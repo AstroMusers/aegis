@@ -13,11 +13,12 @@ plt.rcParams['figure.figsize'] = [4, 9]
 R_j = 69911 # Jupiter radius in kilometers
 mu_0 = 4 * np.pi * 10**(-7) # Vacuum Permeability in SI units
 
+
 plt.figure(1)
 
 v_sw = np.linspace(1,1000,1000) # km/s
 R_mp = R_j
-B_sw = 10**(-9)
+B_sw = 10**(-8)
 
 L_r = 3 * 10**(-3) * np.pi * (R_mp * 10**3)**2 * (v_sw * 10**3) * B_sw**2 / (2*mu_0)
 
@@ -29,7 +30,7 @@ plt.title(r"Scaling of $L_r$ by $v_{sw}$")
 
 v_sw = np.sqrt(1000) # km/s
 R_mp = np.linspace(0.1, 10, 1000 ) #Jupiter masses
-B_sw = 10**(-9)
+B_sw = 10**(-8)
 
 L_r = 3 * 10**(-3) * np.pi * (R_mp*R_j* 10**3)**2 * (v_sw * 10**3) * B_sw**2 / (2*mu_0)
 

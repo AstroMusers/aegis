@@ -14,7 +14,7 @@ mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=["navy", "darkred", "b"])
 
 k = 7.39 * 10 ** 22
 
-v_sw = np.sqrt(1000)  # km/s
+v_sw = 400  # km/s
 B_sw = 10 ** (-8)  # teslas
 B_s = np.linspace(1, 50, 1000)
 a = np.linspace(0.1, 10, 1000)

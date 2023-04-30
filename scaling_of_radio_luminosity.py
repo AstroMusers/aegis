@@ -30,7 +30,7 @@ plt.xlabel(r"$v_{sw}$ (km/s)")
 plt.ylabel(r"$L_r$ (Watts)")
 plt.title(r"Scaling of $L_r$ by $v_{sw}$")
 
-v_sw = np.sqrt(1000) # km/s
+v_sw = 400 # km/s
 R_mp = np.linspace(0.1, 100, 1000 ) #Jupiter radius
 B_sw = 10**(-8)
 
@@ -42,7 +42,7 @@ plt.xlabel(r"$R_{mp}$ $(R_J)$")
 plt.ylabel(r"$L_r$ (Watts)")
 plt.title(r"Scaling of $L_r$ by $R_{mp}$")
 
-v_sw = np.sqrt(1000) # km/s
+v_sw = 400 # km/s
 R_mp = 10*R_j #km
 B_sw = np.linspace(1, 100, 1000)
 

@@ -36,7 +36,7 @@ for i in range(100):
     M = rng.normal(0.8, 0.3)  # solar masses
     Mdot = rng.normal(68, 10)  # e-15 solar masses
     D = rng.normal(1000, 400)  # light years
-    D = D* 9.46 * 10**15
+    D = D* 9.46 * 10**15 # conversion to meters
     exo = Exoplanet(a, Bs, M, Mdot, D)
     exoplanets.append(exo)
 

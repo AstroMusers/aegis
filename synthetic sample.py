@@ -15,7 +15,6 @@ mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=["firebrick", "navy", "b"])
 
 rng = np.random.default_rng()
 
-
 class Exoplanet:
     def __init__(self, semi_major_axis, magnetic_field, star_mass, star_mass_loss, distance):
         self.semi_major_axis = semi_major_axis

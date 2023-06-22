@@ -91,8 +91,10 @@ frequencies = np.array(frequencies)
 distances = np.array(distances)
 
 semis = np.array(semis)
-semis = np.reciprocal(semis)
-semis *= 20
+semis = np.log10(semis)
+
+# semis = np.reciprocal(semis)
+# semis *= 20
 
 df = pd.DataFrame({"x": frequencies,
                    "y": intensities,
@@ -101,10 +103,10 @@ df = pd.DataFrame({"x": frequencies,
 
 fig, ax = plt.subplots()
 
-im = ax.scatter(df.x, df.y, c=df.d, s=df.s, cmap="viridis")
+im = ax.scatter(df.x, df.y, c=df.s, cmap="turbo_r")
 plt.axvline(x=10, color="black", linestyle="dashed")
 
-fig.colorbar(im, ax=ax, label="Distance from Earth (ly)")
+fig.colorbar(im, ax=ax, label="Distance to Host Star $\log_{10}{\mathrm{(AU)}}$")
 
 ax.set_xscale("log")
 ax.set_yscale("log")

@@ -30,7 +30,7 @@ class Exoplanet:
 
 exoplanets = []
 for i in range(100):
-    a = rng.normal(0.5, 0.2)  # AU
+    a = 4 * rng.random() - 2  # logAU
     Bs = rng.normal(15, 5)  # gauss
     # Bs = rng.random() * 20  # gauss
     M = rng.normal(0.8, 0.3)  # solar masses
@@ -68,6 +68,7 @@ for exo in exoplanets:
     D = exo.distance
 
     semis.append(a)
+    a = 10 ** a
 
     distances.append(D / (9.46 * 10 ** 15))
 
@@ -82,19 +83,16 @@ for exo in exoplanets:
     # print(L)
 
     # I = delta*L / (4*np.pi*D)**2 / nu * 10**(26)
-    I = delta * L / (4 * np.pi * nu * D) ** 2 * 10 ** (26)
+    I = delta * L / (4 * np.pi * nu * D) ** 2 * 10 ** 26
     intensities.append(I)
 
 frequencies = np.array(frequencies)
-# frequencies *= 10**6
 
 distances = np.array(distances)
+distances = np.reciprocal(distances)
+distances *= 10**4
 
 semis = np.array(semis)
-semis = np.log10(semis)
-
-# semis = np.reciprocal(semis)
-# semis *= 20
 
 df = pd.DataFrame({"x": frequencies,
                    "y": intensities,
@@ -103,16 +101,16 @@ df = pd.DataFrame({"x": frequencies,
 
 fig, ax = plt.subplots()
 
-im = ax.scatter(df.x, df.y, c=df.s, cmap="turbo_r")
+im = ax.scatter(df.x, df.y, c=df.s, s=df.d, cmap="jet_r")
 plt.axvline(x=10, color="black", linestyle="dashed")
 
-fig.colorbar(im, ax=ax, label="Distance to Host Star $\log_{10}{\mathrm{(AU)}}$")
+fig.colorbar(im, ax=ax, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)")
 
 ax.set_xscale("log")
 ax.set_yscale("log")
 ax.set_xlim(left=8)
 
-ax.axvspan(8, 10, alpha=0.2, color="teal")
+ax.axvspan(0, 10, alpha=0.2, color="teal")
 
 ax.set_title("Frequency and Intensity of CMI Emissions of a Synthetic Exoplanet Sample")
 ax.set_xlabel("Emission Frequency (MHz)")

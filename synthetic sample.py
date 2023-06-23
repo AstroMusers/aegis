@@ -29,12 +29,12 @@ class Exoplanet:
 
 
 exoplanets = []
-for i in range(100):
+for i in range(150):
     a = 4 * rng.random() - 2  # logAU
-    Bs = rng.normal(15, 5)  # gauss
+    Bs = rng.normal(10, 4)  # gauss
     # Bs = rng.random() * 20  # gauss
     M = rng.normal(0.8, 0.3)  # solar masses
-    Mdot = rng.normal(68, 10)  # e-15 solar masses / yr
+    Mdot = rng.normal(68, 20)  # e-15 solar masses / yr
     D = rng.normal(1000, 400)  # light years
     D = D * 9.46 * 10 ** 15  # conversion to meters
     exo = Exoplanet(a, Bs, M, Mdot, D)
@@ -79,18 +79,18 @@ for exo in exoplanets:
     # Lj = 7.4 * 10**22 * Bj**(2/3) * a**(2/3) * v_sw * B_sw**2
     Lj = 2.1 * 10 ** 11
 
-    L = (Rmp / Rmpj) ** 2 * (aj / a) ** 2 * (M / M_sun) * (Mdot / M_sun_loss) * Lj
+    L = (Rmp / Rmpj) ** 2 * (aj / a) ** 2 * (M / M_sun) * (Mdot / M_sun_loss) * Lj  # Ashtari 2022
     # print(L)
 
     # I = delta*L / (4*np.pi*D)**2 / nu * 10**(26)
-    I = delta * L / (4 * np.pi * nu * D) ** 2 * 10 ** 26
+    I = delta * L / (4 * np.pi * nu * D ** 2) * 10 ** 26  # Ashtari 2022
     intensities.append(I)
 
 frequencies = np.array(frequencies)
 
 distances = np.array(distances)
 distances = np.reciprocal(distances)
-distances *= 10**4
+distances *= 10 ** 4
 
 semis = np.array(semis)
 
@@ -108,7 +108,7 @@ fig.colorbar(im, ax=ax, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$
 
 ax.set_xscale("log")
 ax.set_yscale("log")
-ax.set_xlim(left=8)
+ax.set_xlim(left=6)
 
 ax.axvspan(0, 10, alpha=0.2, color="teal")
 

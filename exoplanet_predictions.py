@@ -25,6 +25,7 @@ rng = np.random.default_rng()
 # Get the input variables from command-line arguments. Use this if you want
 # to run the code using the GUI, otherwise comment out the following
 # 10 lines.
+
 a_min = float(sys.argv[1])
 a_max = float(sys.argv[2])
 B_mean = float(sys.argv[3])
@@ -35,10 +36,12 @@ Mdot_mean = float(sys.argv[7])
 Mdot_sd = float(sys.argv[8])
 D_mean = float(sys.argv[9])
 D_sd = float(sys.argv[10])
+size = int(sys.argv[11])
 
 # Default values for the variables. Use this section of the code to run
 # the code in the script.
 # --------------------------------------------------------------------
+# size = 150
 # a_min = -2
 # a_max = 2
 # B_mean = 10
@@ -54,7 +57,7 @@ D_sd = float(sys.argv[10])
 # Create Synthetic Sample
 # -----------------------
 exoplanets = []
-for i in range(150):
+for i in range(size):
     a = rng.uniform(a_min, a_max)  # logAU
 
     Bs = rng.normal(B_mean, B_sd)  # gauss

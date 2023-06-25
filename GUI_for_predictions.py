@@ -7,7 +7,8 @@ import subprocess
 def save_recent_parameters():
     recent_parameters = [
         entry1.get(), entry2.get(), entry3.get(), entry4.get(), entry5.get(),
-        entry6.get(), entry7.get(), entry8.get(), entry9.get(), entry10.get()
+        entry6.get(), entry7.get(), entry8.get(), entry9.get(), entry10.get(),
+        entry11.get()
     ]
 
     with open("recent_parameters.txt", "w") as file:
@@ -41,6 +42,8 @@ def load_recent_parameters():
         entry9.insert(tk.END, recent_parameters[8])
         entry10.delete(0, tk.END)
         entry10.insert(tk.END, recent_parameters[9])
+        entry11.delete(0, tk.END)
+        entry11.insert(tk.END, recent_parameters[10])
     except FileNotFoundError:
         # Handle the case when the configuration file does not exist
         pass
@@ -49,7 +52,6 @@ def load_recent_parameters():
 def run_predictions():
     # Get the input values
     save_recent_parameters()
-
     a_min = entry1.get()
     a_max = entry2.get()
     B_mean = entry3.get()
@@ -60,6 +62,7 @@ def run_predictions():
     Mdot_sd = entry8.get()
     D_mean = entry9.get()
     D_sd = entry10.get()
+    sample_size = entry11.get()
 
     # Validate and convert the input values to float
     try:
@@ -73,6 +76,7 @@ def run_predictions():
         Mdot_sd = float(Mdot_sd)
         D_mean = float(D_mean)
         D_sd = float(D_sd)
+        sample_size = int(sample_size)
     except ValueError:
         # Handle any invalid input
         print("Invalid input. Please enter numeric values.")
@@ -80,13 +84,13 @@ def run_predictions():
 
     # Execute the exoplanet_predictions.py script with the input values as arguments
     subprocess.call(['python', 'exoplanet_predictions.py', str(a_min), str(a_max), str(B_mean), str(B_sd),
-                     str(M_mean), str(M_sd), str(Mdot_mean), str(Mdot_sd), str(D_mean), str(D_sd)])
+                     str(M_mean), str(M_sd), str(Mdot_mean), str(Mdot_sd), str(D_mean), str(D_sd), str(sample_size)])
 
 
 # Create the main window
 window = tk.Tk()
 window.title("Exoplanet Predictions")
-window.geometry("500x350")
+window.geometry("500x400")
 
 # Default values for the variables
 default_a_min = -2
@@ -99,6 +103,7 @@ default_Mdot_mean = 100
 default_Mdot_sd = 30
 default_D_mean = 1000
 default_D_sd = 300
+default_size = 150
 
 # Create entry fields for input variables with default values
 style = ttk.Style()
@@ -165,6 +170,16 @@ entry10 = ttk.Entry(window, style="Custom.TEntry")
 entry10.insert(tk.END, default_D_sd)
 entry10.grid(row=9, column=1)
 
+# Create an empty label as a separator
+empty_label = ttk.Label(window, text="")
+empty_label.grid(row=10, column=0, columnspan=2)
+
+label11 = ttk.Label(window, text="Sample size:")
+label11.grid(row=11, column=0, sticky="e")
+entry11 = ttk.Entry(window, style="Custom.TEntry")
+entry11.insert(tk.END, default_size)
+entry11.grid(row=11, column=1)
+
 load_recent_parameters()
 
 # Define the custom entry style with a grayish background color and a black frame
@@ -172,7 +187,7 @@ style.configure("Custom.TEntry", background="#f0f0f0", bordercolor="black", reli
 
 # Create a button to run the predictions
 button = ttk.Button(window, text="Run Predictions", command=run_predictions)
-button.grid(row=10, column=0, columnspan=2)
+button.grid(row=12, column=0, columnspan=3)
 
 # Start the GUI event loop
 window.mainloop()

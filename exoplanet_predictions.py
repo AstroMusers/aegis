@@ -26,32 +26,32 @@ rng = np.random.default_rng()
 # to run the code using the GUI, otherwise comment out the following
 # 10 lines.
 
-a_min = float(sys.argv[1])
-a_max = float(sys.argv[2])
-B_mean = float(sys.argv[3])
-B_sd = float(sys.argv[4])
-M_mean = float(sys.argv[5])
-M_sd = float(sys.argv[6])
-Mdot_mean = float(sys.argv[7])
-Mdot_sd = float(sys.argv[8])
-D_mean = float(sys.argv[9])
-D_sd = float(sys.argv[10])
-size = int(sys.argv[11])
+# a_min = float(sys.argv[1])
+# a_max = float(sys.argv[2])
+# B_mean = float(sys.argv[3])
+# B_sd = float(sys.argv[4])
+# M_mean = float(sys.argv[5])
+# M_sd = float(sys.argv[6])
+# Mdot_mean = float(sys.argv[7])
+# Mdot_sd = float(sys.argv[8])
+# D_mean = float(sys.argv[9])
+# D_sd = float(sys.argv[10])
+# size = int(sys.argv[11])
 
 # Default values for the variables. Use this section of the code to run
 # the code in the script.
 # --------------------------------------------------------------------
-# size = 150
-# a_min = -2
-# a_max = 2
-# B_mean = 10
-# B_sd = 3
-# M_mean = 3
-# M_sd = 0.8
-# Mdot_mean = 100
-# Mdot_sd = 30
-# D_mean = 1000
-# D_sd = 300
+size = 150
+a_min = -2
+a_max = 2
+B_mean = 10
+B_sd = 3
+M_mean = 3
+M_sd = 0.8
+Mdot_mean = 100
+Mdot_sd = 30
+D_mean = 1000
+D_sd = 300
 # --------------------------------------------------------------------
 
 # Create Synthetic Sample
@@ -117,25 +117,33 @@ distances *= 10 ** 4
 
 semis = np.array(semis)
 
-# Plotting
-# -------------------
+# Import Ashtari2022 results
+df2 = pd.read_csv("dataAshtari22.txt", delimiter="\t", names=["Planet", "freq", "lowSflux", "highSflux"])
+df2.freq /= 10**6
 
 df = pd.DataFrame({"x": frequencies,
                    "y": intensities,
                    "d": distances,
                    "s": semis})
 
+# Plotting
+# -------------------
 
 fig, ax = plt.subplots()
 
-im = ax.scatter(df.x, df.y, c=df.s, s=df.d, cmap="jet_r")
-plt.axvline(x=10, color="black", linestyle="dashed")
+# Uncomment these to see the random sample predictions
 
-fig.colorbar(im, ax=ax, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)")
+# im = ax.scatter(df.x, df.y, c=df.s, s=df.d, cmap="jet_r")
+#
+# fig.colorbar(im, ax=ax, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)")
+
+im = ax.scatter(df2.freq, df2.highSflux, s=10, marker="v")
+
+plt.axvline(x=10, color="black", linestyle="dashed")
 
 ax.set_xscale("log")
 ax.set_yscale("log")
-ax.set_xlim(left=6)
+ax.set_xlim(10**(-2), 10**5)
 
 ax.axvspan(0, 10, alpha=0.2, color="teal")
 

@@ -63,6 +63,7 @@ def run_predictions():
     D_mean = entry9.get()
     D_sd = entry10.get()
     sample_size = entry11.get()
+    emission_type = burst.get()
 
     # Validate and convert the input values to float
     try:
@@ -77,6 +78,7 @@ def run_predictions():
         D_mean = float(D_mean)
         D_sd = float(D_sd)
         sample_size = int(sample_size)
+        emission_type = int(emission_type)
     except ValueError:
         # Handle any invalid input
         print("Invalid input. Please enter numeric values.")
@@ -84,13 +86,15 @@ def run_predictions():
 
     # Execute the exoplanet_predictions.py script with the input values as arguments
     subprocess.call(['python', 'exoplanet_predictions.py', str(a_min), str(a_max), str(B_mean), str(B_sd),
-                     str(M_mean), str(M_sd), str(Mdot_mean), str(Mdot_sd), str(D_mean), str(D_sd), str(sample_size)])
+                     str(M_mean), str(M_sd), str(Mdot_mean), str(Mdot_sd), str(D_mean), str(D_sd), str(sample_size), str(emission_type)])
 
 
 # Create the main window
 window = tk.Tk()
 window.title("Exoplanet Predictions")
 window.geometry("500x400")
+
+burst = tk.IntVar()
 
 # Default values for the variables
 default_a_min = -2
@@ -180,6 +184,13 @@ entry11 = ttk.Entry(window, style="Custom.TEntry")
 entry11.insert(tk.END, default_size)
 entry11.grid(row=11, column=1)
 
+checkbox = ttk.Checkbutton(window,
+                           text="Burst?",
+                           variable=burst,
+                           onvalue=1,
+                           offvalue=0)
+checkbox.grid(row=12, column=0)
+
 load_recent_parameters()
 
 # Define the custom entry style with a grayish background color and a black frame
@@ -187,7 +198,7 @@ style.configure("Custom.TEntry", background="#f0f0f0", bordercolor="black", reli
 
 # Create a button to run the predictions
 button = ttk.Button(window, text="Run Predictions", command=run_predictions)
-button.grid(row=12, column=0, columnspan=3)
+button.grid(row=13, column=0, columnspan=3)
 
 # Start the GUI event loop
 window.mainloop()

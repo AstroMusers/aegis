@@ -84,8 +84,8 @@ def run_predictions():
         print("Invalid input. Please enter numeric values.")
         return
 
-    # Execute the exoplanet_predictions.py script with the input values as arguments
-    subprocess.call(['python', 'exoplanet_predictions.py', str(a_min), str(a_max), str(B_mean), str(B_sd),
+    # Execute the synthetic_predictions.py script with the input values as arguments
+    subprocess.call(['python', 'synthetic_predictions.py', str(a_min), str(a_max), str(B_mean), str(B_sd),
                      str(M_mean), str(M_sd), str(Mdot_mean), str(Mdot_sd), str(D_mean), str(D_sd), str(sample_size), str(emission_type)])
 
 

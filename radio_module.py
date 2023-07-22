@@ -2,7 +2,8 @@ import numpy as np
 
 
 class Exoplanet:
-    def __init__(self, semi_major_axis, magnetic_field, star_mass, star_mass_loss, distance):
+    def __init__(self, name, semi_major_axis, magnetic_field, star_mass, star_mass_loss, distance):
+        self.name = name
         self.semi_major_axis = semi_major_axis
         self.magnetic_field = magnetic_field
         self.star_mass = star_mass
@@ -10,7 +11,7 @@ class Exoplanet:
         self.distance = distance
 
     def __repr__(self):
-        return f"Exoplanet with: a={self.semi_major_axis}, Bs={self.magnetic_field}, M={self.star_mass}, Mdot={self.star_mass_loss}, D={self.distance} \n"
+        return f"Exoplanet {self.name} with: a={self.semi_major_axis}, Bs={self.magnetic_field}, M={self.star_mass}, Mdot={self.star_mass_loss}, D={self.distance} \n"
 
 
 def max_freq(B):

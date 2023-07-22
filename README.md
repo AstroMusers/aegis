@@ -18,7 +18,7 @@ The script "radio_module.py" provides a new module with an exoplanet class
 and various functions that might be used throughout the project. 
 
 ### Expectation Script and the GUI.
-The scripts "exoplanet_predictions.py" and "GUI_for_predictions.py" are
+The scripts "synthetic_predictions.py" and "GUI_for_predictions.py" are
 currently under development. The former is the main script that generates
 a random sample of exoplanets by randomly assigning values drawn from
 specific probability distributions to various characteristics of exoplanets.

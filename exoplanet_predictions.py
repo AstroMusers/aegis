@@ -5,6 +5,16 @@ import pandas as pd
 
 from radio_module import *
 
+rng = np.random.default_rng()
+
+mpl.rcParams["figure.autolayout"] = True
+plt.rcParams['figure.figsize'] = [8, 4]
+
+rc = {"font.family": "times new roman",
+      "font.size": 11,
+      "mathtext.fontset": "stix"}
+plt.rcParams.update(rc)
+
 df = pd.read_csv("NASA2207.csv", skiprows=34)
 print(df)
 
@@ -22,7 +32,9 @@ for i in df.iterrows():
     highS_Mdot = t ** (-1.23) * 10**3
     lowS_Mdot = t ** (-0.9) * 10**3
 
-    exo = Exoplanet(name, a, 1, M, highS_Mdot, d)
+    B = rng.normal(10, 3)
+
+    exo = Exoplanet(name, a, B, M, highS_Mdot, d)
     exoplanets.append(exo)
 
 print(exoplanets)
@@ -59,7 +71,7 @@ frequencies = np.array(frequencies)
 
 distances = np.array(distances)
 distances = np.reciprocal(distances)
-distances *= 10 ** 2
+distances *= 10 ** 2.5
 
 intensities = np.array(intensities)
 burst = intensities * (10 ** 1.53)
@@ -79,28 +91,49 @@ else:
                        "d": distances,
                        "s": semis})
 
-fig, ax = plt.subplots()
+fig0, ax0 = plt.subplots()
 
 # Uncomment these to see the random sample predictions
-im = ax.scatter(df1.x, df1.y, c=df1.s, s=df1.d, cmap="jet_r")
-fig.colorbar(im, ax=ax, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)")
+im = ax0.scatter(df1.x, df1.y, c=df1.s, s=df1.d, cmap="jet_r")
+fig0.colorbar(im, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)")
 
 # im = ax.scatter(df2.freq, df2.highSflux, s=10, marker="v")
 
-plt.axvline(x=10, color="black", linestyle="dashed")
+ax0.axvline(x=10, color="black", linestyle="dashed")
 
-ax.set_xscale("log")
-ax.set_yscale("log")
-# ax.set_xlim(6, 30)
+ax0.set_xscale("log")
+ax0.set_yscale("log")
+ax0.set_xlim(6, 30)
 # ax.set_xlim(10**(-2), 10**5)
 
 
-ax.axvspan(0, 10, alpha=0.2, color="teal")
+ax0.axvspan(0, 10, alpha=0.2, color="teal")
+fig0.tight_layout()
 
 if IsBurst:
-    ax.set_title("Frequency and Intensity of Burst CMI Emissions of a Synthetic Exoplanet Sample")
+    ax0.set_title("Frequency and Intensity of Burst CMI Emissions of the Exoplanet Sample")
 else:
-    ax.set_title("Frequency and Intensity of Quiescent CMI Emissions of a Synthetic Exoplanet Sample")
-ax.set_xlabel("Emission Frequency (MHz)")
-ax.set_ylabel("Radio Brightness (Jy)")
+    ax0.set_title("Frequency and Intensity of Quiescent CMI Emissions of the Exoplanet Sample")
+ax0.set_xlabel("Emission Frequency (MHz)")
+ax0.set_ylabel("Radio Brightness (Jy)")
+
+TheBins = np.logspace(-6, 3, 10)
+
+plt.rcParams['figure.figsize'] = [6, 4]
+
+fig1, ax1 = plt.subplots()
+
+if IsBurst:
+    ax1.hist(burst, bins=TheBins, edgecolor="black")
+    ax1.set_xlabel("Intensity of Burst Emission (Jy)")
+    ax1.set_title("Histogram of Burst Emission Intensities")
+else:
+    ax1.hist(intensities, bins=TheBins, edgecolor="black")
+    ax1.set_xlabel("Intensity of Quiescent Emission (Jy)")
+    ax1.set_title("Histogram of Quiescent Emission Intensities")
+
+ax1.set_xscale("log")
+ax1.set_ylabel("Number of Exoplanets")
+
 plt.show()
+

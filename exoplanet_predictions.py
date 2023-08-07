@@ -18,56 +18,70 @@ plt.rcParams.update(rc)
 df = pd.read_csv("NASA2207.csv", skiprows=34)
 print(df)
 
-exoplanets = []
+N = 100
 
-for i in df.iterrows():
-    name = i[1][0]
-    a = i[1][3]
-    M = i[1][7]
-    t = i[1][11]
-    d = i[1][15]
+totalFreq = np.zeros(len(df.index))
+totalI = np.zeros(len(df.index))
 
-    d *= 3.26156
+for j in range(N):
 
-    highS_Mdot = t ** (-1.23) * 10**3
-    lowS_Mdot = t ** (-0.9) * 10**3
+    exoplanets = []
 
-    B = rng.normal(10, 3)
+    for i in df.iterrows():
+        name = i[1][0]
+        a = i[1][3]
+        M = i[1][7]
+        t = i[1][11]
+        d = i[1][15]
 
-    exo = Exoplanet(name, a, B, M, highS_Mdot, d)
-    exoplanets.append(exo)
+        d *= 3.26156
 
-print(exoplanets)
+        highS_Mdot = t ** (-1.23) * 10 ** 3
+        lowS_Mdot = t ** (-0.9) * 10 ** 3
 
-frequencies = []
-intensities = []
-distances = []
-semis = []
+        B = rng.uniform(5,15)
 
-for exo in exoplanets:
-    a = exo.semi_major_axis
-    B = exo.magnetic_field
-    M = exo.star_mass
-    Mdot = exo.star_mass_loss
-    D = exo.distance
+        exo = Exoplanet(name, a, B, M, highS_Mdot, d)
+        exoplanets.append(exo)
 
-    a = np.log10(a)
-    semis.append(a)
-    a = 10 ** a
+    # print(exoplanets)
 
-    distances.append(D)
+    frequencies = []
+    intensities = []
+    distances = []
+    semis = []
 
-    D = D * 9.46 * 10 ** 15  # conversion to meters
+    for exo in exoplanets:
+        a = exo.semi_major_axis
+        B = exo.magnetic_field
+        M = exo.star_mass
+        Mdot = exo.star_mass_loss
+        D = exo.distance
 
-    nu = max_freq(B)
-    assert nu > 0, f"Maximum emission frequency must be positive, instead got {nu=}."
-    frequencies.append(nu / 10 ** 6)
+        a = np.log10(a)
+        semis.append(a)
+        a = 10 ** a
 
-    I = complete(B, a, M, Mdot, D)
-    assert I > 0, f"Radio brightness must be positive, instead got {I=}."
-    intensities.append(I)
+        distances.append(D)
 
-frequencies = np.array(frequencies)
+        D = D * 9.46 * 10 ** 15  # conversion to meters
+
+        nu = max_freq(B)
+        assert nu > 0, f"Maximum emission frequency must be positive, instead got {nu=}."
+        frequencies.append(nu / 10 ** 6)
+
+        I = complete(B, a, M, Mdot, D)
+        assert I > 0, f"Radio brightness must be positive, instead got {I=}."
+        intensities.append(I)
+
+    frequencies = np.array(frequencies)
+    intensities = np.array(intensities)
+
+    totalFreq += frequencies
+    totalI += intensities
+
+frequencies = totalFreq / N
+intensities = totalI / N
 
 distances = np.array(distances)
 distances = np.reciprocal(distances)
@@ -82,14 +96,14 @@ IsBurst = 1
 
 if IsBurst:
     df1 = pd.DataFrame({"x": frequencies,
-                       "y": burst,
-                       "d": distances,
-                       "s": semis})
+                        "y": burst,
+                        "d": distances,
+                        "s": semis})
 else:
     df1 = pd.DataFrame({"x": frequencies,
-                       "y": intensities,
-                       "d": distances,
-                       "s": semis})
+                        "y": intensities,
+                        "d": distances,
+                        "s": semis})
 
 fig0, ax0 = plt.subplots()
 
@@ -136,4 +150,3 @@ ax1.set_xscale("log")
 ax1.set_ylabel("Number of Exoplanets")
 
 plt.show()
-

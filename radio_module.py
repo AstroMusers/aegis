@@ -2,16 +2,20 @@ import numpy as np
 
 
 class Exoplanet:
-    def __init__(self, name, semi_major_axis, magnetic_field, star_mass, star_mass_loss, distance):
+    def __init__(self, name, semi_major_axis, radius, mass, density, magnetic_field, star_mass, star_mass_loss, distance):
         self.name = name
         self.semi_major_axis = semi_major_axis
+        self.radius = radius
+        self.mass = mass
+        self.density = density
         self.magnetic_field = magnetic_field
         self.star_mass = star_mass
         self.star_mass_loss = star_mass_loss
         self.distance = distance
 
     def __repr__(self):
-        return f"Exoplanet {self.name} with: a={self.semi_major_axis}, Bs={self.magnetic_field}, M={self.star_mass}, Mdot={self.star_mass_loss}, D={self.distance} \n"
+        return f"Exoplanet {self.name} with: a={self.semi_major_axis}, Bs={self.magnetic_field}, M={self.star_mass}," \
+               f" Mdot={self.star_mass_loss}, D={self.distance} \n"
 
 
 def max_freq(B):
@@ -21,8 +25,70 @@ def max_freq(B):
     :return: Maximum CMI emission frequency of the exoplanet, given in Hz
     """
     Bj = 14  # gauss
-    nuJ = 24 * 10**6  # Hz
+    nuJ = 24 * 10 ** 6  # Hz
     return nuJ * B / Bj
+
+
+def density(p):
+    """
+    Returns the density of a planet in Jovian density
+    :param p: density in g/cm^3
+    :return: Density in p_j
+    """
+    return p / 1.326
+
+
+def rotation(T, a):
+    """
+    Returns the planetary rotation rate in Jovian rotation rate. Assume tidally locked if orbit semi major axis is less
+    than 0.1 AU.
+    :param T: Planet orbital period in days
+    :param a: Semi major axis in AU
+    :return: Planetary rotation rate in Jovian rotation rate.
+    """
+    if a <= 0.1:
+        return T / 0.414
+    else:
+        return 1
+
+
+def convective_radius(exo):
+    """
+    Calculates the radius of the convective core of the exoplanet with the scaling provided in Curtis & Ness 1986.
+    If the calculation exceeds planetary radius, planetary radius is returned. JOvain convective radius of 0.830 R_j
+    is taken from Sharan 2022.
+    :param exo: the exoplanet
+    :return: Radius of the convective core
+    """
+    M = exo.mass
+    R = M ** 0.44
+    return min(R, exo.radius) / 0.830
+
+
+def magnetic_moment(p_c, w_p, r_c, sigma):
+    """
+    Finds the magnetic moment of the exoplanet using the density of its convective core, rotation rate, radius of its
+    convective core, and the conductivity of its convective core. Results is in Jovian magnetic moments when all parameter
+    values are given with respect to Jupiter.
+    :param p_c: Density of the convective core.
+    :param w_p: Planetary rotation rate.
+    :param r_c: Radius of the convective core
+    :param sigma: Conductivity of the convective core
+    :return: Magnetic moment of the exoplanet.
+    """
+    return p_c ** (1 / 2) * w_p ** (1 / 2) * r_c ** 3 * sigma ** (-1 / 2)
+
+
+def magnetic_field(mu, R):
+    """
+    Calculates the magnetic field strength at the surface of an exopplanet from its magnetic moment and radius. Given
+    in Ashtari2022
+    :param mu: Magnetic moment in A m^2
+    :param R:Radius in Jupiter radii.
+    :return: Magnetic field strength at the surface.
+    """
+    B_j = 4.17 # Gauss
+    return mu / R**3 * B_j
 
 
 def magnetopause(B, a):

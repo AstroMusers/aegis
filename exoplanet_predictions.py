@@ -15,27 +15,45 @@ rc = {"font.family": "times new roman",
       "mathtext.fontset": "stix"}
 plt.rcParams.update(rc)
 
-df = pd.read_csv("NASA2207.csv", skiprows=34)
+df = pd.read_csv("NASA0808.csv", skiprows=55)
 print(df)
 
 exoplanets = []
 
 for i in df.iterrows():
-    name = i[1][0]
-    a = i[1][3]
-    M = i[1][7]
-    t = i[1][11]
-    d = i[1][15]
+    j = i[1]
+    name = j[0]
+    T = j[2]
+    a = j[6]
+    R = j[10]
+    M = j[14]
+    p = j[19]
+    M_s = j[28]
+    t = j[32]
+    d = j[36]
+
+    p_c = density(p)
+    w_p = rotation(T, a)
 
     d *= 3.26156
 
-    highS_Mdot = t ** (-1.23) * 10**3
-    lowS_Mdot = t ** (-0.9) * 10**3
+    highS_Mdot = t ** (-1.23) * 10 ** 3
+    lowS_Mdot = t ** (-0.9) * 10 ** 3
 
-    B = rng.normal(10, 3)
+    B = 1  # Tentative
+    sigma = 1  # Jupiter conductivity
 
-    exo = Exoplanet(name, a, B, M, highS_Mdot, d)
-    exoplanets.append(exo)
+    exo = Exoplanet(name, a, R, M, p, B, M_s, highS_Mdot, d)
+
+    r_c = convective_radius(exo)
+    mu = magnetic_moment(p_c, w_p, r_c, sigma)
+
+    B = magnetic_field(mu, exo.radius)
+
+    exo.magnetic_field = B
+
+    if exo.magnetic_field != 0:
+        exoplanets.append(exo)
 
 print(exoplanets)
 
@@ -43,6 +61,7 @@ frequencies = []
 intensities = []
 distances = []
 semis = []
+magnetic_fields = []
 
 for exo in exoplanets:
     a = exo.semi_major_axis
@@ -56,6 +75,8 @@ for exo in exoplanets:
     a = 10 ** a
 
     distances.append(D)
+
+    magnetic_fields.append(B)
 
     D = D * 9.46 * 10 ** 15  # conversion to meters
 
@@ -71,7 +92,7 @@ frequencies = np.array(frequencies)
 
 distances = np.array(distances)
 distances = np.reciprocal(distances)
-distances *= 10 ** 2.5
+distances *= 10 ** 2.7
 
 intensities = np.array(intensities)
 burst = intensities * (10 ** 1.53)
@@ -82,29 +103,26 @@ IsBurst = 1
 
 if IsBurst:
     df1 = pd.DataFrame({"x": frequencies,
-                       "y": burst,
-                       "d": distances,
-                       "s": semis})
+                        "y": burst,
+                        "d": distances,
+                        "s": semis})
 else:
     df1 = pd.DataFrame({"x": frequencies,
-                       "y": intensities,
-                       "d": distances,
-                       "s": semis})
+                        "y": intensities,
+                        "d": distances,
+                        "s": semis})
 
 fig0, ax0 = plt.subplots()
 
-# Uncomment these to see the random sample predictions
 im = ax0.scatter(df1.x, df1.y, c=df1.s, s=df1.d, cmap="jet_r")
 fig0.colorbar(im, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)")
-
-# im = ax.scatter(df2.freq, df2.highSflux, s=10, marker="v")
 
 ax0.axvline(x=10, color="black", linestyle="dashed")
 
 ax0.set_xscale("log")
 ax0.set_yscale("log")
-ax0.set_xlim(6, 30)
-# ax.set_xlim(10**(-2), 10**5)
+# ax0.set_xlim(6, 30)
+ax0.set_xlim(0.5, 400)
 
 
 ax0.axvspan(0, 10, alpha=0.2, color="teal")
@@ -117,23 +135,33 @@ else:
 ax0.set_xlabel("Emission Frequency (MHz)")
 ax0.set_ylabel("Radio Brightness (Jy)")
 
-TheBins = np.logspace(-6, 3, 10)
+TheBins1 = np.logspace(-6, 3, 10)
 
 plt.rcParams['figure.figsize'] = [6, 4]
 
 fig1, ax1 = plt.subplots()
 
 if IsBurst:
-    ax1.hist(burst, bins=TheBins, edgecolor="black")
+    ax1.hist(burst, bins=TheBins1, edgecolor="black")
     ax1.set_xlabel("Intensity of Burst Emission (Jy)")
     ax1.set_title("Histogram of Burst Emission Intensities")
 else:
-    ax1.hist(intensities, bins=TheBins, edgecolor="black")
+    ax1.hist(intensities, bins=TheBins1, edgecolor="black")
     ax1.set_xlabel("Intensity of Quiescent Emission (Jy)")
     ax1.set_title("Histogram of Quiescent Emission Intensities")
 
 ax1.set_xscale("log")
 ax1.set_ylabel("Number of Exoplanets")
 
-plt.show()
+fig2, ax2 = plt.subplots()
 
+TheBins2 = np.logspace(-4, 4, 17)
+
+ax2.hist(magnetic_fields, bins=TheBins2, edgecolor="black")
+ax2.set_xlabel("Magnetic Field Strength at the Surface (Gauss)")
+ax2.set_title("Histogram of the Magnetic Field Strengths")
+
+ax2.set_xscale("log")
+ax2.set_ylabel("Number of Exoplanets")
+
+plt.show()

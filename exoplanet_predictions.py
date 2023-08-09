@@ -26,7 +26,10 @@ for i in df.iterrows():
     T = j[2]
     a = j[6]
     R = j[10]
-    M = j[14]
+    if j[14] == "Mass":
+        M = j[14]
+    else:
+        M = j[14] * 1.15  # Expected Value of the mass based on projected mass
     p = j[19]
     M_s = j[28]
     t = j[32]
@@ -40,10 +43,12 @@ for i in df.iterrows():
     highS_Mdot = t ** (-1.23) * 10 ** 3
     lowS_Mdot = t ** (-0.9) * 10 ** 3
 
+    Mdot = 8.1 * t**(-1.37)
+
     B = 1  # Tentative
     sigma = 1  # Jupiter conductivity
 
-    exo = Exoplanet(name, a, R, M, p, B, M_s, highS_Mdot, d)
+    exo = Exoplanet(name, a, R, M, p, B, M_s, Mdot, d)
 
     r_c = convective_radius(exo)
     mu = magnetic_moment(p_c, w_p, r_c, sigma)
@@ -66,7 +71,7 @@ magnetic_fields = []
 for exo in exoplanets:
     a = exo.semi_major_axis
     B = exo.magnetic_field
-    M = exo.star_mass
+    M_s = exo.star_mass
     Mdot = exo.star_mass_loss
     D = exo.distance
 
@@ -84,7 +89,7 @@ for exo in exoplanets:
     assert nu > 0, f"Maximum emission frequency must be positive, instead got {nu=}."
     frequencies.append(nu / 10 ** 6)
 
-    I = complete(B, a, M, Mdot, D)
+    I = complete(B, a, M_s, Mdot, D)
     assert I > 0, f"Radio brightness must be positive, instead got {I=}."
     intensities.append(I)
 
@@ -135,9 +140,13 @@ else:
 ax0.set_xlabel("Emission Frequency (MHz)")
 ax0.set_ylabel("Radio Brightness (Jy)")
 
-TheBins1 = np.logspace(-6, 3, 10)
+TheBins1 = np.logspace(-9, 2, 12)
 
-plt.rcParams['figure.figsize'] = [6, 4]
+plt.rcParams['figure.figsize'] = [6,4]
+rc = {"font.family": "times new roman",
+      "font.size": 14,
+      "mathtext.fontset": "stix"}
+plt.rcParams.update(rc)
 
 fig1, ax1 = plt.subplots()
 

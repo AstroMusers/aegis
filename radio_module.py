@@ -2,7 +2,8 @@ import numpy as np
 
 
 class Exoplanet:
-    def __init__(self, name, semi_major_axis, radius, mass, density, magnetic_field, star_mass, star_mass_loss, distance):
+    def __init__(self, name, semi_major_axis, radius, mass, density, magnetic_field, star_mass, star_mass_loss,
+                 distance):
         self.name = name
         self.semi_major_axis = semi_major_axis
         self.radius = radius
@@ -61,7 +62,12 @@ def convective_radius(exo):
     :return: Radius of the convective core
     """
     M = exo.mass
-    R = M ** 0.44
+    p = exo.density
+    r = exo.radius
+    if p < 1.6 and M > 0.4:
+        R = M ** 0.44  # Curtis & Ness (1986)
+    else:
+        R = M ** 0.75 * r ** (-0.96)  # Grießmeier (2004)
     return min(R, exo.radius) / 0.830
 
 
@@ -87,8 +93,8 @@ def magnetic_field(mu, R):
     :param R:Radius in Jupiter radii.
     :return: Magnetic field strength at the surface.
     """
-    B_j = 4.17 # Gauss
-    return mu / R**3 * B_j
+    B_j = 4.17  # Gauss
+    return mu / R ** 3 * B_j
 
 
 def magnetopause(B, a):
@@ -99,7 +105,7 @@ def magnetopause(B, a):
     :param a: Semi-major axis given in AU.
     :return: The magnetopause standoff distance of the exoplanet given in Jupiter radii.
     """
-    Bj = 14  # gauss
+    Bj = 4.17  # gauss
     aj = 5.204  # AU
     Rj = 1  # Rj
     return 56 * Rj * ((B / Bj) / (aj / a)) ** (1 / 3)

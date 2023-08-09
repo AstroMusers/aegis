@@ -68,7 +68,7 @@ def convective_radius(exo):
         R = M ** 0.44  # Curtis & Ness (1986)
     else:
         R = M ** 0.75 * r ** (-0.96)  # Grießmeier (2004)
-    return min(R, exo.radius) / 0.830
+    return min(R, exo.radius) / 0.9
 
 
 def magnetic_moment(p_c, w_p, r_c, sigma):

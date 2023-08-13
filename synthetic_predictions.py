@@ -75,7 +75,7 @@ for i in range(size):
     D = rng.normal(D_mean, D_sd)  # light years
     assert D > 0, f"Distance to Exoplanet is expected positive, instead got {D=}."
 
-    exo = Exoplanet(i, a, Bs, M, Mdot, D)
+    exo = Exoplanet(i, a, 1, 1, 1, Bs, M, Mdot, D)  # See the module. 1, 1, 1 stand for currently unnecessary parameters.
     exoplanets.append(exo)
 
 print(exoplanets)

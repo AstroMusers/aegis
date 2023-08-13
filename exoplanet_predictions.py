@@ -142,7 +142,7 @@ ax0.set_ylabel("Radio Brightness (Jy)")
 
 TheBins1 = np.logspace(-9, 2, 12)
 
-plt.rcParams['figure.figsize'] = [6,4]
+plt.rcParams['figure.figsize'] = [6, 4]
 rc = {"font.family": "times new roman",
       "font.size": 14,
       "mathtext.fontset": "stix"}

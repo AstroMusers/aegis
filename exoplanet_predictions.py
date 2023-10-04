@@ -117,9 +117,25 @@ else:
                         "d": distances,
                         "s": semis})
 
+
+lofar = pd.read_csv("sensitivities.csv")
+lofar.columns = lofar.iloc[0]
+lofar = lofar[1:]
+lofar = lofar.drop([1, 2, 3, 11, 12, 13])
+lofar = lofar.reset_index(drop=True)
+lofar = lofar.apply(pd.to_numeric, errors="ignore")
+lofar["NL Core"] = lofar["NL Core"].multiply(10**(-3))
+lofar["Full EU"] = lofar["Full EU"].multiply(10**(-3))
+
+print(lofar)
+print(lofar.dtypes)
+
 fig0, ax0 = plt.subplots()
 
 im = ax0.scatter(df1.x, df1.y, c=df1.s, s=df1.d, cmap="jet_r")
+lofar.plot(ax=ax0, x="Freq.", y="NL Core")
+lofar.plot(ax=ax0, x="Freq.", y="Full EU")
+
 fig0.colorbar(im, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)")
 
 ax0.axvline(x=10, color="black", linestyle="dashed")
@@ -128,7 +144,6 @@ ax0.set_xscale("log")
 ax0.set_yscale("log")
 # ax0.set_xlim(6, 30)
 ax0.set_xlim(0.5, 400)
-
 
 ax0.axvspan(0, 10, alpha=0.2, color="teal")
 fig0.tight_layout()
@@ -160,6 +175,7 @@ else:
     ax1.set_title("Histogram of Quiescent Emission Intensities")
 
 ax1.set_xscale("log")
+ax1.set_yscale("log")
 ax1.set_ylabel("Number of Exoplanets")
 
 fig2, ax2 = plt.subplots()

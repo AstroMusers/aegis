@@ -127,14 +127,21 @@ lofar = lofar.apply(pd.to_numeric, errors="ignore")
 lofar["NL Core"] = lofar["NL Core"].multiply(10**(-3))
 lofar["Full EU"] = lofar["Full EU"].multiply(10**(-3))
 
-print(lofar)
-print(lofar.dtypes)
+L_NL = lofar["NL Core"]
+L_EU = lofar["Full EU"]
+Freq = lofar["Freq."]
+
+# print(lofar)
+# print(lofar.dtypes)
 
 fig0, ax0 = plt.subplots()
 
 im = ax0.scatter(df1.x, df1.y, c=df1.s, s=df1.d, cmap="jet_r")
-lofar.plot(ax=ax0, x="Freq.", y="NL Core")
-lofar.plot(ax=ax0, x="Freq.", y="Full EU")
+# lofar.plot(ax=ax0, x="Freq.", y="NL Core", style ="--", linewidth=0.2)
+lofar.plot(label="LOFAR", ax=ax0, x="Freq.", y="Full EU", style="g--", alpha=0.2, linewidth=1)
+
+ax0.fill_between(Freq, L_EU, 10**6, color="green", alpha=0.1)
+# ax0.fill_between(Freq, L_NL, 10**6, color="green", alpha=0.1)
 
 fig0.colorbar(im, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)")
 
@@ -144,6 +151,7 @@ ax0.set_xscale("log")
 ax0.set_yscale("log")
 # ax0.set_xlim(6, 30)
 ax0.set_xlim(0.5, 400)
+ax0.set_ylim(top=10**1)
 
 ax0.axvspan(0, 10, alpha=0.2, color="teal")
 fig0.tight_layout()

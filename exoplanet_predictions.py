@@ -118,18 +118,29 @@ else:
                         "s": semis})
 
 
-lofar = pd.read_csv("sensitivities.csv")
+lofar = pd.read_csv("sensitivities.csv")  # Obtained from van Haarlem et al. (2017), 8h integration time, 4.66MHz effective bandwidth
 lofar.columns = lofar.iloc[0]
 lofar = lofar[1:]
 lofar = lofar.drop([1, 2, 3, 11, 12, 13])
 lofar = lofar.reset_index(drop=True)
 lofar = lofar.apply(pd.to_numeric, errors="ignore")
-lofar["NL Core"] = lofar["NL Core"].multiply(10**(-3))
-lofar["Full EU"] = lofar["Full EU"].multiply(10**(-3))
+lofar["NL Core"] = lofar["NL Core"].multiply(10**(-3)) * 5  # 5 sigma sensitivity in Jy
+lofar["Full EU"] = lofar["Full EU"].multiply(10**(-3)) * 5  # 5 sigma sensitivity in Jy
 
 L_NL = lofar["NL Core"]
 L_EU = lofar["Full EU"]
 Freq = lofar["Freq."]
+
+d = {"Bands": ["Band 1", "Band 2", "Band 3", "Band 4"],
+     "Frequencies": [[120, 250], [250, 500], [550, 850], [1050, 1450]],  #MHz
+     "RMS Noise": [np.array([190, 190]), np.array([50, 50]), np.array([40, 40]), np.array([45, 45])]  # microJy, 10min integration time, 100MHz Bandwidth
+     }
+
+uGMRT = pd.DataFrame(data=d)
+integration_time = 8 * 60  # minutes
+bandwidth = 100  # MHZ
+uGMRT["RMS Noise"] = uGMRT["RMS Noise"] * (np.sqrt( (100 * 10) / (bandwidth * integration_time) )) * 10**(-6) * 5  # 5 sigma sensitivity in Jy
+print(uGMRT)
 
 # print(lofar)
 # print(lofar.dtypes)
@@ -138,7 +149,15 @@ fig0, ax0 = plt.subplots()
 
 im = ax0.scatter(df1.x, df1.y, c=df1.s, s=df1.d, cmap="jet_r")
 # lofar.plot(ax=ax0, x="Freq.", y="NL Core", style ="--", linewidth=0.2)
-lofar.plot(label="LOFAR", ax=ax0, x="Freq.", y="Full EU", style="g--", alpha=0.2, linewidth=1)
+lofar.plot(label="LOFAR", ax=ax0, x="Freq.", y="Full EU", style="g--", linewidth=0.5)
+
+for i in range(4):
+    x = uGMRT["Frequencies"][i]
+    y = uGMRT["RMS Noise"][i]
+    plt.plot(x, y, "b--", label="uGMRT", linewidth=0.5)
+    ax0.fill_between(x, y, 10**6, color="blue", alpha=0.1)
+    if i == 0:
+        plt.legend()
 
 ax0.fill_between(Freq, L_EU, 10**6, color="green", alpha=0.1)
 # ax0.fill_between(Freq, L_NL, 10**6, color="green", alpha=0.1)
@@ -150,7 +169,7 @@ ax0.axvline(x=10, color="black", linestyle="dashed")
 ax0.set_xscale("log")
 ax0.set_yscale("log")
 # ax0.set_xlim(6, 30)
-ax0.set_xlim(0.5, 400)
+ax0.set_xlim(left=0.5)
 ax0.set_ylim(top=10**1)
 
 ax0.axvspan(0, 10, alpha=0.2, color="teal")

@@ -149,17 +149,20 @@ fig0, ax0 = plt.subplots()
 
 im = ax0.scatter(df1.x, df1.y, c=df1.s, s=df1.d, cmap="jet_r")
 # lofar.plot(ax=ax0, x="Freq.", y="NL Core", style ="--", linewidth=0.2)
-lofar.plot(label="LOFAR", ax=ax0, x="Freq.", y="Full EU", style="g--", linewidth=0.5)
+# lofar.plot(ax=ax0, x="Freq.", y="Full EU", style="g--", linewidth=0.5)
+ax0.plot(Freq, L_EU, "g--", linewidth=0.5)
 
 for i in range(4):
     x = uGMRT["Frequencies"][i]
     y = uGMRT["RMS Noise"][i]
-    plt.plot(x, y, "b--", label="uGMRT", linewidth=0.5)
-    ax0.fill_between(x, y, 10**6, color="blue", alpha=0.1)
+    plt.plot(x, y, "b--", linewidth=0.5)
     if i == 0:
-        plt.legend()
+        ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1, label="uGMRT")
+    else:
+        ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1)
 
-ax0.fill_between(Freq, L_EU, 10**6, color="green", alpha=0.1)
+ax0.fill_between(Freq, L_EU, 10**6, color="green", alpha=0.1, label="LOFAR")
+plt.legend()
 # ax0.fill_between(Freq, L_NL, 10**6, color="green", alpha=0.1)
 
 fig0.colorbar(im, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)")

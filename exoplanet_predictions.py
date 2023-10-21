@@ -15,8 +15,31 @@ rc = {"font.family": "times new roman",
       "mathtext.fontset": "stix"}
 plt.rcParams.update(rc)
 
+lofar = pd.read_csv("sensitivities.csv")  # Obtained from van Haarlem et al. (2017), 8h integration time, 4.66MHz effective bandwidth
+lofar.columns = lofar.iloc[0]
+lofar = lofar[1:]
+lofar = lofar.drop([1, 2, 3, 11, 12, 13])
+lofar = lofar.reset_index(drop=True)
+lofar = lofar.apply(pd.to_numeric, errors="ignore")
+lofar["NL Core"] = lofar["NL Core"].multiply(10**(-3)) * 5  # 5 sigma sensitivity in Jy
+lofar["Full EU"] = lofar["Full EU"].multiply(10**(-3)) * 5  # 5 sigma sensitivity in Jy
+
+L_NL = lofar["NL Core"]
+L_EU = lofar["Full EU"]
+Freq = lofar["Freq."]
+
+d = {"Bands": ["Band 1", "Band 2", "Band 3", "Band 4"],
+     "Frequencies": [[120, 250], [250, 500], [550, 850], [1050, 1450]],  # MHz
+     "RMS Noise": [np.array([190, 190]), np.array([50, 50]), np.array([40, 40]), np.array([45, 45])]  # microJy, 10min integration time, 100MHz Bandwidth
+     }
+
+uGMRT = pd.DataFrame(data=d)
+integration_time = 8 * 60  # minutes
+bandwidth = 100  # MHZ
+uGMRT["RMS Noise"] = uGMRT["RMS Noise"] * (np.sqrt((100 * 10) / (bandwidth * integration_time))) * 10**(-6) * 5  # 5 sigma sensitivity in Jy
+
 df = pd.read_csv("NASA0808.csv", skiprows=55)
-print(df)
+# print(df)
 
 exoplanets = []
 
@@ -60,13 +83,16 @@ for i in df.iterrows():
     if exo.magnetic_field != 0:
         exoplanets.append(exo)
 
-print(exoplanets)
+# print(exoplanets)
 
 frequencies = []
 intensities = []
 distances = []
 semis = []
 magnetic_fields = []
+labels = []
+
+IsBurst = 1
 
 for exo in exoplanets:
     a = exo.semi_major_axis
@@ -74,6 +100,7 @@ for exo in exoplanets:
     M_s = exo.star_mass
     Mdot = exo.star_mass_loss
     D = exo.distance
+    obs = False
 
     a = np.log10(a)
     semis.append(a)
@@ -87,11 +114,38 @@ for exo in exoplanets:
 
     nu = max_freq(B)
     assert nu > 0, f"Maximum emission frequency must be positive, instead got {nu=}."
-    frequencies.append(nu / 10 ** 6)
+    nu /= 10**6
+    frequencies.append(nu)
 
     I = complete(B, a, M_s, Mdot, D)
     assert I > 0, f"Radio brightness must be positive, instead got {I=}."
+
+    if IsBurst:
+        I = I*(10 ** 1.53)
+
     intensities.append(I)
+
+    if 30 <= nu <= 180:
+        for i in range(6):
+            if Freq[i] <= nu <= Freq[i + 1]:
+                if I >= (L_EU[i+1] - L_EU[i]) / (Freq[i+1] - Freq[i]) * (nu - Freq[i]) + L_EU[i]:
+                    obs = str(exo.name)
+                    print(obs, Freq[i], L_EU[i])
+
+    if 120 <= nu < 850 or 1050 < nu <= 1450:
+        for i in range(4):
+            if uGMRT["Frequencies"][i][0] <= nu <= uGMRT["Frequencies"][i][1] and I > uGMRT["RMS Noise"][i][0]:
+                obs = str(exo.name)
+                print(obs)
+
+    if exo.name == "tau Boo b":
+        obs = exo.name
+    if I > 10**(-2):
+        obs = exo.name
+
+    labels.append(obs)
+
+arr = np.array(labels)
 
 frequencies = np.array(frequencies)
 
@@ -100,54 +154,26 @@ distances = np.reciprocal(distances)
 distances *= 10 ** 2.7
 
 intensities = np.array(intensities)
-burst = intensities * (10 ** 1.53)
 
 semis = np.array(semis)
 
-IsBurst = 1
 
-if IsBurst:
-    df1 = pd.DataFrame({"x": frequencies,
-                        "y": burst,
-                        "d": distances,
-                        "s": semis})
-else:
-    df1 = pd.DataFrame({"x": frequencies,
-                        "y": intensities,
-                        "d": distances,
-                        "s": semis})
+df1 = pd.DataFrame({"x": frequencies,
+                    "y": intensities,
+                    "d": distances,
+                    "s": semis,
+                    "l": labels})
 
-
-lofar = pd.read_csv("sensitivities.csv")  # Obtained from van Haarlem et al. (2017), 8h integration time, 4.66MHz effective bandwidth
-lofar.columns = lofar.iloc[0]
-lofar = lofar[1:]
-lofar = lofar.drop([1, 2, 3, 11, 12, 13])
-lofar = lofar.reset_index(drop=True)
-lofar = lofar.apply(pd.to_numeric, errors="ignore")
-lofar["NL Core"] = lofar["NL Core"].multiply(10**(-3)) * 5  # 5 sigma sensitivity in Jy
-lofar["Full EU"] = lofar["Full EU"].multiply(10**(-3)) * 5  # 5 sigma sensitivity in Jy
-
-L_NL = lofar["NL Core"]
-L_EU = lofar["Full EU"]
-Freq = lofar["Freq."]
-
-d = {"Bands": ["Band 1", "Band 2", "Band 3", "Band 4"],
-     "Frequencies": [[120, 250], [250, 500], [550, 850], [1050, 1450]],  #MHz
-     "RMS Noise": [np.array([190, 190]), np.array([50, 50]), np.array([40, 40]), np.array([45, 45])]  # microJy, 10min integration time, 100MHz Bandwidth
-     }
-
-uGMRT = pd.DataFrame(data=d)
-integration_time = 8 * 60  # minutes
-bandwidth = 100  # MHZ
-uGMRT["RMS Noise"] = uGMRT["RMS Noise"] * (np.sqrt( (100 * 10) / (bandwidth * integration_time) )) * 10**(-6) * 5  # 5 sigma sensitivity in Jy
 print(uGMRT)
-
-# print(lofar)
+print(lofar)
 # print(lofar.dtypes)
 
 fig0, ax0 = plt.subplots()
 
 im = ax0.scatter(df1.x, df1.y, c=df1.s, s=df1.d, cmap="jet_r")
+for i, txt in enumerate(labels):
+    if txt:
+        ax0.annotate(txt, (df1.x[i], df1.y[i]), fontsize=8)
 # lofar.plot(ax=ax0, x="Freq.", y="NL Core", style ="--", linewidth=0.2)
 # lofar.plot(ax=ax0, x="Freq.", y="Full EU", style="g--", linewidth=0.5)
 ax0.plot(Freq, L_EU, "g--", linewidth=0.5)
@@ -195,12 +221,12 @@ plt.rcParams.update(rc)
 
 fig1, ax1 = plt.subplots()
 
+
+ax1.hist(intensities, bins=TheBins1, edgecolor="black")
 if IsBurst:
-    ax1.hist(burst, bins=TheBins1, edgecolor="black")
     ax1.set_xlabel("Intensity of Burst Emission (Jy)")
     ax1.set_title("Histogram of Burst Emission Intensities")
 else:
-    ax1.hist(intensities, bins=TheBins1, edgecolor="black")
     ax1.set_xlabel("Intensity of Quiescent Emission (Jy)")
     ax1.set_title("Histogram of Quiescent Emission Intensities")
 

@@ -7,6 +7,8 @@ from radio_module import *
 
 rng = np.random.default_rng()
 
+mpl.use('Qt5Agg')
+
 mpl.rcParams["figure.autolayout"] = True
 plt.rcParams['figure.figsize'] = [8, 4]
 
@@ -15,6 +17,7 @@ rc = {"font.family": "times new roman",
       "mathtext.fontset": "stix"}
 plt.rcParams.update(rc)
 
+# LOFAR:
 lofar = pd.read_csv("sensitivities.csv")  # Obtained from van Haarlem et al. (2017), 8h integration time, 4.66MHz effective bandwidth
 lofar.columns = lofar.iloc[0]
 lofar = lofar[1:]
@@ -28,6 +31,9 @@ L_NL = lofar["NL Core"]
 L_EU = lofar["Full EU"]
 Freq = lofar["Freq."]
 
+# ----------------------------
+
+# uGMRT:
 d = {"Bands": ["Band 1", "Band 2", "Band 3", "Band 4"],
      "Frequencies": [[120, 250], [250, 500], [550, 850], [1050, 1450]],  # MHz
      "RMS Noise": [np.array([190, 190]), np.array([50, 50]), np.array([40, 40]), np.array([45, 45])]  # microJy, 10min integration time, 100MHz Bandwidth
@@ -40,6 +46,7 @@ uGMRT["RMS Noise"] = uGMRT["RMS Noise"] * (np.sqrt((100 * 10) / (bandwidth * int
 
 df = pd.read_csv("NASA0808.csv", skiprows=55)
 # print(df)
+# ----------------------------
 
 exoplanets = []
 

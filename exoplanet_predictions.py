@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib as mpl
 import pandas as pd
+from tabulate import tabulate
 
 from radio_module import *
 
@@ -47,6 +48,7 @@ uGMRT["RMS Noise"] = uGMRT["RMS Noise"] * (np.sqrt((100 * 10) / (bandwidth * int
 df = pd.read_csv("NASA0808.csv", skiprows=55)
 # print(df)
 # ----------------------------
+# MWA
 
 exoplanets = []
 
@@ -92,6 +94,7 @@ for i in df.iterrows():
 
 # print(exoplanets)
 
+names = []
 frequencies = []
 intensities = []
 distances = []
@@ -102,12 +105,15 @@ labels = []
 IsBurst = 1
 
 for exo in exoplanets:
+    n = exo.name
     a = exo.semi_major_axis
     B = exo.magnetic_field
     M_s = exo.star_mass
     Mdot = exo.star_mass_loss
     D = exo.distance
     obs = False
+
+    names.append(n)
 
     a = np.log10(a)
     semis.append(a)
@@ -147,8 +153,8 @@ for exo in exoplanets:
 
     if exo.name == "tau Boo b":
         obs = exo.name
-    if I > 10**(-2):
-        obs = exo.name
+    # if I > 10**(-2):
+    #     obs = exo.name
 
     labels.append(obs)
 
@@ -253,3 +259,17 @@ ax2.set_xscale("log")
 ax2.set_ylabel("Number of Exoplanets")
 
 plt.show()
+
+l1 = [frequencies, intensities]
+l1 = [arr.tolist() for arr in l1]
+l2 = [names]
+l2.extend(l1)
+
+table = list(zip(*l2))
+
+table = sorted(table, key=lambda x: x[2], reverse=True)
+file_name = "intens.txt"
+
+with open(file_name, 'w') as f:
+    f.write(tabulate(table))
+

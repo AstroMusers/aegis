@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib as mpl
 import pandas as pd
 from tabulate import tabulate
+from adjustText import adjust_text
 
 from radio_module import *
 
@@ -111,7 +112,7 @@ for exo in exoplanets:
     M_s = exo.star_mass
     Mdot = exo.star_mass_loss
     D = exo.distance
-    obs = False
+    obs = ""
 
     names.append(n)
 
@@ -184,9 +185,12 @@ print(lofar)
 fig0, ax0 = plt.subplots()
 
 im = ax0.scatter(df1.x, df1.y, c=df1.s, s=df1.d, cmap="jet_r")
+# texts = [plt.text(df1.x[i], df1.y[i], labels[i], ha='center', va='center', fontsize=8) for i in range(len(labels)) if labels[i] != ""]
+# adjust_text(texts, force_points=0.15,
+#             arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
 for i, txt in enumerate(labels):
     if txt:
-        ax0.annotate(txt, (df1.x[i], df1.y[i]), fontsize=8)
+        ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(10,10), textcoords="offset pixels", fontsize=8)
 # lofar.plot(ax=ax0, x="Freq.", y="NL Core", style ="--", linewidth=0.2)
 # lofar.plot(ax=ax0, x="Freq.", y="Full EU", style="g--", linewidth=0.5)
 ax0.plot(Freq, L_EU, "g--", linewidth=0.5)

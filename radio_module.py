@@ -3,7 +3,7 @@ import numpy as np
 
 class Exoplanet:
     def __init__(self, name, semi_major_axis, radius, mass, density, magnetic_field, star_mass, star_mass_loss,
-                 distance):
+                 distance, freq=0, intensity=0):
         self.name = name
         self.semi_major_axis = semi_major_axis
         self.radius = radius
@@ -13,7 +13,8 @@ class Exoplanet:
         self.star_mass = star_mass
         self.star_mass_loss = star_mass_loss
         self.distance = distance
-
+        self.freq = freq
+        self.intensity = intensity
     def __repr__(self):
         return f"Exoplanet {self.name} with: a={self.semi_major_axis}, Bs={self.magnetic_field}, M={self.star_mass}," \
                f" Mdot={self.star_mass_loss}, D={self.distance} \n"
@@ -53,22 +54,22 @@ def rotation(T, a):
         return 1
 
 
-def convective_radius(exo):
+def convective_radius(M, p, r):
     """
     Calculates the radius of the convective core of the exoplanet with the scaling provided in Curtis & Ness 1986.
-    If the calculation exceeds planetary radius, planetary radius is returned. JOvain convective radius of 0.830 R_j
+    If the calculation exceeds planetary radius, planetary radius is returned. Jovain convective radius of 0.830 R_j
     is taken from Sharan 2022.
     :param exo: the exoplanet
     :return: Radius of the convective core
     """
-    M = exo.mass
-    p = exo.density
-    r = exo.radius
+    # M = exo.mass
+    # p = exo.density
+    # r = exo.radius
     if p < 1.6 and M > 0.4:
         R = M ** 0.44  # Curtis & Ness (1986)
     else:
         R = M ** 0.75 * r ** (-0.96)  # Grießmeier (2004)
-    return min(R, exo.radius) / 0.9
+    return min(R, r) / 0.830
 
 
 def magnetic_moment(p_c, w_p, r_c, sigma):

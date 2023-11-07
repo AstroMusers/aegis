@@ -65,6 +65,7 @@ for i in df.iterrows():
         M = j[14] * 1.15  # Expected Value of the mass based on projected mass
     p = j[19]
     M_s = j[28]
+    M_s_unc = [M_s+j[30], M_s+j[29]]
     t = j[32]
     d = j[36]
 
@@ -81,13 +82,16 @@ for i in df.iterrows():
     B = 1  # Tentative
     sigma = 1  # Jupiter conductivity
 
+    # freqs = []
+    # intenss = []
+    # for i in range(100):
+    #     M_s = rng.random() * (M_s_unc[1] - M_s_unc[0]) + M_s_unc[0]
+
     exo = Exoplanet(name, a, R, M, p, B, M_s, Mdot, d)
 
-    r_c = convective_radius(exo)
+    r_c = convective_radius(M, p_c, R)
     mu = magnetic_moment(p_c, w_p, r_c, sigma)
-
     B = magnetic_field(mu, exo.radius)
-
     exo.magnetic_field = B
 
     if exo.magnetic_field != 0:
@@ -262,7 +266,7 @@ ax2.set_title("Histogram of the Magnetic Field Strengths")
 ax2.set_xscale("log")
 ax2.set_ylabel("Number of Exoplanets")
 
-# plt.show()
+plt.show()
 
 l1 = [frequencies, intensities]
 l1 = [arr.tolist() for arr in l1]

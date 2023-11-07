@@ -262,7 +262,7 @@ ax2.set_title("Histogram of the Magnetic Field Strengths")
 ax2.set_xscale("log")
 ax2.set_ylabel("Number of Exoplanets")
 
-plt.show()
+# plt.show()
 
 l1 = [frequencies, intensities]
 l1 = [arr.tolist() for arr in l1]
@@ -270,10 +270,23 @@ l2 = [names]
 l2.extend(l1)
 
 table = list(zip(*l2))
+file_names = ["names.txt", "freq.txt", "intens.txt"]
 
-table = sorted(table, key=lambda x: x[2], reverse=True)
-file_name = "intens.txt"
-
+table = sorted(table, key=lambda x: x[0].lower())
+file_name = file_names[0]
 with open(file_name, 'w') as f:
     f.write(tabulate(table))
+    f.close()
+
+table = sorted(table, key=lambda x: x[1])
+file_name = file_names[1]
+with open(file_name, 'w') as f:
+    f.write(tabulate(table))
+    f.close()
+
+table = sorted(table, key=lambda x: x[2], reverse=True)
+file_name = file_names[2]
+with open(file_name, 'w') as f:
+    f.write(tabulate(table))
+    f.close()
 

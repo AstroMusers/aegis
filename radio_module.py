@@ -21,14 +21,14 @@ class Exoplanet:
 
 def max_freq(B):
     """
-    Finds the maximum CMI emission frequency based on Jupiter's emission, as given in Ashtari et al. 2022.
+    Finds the maximum CMI emission frequency based on Jupiter's emission, as given in Ashtari et al. 2022. or Lynch et al. 2018
     :param B: Magnetic Field Strength at the surface of the exoplanet, must be given in Gauss.
     :return: Maximum CMI emission frequency of the exoplanet, given in Hz
     """
-    Bj = 14  # gauss
-    nuJ = 24 * 10 ** 6  # Hz
-    return nuJ * B / Bj
-
+    # Bj = 14  # gauss
+    # nuJ = 24 * 10 ** 6  # Hz
+    # return nuJ * B / Bj
+    return 2.8 * 10**6 * B
 
 def density(p):
     """

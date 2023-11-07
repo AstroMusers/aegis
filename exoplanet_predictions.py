@@ -52,6 +52,7 @@ df = pd.read_csv("NASA0808.csv", skiprows=55)
 # MWA
 
 exoplanets = []
+IsBurst = 1
 
 for i in df.iterrows():
     j = i[1]
@@ -65,7 +66,16 @@ for i in df.iterrows():
         M = j[14] * 1.15  # Expected Value of the mass based on projected mass
     p = j[19]
     M_s = j[28]
-    M_s_unc = [M_s+j[30], M_s+j[29]]
+
+    M_s_b = M_s + j[29]
+    if np.isnan(M_s_b) or M_s_b < 0:
+        M_s_b = M_s
+
+    M_s_a = M_s + j[30]
+    if np.isnan(M_s_a) or M_s_a < 0:
+        M_s_a = M_s
+
+    M_s_unc = [M_s_a, M_s_b]
     t = j[32]
     d = j[36]
 
@@ -82,20 +92,42 @@ for i in df.iterrows():
     B = 1  # Tentative
     sigma = 1  # Jupiter conductivity
 
-    # freqs = []
-    # intenss = []
-    # for i in range(100):
-    #     M_s = rng.random() * (M_s_unc[1] - M_s_unc[0]) + M_s_unc[0]
+    freqs = []
+    intenss = []
 
-    exo = Exoplanet(name, a, R, M, p, B, M_s, Mdot, d)
+    for k in range(100):
+        M_s_i = rng.random() * (M_s_unc[1] - M_s_unc[0]) + M_s_unc[0]
 
-    r_c = convective_radius(M, p_c, R)
-    mu = magnetic_moment(p_c, w_p, r_c, sigma)
-    B = magnetic_field(mu, exo.radius)
-    exo.magnetic_field = B
+        exo = Exoplanet(name, a, R, M, p, B, M_s_i, Mdot, d)
 
-    if exo.magnetic_field != 0:
-        exoplanets.append(exo)
+        r_c = convective_radius(M, p_c, R)
+        mu = magnetic_moment(p_c, w_p, r_c, sigma)
+        B = magnetic_field(mu, exo.radius)
+        exo.magnetic_field = B
+        if B == 0:
+            continue
+
+        D = d * 9.46 * 10 ** 15  # conversion to meters
+
+        nu = max_freq(B)
+        assert nu > 0, f"Maximum emission frequency must be positive, instead got {nu=}."
+        nu /= 10 ** 6
+        freqs.append(nu)
+
+        I = complete(B, a, M_s_i, Mdot, D)
+        assert I > 0, f"Radio brightness must be positive, instead got {I=}."
+
+        if IsBurst:
+            I = I * (10 ** 1.53)
+
+        intenss.append(I)
+
+    nu = np.array(freqs).mean()
+    I = np.array(intenss).mean()
+
+    EXO = Exoplanet(name, a, R, M, p, B, M_s_i, Mdot, d, freq=nu, intensity=I)
+    if EXO.magnetic_field != 0:
+        exoplanets.append(EXO)
 
 # print(exoplanets)
 
@@ -117,7 +149,8 @@ for exo in exoplanets:
     Mdot = exo.star_mass_loss
     D = exo.distance
     obs = ""
-
+    nu = exo.freq
+    I = exo.intensity
     names.append(n)
 
     a = np.log10(a)
@@ -130,16 +163,16 @@ for exo in exoplanets:
 
     D = D * 9.46 * 10 ** 15  # conversion to meters
 
-    nu = max_freq(B)
-    assert nu > 0, f"Maximum emission frequency must be positive, instead got {nu=}."
-    nu /= 10**6
+    # nu = max_freq(B)
+    # assert nu > 0, f"Maximum emission frequency must be positive, instead got {nu=}."
+    # nu /= 10**6
     frequencies.append(nu)
 
-    I = complete(B, a, M_s, Mdot, D)
-    assert I > 0, f"Radio brightness must be positive, instead got {I=}."
+    # I = complete(B, a, M_s, Mdot, D)
+    # assert I > 0, f"Radio brightness must be positive, instead got {I=}."
 
-    if IsBurst:
-        I = I*(10 ** 1.53)
+    # if IsBurst:
+    #     I = I*(10 ** 1.53)
 
     intensities.append(I)
 
@@ -194,7 +227,7 @@ im = ax0.scatter(df1.x, df1.y, c=df1.s, s=df1.d, cmap="jet_r")
 #             arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
 for i, txt in enumerate(labels):
     if txt:
-        ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(10,10), textcoords="offset pixels", fontsize=8)
+        ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(1,1), textcoords="offset pixels", fontsize=8)
 # lofar.plot(ax=ax0, x="Freq.", y="NL Core", style ="--", linewidth=0.2)
 # lofar.plot(ax=ax0, x="Freq.", y="Full EU", style="g--", linewidth=0.5)
 ax0.plot(Freq, L_EU, "g--", linewidth=0.5)

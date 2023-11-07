@@ -54,51 +54,110 @@ df = pd.read_csv("NASA0808.csv", skiprows=55)
 exoplanets = []
 IsBurst = 1
 
+names = []
+frequencies = []
+intensities = []
+distances = []
+semis = []
+magnetic_fields = []
+labels = []
+
+y_minerr = []
+y_maxerr = []
+x_maxerr = []
+x_minerr = []
+
+#indices
+pl_orbper = 2
+pl_orbsmax = 6
+pl_bmassj = 14
+st_mass = 28
+st_age = 32
+
 for i in df.iterrows():
     j = i[1]
     name = j[0]
-    T = j[2]
-    a = j[6]
-    R = j[10]
-    if j[14] == "Mass":
-        M = j[14]
-    else:
-        M = j[14] * 1.15  # Expected Value of the mass based on projected mass
-    p = j[19]
-    M_s = j[28]
 
-    M_s_b = M_s + j[29]
+    T = j[pl_orbper]
+    T_b = T + j[pl_orbper+1]
+    if np.isnan(T_b) or T_b < 0:
+        T_b = T
+    T_a = T + j[pl_orbper+2]
+    if np.isnan(T_a) or T_a < 0:
+        T_a = T
+    T_unc = [T_a, T_b]
+
+    a = j[pl_orbsmax]
+    a_b = a + j[pl_orbsmax + 1]
+    if np.isnan(a_b) or a_b < 0:
+        a_b = a
+    a_a = a + j[pl_orbsmax + 2]
+    if np.isnan(a_a) or a_a < 0:
+        a_a = a
+    a_unc = [a_a, a_b]
+
+    R = j[10]
+
+    if j[18] == "Mass" or j[18] == "Msin(i)/sin(i)":
+        M = j[pl_bmassj]
+    else:
+        M = j[pl_bmassj] * 1.15  # Expected Value of the mass based on projected mass
+    M_b = M + j[pl_bmassj+1]
+    if np.isnan(M_b) or M_b < 0:
+        M_b = M
+    M_a = M + j[pl_bmassj+2]
+    if np.isnan(M_a) or M_a < 0:
+        M_a = M
+    M_unc = [M_a, M_b]
+
+    p = j[19]
+
+    M_s = j[st_mass]
+    M_s_b = M_s + j[st_mass+1]
     if np.isnan(M_s_b) or M_s_b < 0:
         M_s_b = M_s
-
-    M_s_a = M_s + j[30]
+    M_s_a = M_s + j[st_mass+2]
     if np.isnan(M_s_a) or M_s_a < 0:
         M_s_a = M_s
-
     M_s_unc = [M_s_a, M_s_b]
-    t = j[32]
+
+    t = j[st_age]
+    t_b = t + j[st_age + 1]
+    if np.isnan(t_b) or t_b < 0:
+        t_b = t
+    t_a = t + j[st_age + 2]
+    if np.isnan(t_a) or t_a < 0:
+        t_a = t
+    t_unc = [t_a, t_b]
+
     d = j[36]
+    d *= 3.261561
 
-    p_c = density(p)
-    w_p = rotation(T, a)
-
-    d *= 3.26156
-
-    highS_Mdot = t ** (-1.23) * 10 ** 3
-    lowS_Mdot = t ** (-0.9) * 10 ** 3
-
-    Mdot = 8.1 * t**(-1.37)
-
-    B = 1  # Tentative
-    sigma = 1  # Jupiter conductivity
+    # B = 1  # Tentative
+    # sigma = 1  # Jupiter conductivity
 
     freqs = []
     intenss = []
 
-    for k in range(100):
+    for k in range(1000):
+        T = rng.random() * (T_unc[1] - T_unc[0]) + T_unc[0]
+        a = rng.random() * (a_unc[1] - a_unc[0]) + a_unc[0]
+        M = rng.random() * (M_unc[1] - M_unc[0]) + M_unc[0]
         M_s_i = rng.random() * (M_s_unc[1] - M_s_unc[0]) + M_s_unc[0]
+        t = rng.random() * (t_unc[1] - t_unc[0]) + t_unc[0]
+
+        highS_Mdot = t ** (-1.23) * 10 ** 3
+        lowS_Mdot = t ** (-0.9) * 10 ** 3
+        Mdot = 8.1 * t ** (-1.37)
+
+        B = 1  # Tentative
+        sigma = 1  # Jupiter conductivity
+        # d *= 3.26156
 
         exo = Exoplanet(name, a, R, M, p, B, M_s_i, Mdot, d)
+
+        p_c = density(p)
+        w_p = rotation(T, a)
 
         r_c = convective_radius(M, p_c, R)
         mu = magnetic_moment(p_c, w_p, r_c, sigma)
@@ -108,6 +167,7 @@ for i in df.iterrows():
             continue
 
         D = d * 9.46 * 10 ** 15  # conversion to meters
+
 
         nu = max_freq(B)
         assert nu > 0, f"Maximum emission frequency must be positive, instead got {nu=}."
@@ -122,58 +182,26 @@ for i in df.iterrows():
 
         intenss.append(I)
 
+    y_maxerr.append(max(intenss) - I)
+    y_minerr.append(I - min(intenss))
+    x_maxerr.append(max(freqs) - nu)
+    x_minerr.append(nu - min(freqs))
+
     nu = np.array(freqs).mean()
     I = np.array(intenss).mean()
+
+    obs = ""
 
     EXO = Exoplanet(name, a, R, M, p, B, M_s_i, Mdot, d, freq=nu, intensity=I)
     if EXO.magnetic_field != 0:
         exoplanets.append(EXO)
 
-# print(exoplanets)
-
-names = []
-frequencies = []
-intensities = []
-distances = []
-semis = []
-magnetic_fields = []
-labels = []
-
-IsBurst = 1
-
-for exo in exoplanets:
-    n = exo.name
-    a = exo.semi_major_axis
-    B = exo.magnetic_field
-    M_s = exo.star_mass
-    Mdot = exo.star_mass_loss
-    D = exo.distance
-    obs = ""
-    nu = exo.freq
-    I = exo.intensity
-    names.append(n)
-
+    names.append(name)
     a = np.log10(a)
     semis.append(a)
-    a = 10 ** a
-
-    distances.append(D)
-
+    distances.append(d)
     magnetic_fields.append(B)
-
-    D = D * 9.46 * 10 ** 15  # conversion to meters
-
-    # nu = max_freq(B)
-    # assert nu > 0, f"Maximum emission frequency must be positive, instead got {nu=}."
-    # nu /= 10**6
     frequencies.append(nu)
-
-    # I = complete(B, a, M_s, Mdot, D)
-    # assert I > 0, f"Radio brightness must be positive, instead got {I=}."
-
-    # if IsBurst:
-    #     I = I*(10 ** 1.53)
-
     intensities.append(I)
 
     if 30 <= nu <= 180:
@@ -191,15 +219,11 @@ for exo in exoplanets:
 
     if exo.name == "tau Boo b":
         obs = exo.name
-    # if I > 10**(-2):
-    #     obs = exo.name
 
     labels.append(obs)
 
 arr = np.array(labels)
-
 frequencies = np.array(frequencies)
-
 distances = np.array(distances)
 distances = np.reciprocal(distances)
 distances *= 10 ** 2.7
@@ -208,6 +232,13 @@ intensities = np.array(intensities)
 
 semis = np.array(semis)
 
+y_err = [y_minerr, y_maxerr]
+x_err = [x_minerr, x_maxerr]
+
+for i in range(len(labels)):
+    if labels[i] == "":
+        y_err[0][i], y_err[1][i] = 0, 0
+        x_err[0][i], x_err[1][i] = 0, 0
 
 df1 = pd.DataFrame({"x": frequencies,
                     "y": intensities,
@@ -222,12 +253,19 @@ print(lofar)
 fig0, ax0 = plt.subplots()
 
 im = ax0.scatter(df1.x, df1.y, c=df1.s, s=df1.d, cmap="jet_r")
+ax0.errorbar(df1.x, df1.y,
+             yerr=y_err,
+             xerr=x_err,
+             fmt="None",
+             ecolor="black",
+             elinewidth=0.5)
+
 # texts = [plt.text(df1.x[i], df1.y[i], labels[i], ha='center', va='center', fontsize=8) for i in range(len(labels)) if labels[i] != ""]
-# adjust_text(texts, force_points=0.15,
-#             arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
+# adjust_text(texts)
 for i, txt in enumerate(labels):
     if txt:
         ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(1,1), textcoords="offset pixels", fontsize=8)
+
 # lofar.plot(ax=ax0, x="Freq.", y="NL Core", style ="--", linewidth=0.2)
 # lofar.plot(ax=ax0, x="Freq.", y="Full EU", style="g--", linewidth=0.5)
 ax0.plot(Freq, L_EU, "g--", linewidth=0.5)

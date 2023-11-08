@@ -80,20 +80,16 @@ for i in df.iterrows():
 
     T = j[pl_orbper]
     T_b = T + j[pl_orbper+1]
-    if np.isnan(T_b) or T_b < 0:
-        T_b = T
     T_a = T + j[pl_orbper+2]
-    if np.isnan(T_a) or T_a < 0:
-        T_a = T
+    if np.isnan(T_b) or np.isnan(T_a) or T_a < 0:
+        T_a, T_b = T, T
     T_unc = [T_a, T_b]
 
     a = j[pl_orbsmax]
     a_b = a + j[pl_orbsmax + 1]
-    if np.isnan(a_b) or a_b < 0:
-        a_b = a
     a_a = a + j[pl_orbsmax + 2]
-    if np.isnan(a_a) or a_a < 0:
-        a_a = a
+    if np.isnan(a_b) or np.isnan(a_a) or a_a < 0:
+        a_a, a_b = a, a
     a_unc = [a_a, a_b]
 
     R = j[10]
@@ -103,38 +99,29 @@ for i in df.iterrows():
     else:
         M = j[pl_bmassj] * 1.15  # Expected Value of the mass based on projected mass
     M_b = M + j[pl_bmassj+1]
-    if np.isnan(M_b) or M_b < 0:
-        M_b = M
     M_a = M + j[pl_bmassj+2]
-    if np.isnan(M_a) or M_a < 0:
-        M_a = M
+    if np.isnan(M_b) or np.isnan(M_a) or M_a < 0:
+        M_a, M_b = M, M
     M_unc = [M_a, M_b]
 
     p = j[19]
 
     M_s = j[st_mass]
     M_s_b = M_s + j[st_mass+1]
-    if np.isnan(M_s_b) or M_s_b < 0:
-        M_s_b = M_s
     M_s_a = M_s + j[st_mass+2]
-    if np.isnan(M_s_a) or M_s_a < 0:
-        M_s_a = M_s
+    if np.isnan(M_s_b) or np.isnan(M_s_a) or M_s_a < 0:
+        M_s_a, M_s_b = M_s, M_s
     M_s_unc = [M_s_a, M_s_b]
 
     t = j[st_age]
     t_b = t + j[st_age + 1]
-    if np.isnan(t_b) or t_b < 0:
-        t_b = t
     t_a = t + j[st_age + 2]
-    if np.isnan(t_a) or t_a < 0:
-        t_a = t
+    if np.isnan(t_b) or np.isnan(t_a) or t_a < 0:
+        t_a, t_b = t, t
     t_unc = [t_a, t_b]
 
     d = j[36]
     d *= 3.261561
-
-    # B = 1  # Tentative
-    # sigma = 1  # Jupiter conductivity
 
     freqs = []
     intenss = []
@@ -167,7 +154,6 @@ for i in df.iterrows():
             continue
 
         D = d * 9.46 * 10 ** 15  # conversion to meters
-
 
         nu = max_freq(B)
         assert nu > 0, f"Maximum emission frequency must be positive, instead got {nu=}."
@@ -221,6 +207,12 @@ for i in df.iterrows():
         obs = exo.name
 
     labels.append(obs)
+
+    if exo.name == "tau Boo b":
+        plt.hist(intenss)
+        # plt.xscale("log")
+        # plt.yscale("log")
+        plt.show()
 
 arr = np.array(labels)
 frequencies = np.array(frequencies)

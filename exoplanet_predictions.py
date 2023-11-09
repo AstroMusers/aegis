@@ -208,11 +208,26 @@ for i in df.iterrows():
 
     labels.append(obs)
 
-    if exo.name == "tau Boo b":
-        plt.hist(intenss)
+    selected = "GJ 887 b"
+    if exo.name == selected:
+        plt.subplot(1, 2, 1)
+        plt.hist(intenss, edgecolor="black")
         # plt.xscale("log")
         # plt.yscale("log")
+        plt.title(f"Distribution of Emission Intensity for {selected}")
+        plt.xlabel("Intensity (Jy)")
+        plt.ylabel("Bin Count")
+
+        plt.subplot(1, 2, 2)
+        plt.hist(freqs, edgecolor="black")
+        # plt.xscale("log")
+        # plt.yscale("log")
+        plt.title(f"Distribution of Emission Frequency for {selected}")
+        plt.xlabel("Frequency (MHz)")
+        plt.ylabel("Bin Count")
         plt.show()
+        plt.close()
+
 
 arr = np.array(labels)
 frequencies = np.array(frequencies)

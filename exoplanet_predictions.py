@@ -78,47 +78,37 @@ for i in df.iterrows():
     j = i[1]
     name = j[0]
 
-    T = j[pl_orbper]
-    T_b = T + j[pl_orbper+1]
-    T_a = T + j[pl_orbper+2]
-    if np.isnan(T_b) or np.isnan(T_a) or T_a < 0:
-        T_a, T_b = T, T
-    T_unc = [T_a, T_b]
+    T_i = j[pl_orbper]
+    T_s = (j[pl_orbper+1] - j[pl_orbper+2]) / 2
+    if np.isnan(T_s):
+        T_s = 0
 
-    a = j[pl_orbsmax]
-    a_b = a + j[pl_orbsmax + 1]
-    a_a = a + j[pl_orbsmax + 2]
-    if np.isnan(a_b) or np.isnan(a_a) or a_a < 0:
-        a_a, a_b = a, a
-    a_unc = [a_a, a_b]
+    a_i = j[pl_orbsmax]
+    a_s = (j[pl_orbsmax+1] - j[pl_orbsmax+2]) / 2
+    if np.isnan(a_s):
+        a_s = 0
 
     R = j[10]
 
     if j[18] == "Mass" or j[18] == "Msin(i)/sin(i)":
-        M = j[pl_bmassj]
+        M_i = j[pl_bmassj]
     else:
-        M = j[pl_bmassj] * 1.15  # Expected Value of the mass based on projected mass
-    M_b = M + j[pl_bmassj+1]
-    M_a = M + j[pl_bmassj+2]
-    if np.isnan(M_b) or np.isnan(M_a) or M_a < 0:
-        M_a, M_b = M, M
-    M_unc = [M_a, M_b]
+        M_i = j[pl_bmassj] * 1.15  # Expected Value of the mass based on projected mass
+    M_ss = (j[pl_bmassj + 1] - j[pl_bmassj + 2]) / 2
+    if np.isnan(M_ss):
+        M_ss = 0
 
     p = j[19]
 
-    M_s = j[st_mass]
-    M_s_b = M_s + j[st_mass+1]
-    M_s_a = M_s + j[st_mass+2]
-    if np.isnan(M_s_b) or np.isnan(M_s_a) or M_s_a < 0:
-        M_s_a, M_s_b = M_s, M_s
-    M_s_unc = [M_s_a, M_s_b]
+    M_s_i = j[st_mass]
+    M_s_s = (j[st_mass+1] - j[st_mass+2]) / 2
+    if np.isnan(M_s_s):
+        M_s_s = 0
 
-    t = j[st_age]
-    t_b = t + j[st_age + 1]
-    t_a = t + j[st_age + 2]
-    if np.isnan(t_b) or np.isnan(t_a) or t_a < 0:
-        t_a, t_b = t, t
-    t_unc = [t_a, t_b]
+    t_i = j[st_age]
+    t_s = (j[st_age+1] - j[st_age+2]) / 2
+    if np.isnan(t_s):
+        t_s = 0
 
     d = j[36]
     d *= 3.261561
@@ -127,11 +117,35 @@ for i in df.iterrows():
     intenss = []
 
     for k in range(1000):
-        T = rng.random() * (T_unc[1] - T_unc[0]) + T_unc[0]
-        a = rng.random() * (a_unc[1] - a_unc[0]) + a_unc[0]
-        M = rng.random() * (M_unc[1] - M_unc[0]) + M_unc[0]
-        M_s_i = rng.random() * (M_s_unc[1] - M_s_unc[0]) + M_s_unc[0]
-        t = rng.random() * (t_unc[1] - t_unc[0]) + t_unc[0]
+        T = rng.normal(T_i, T_s)
+        n = 2
+        while T < 0:
+            T = rng.normal(T_i, T_s / n)
+            n += 1
+
+        a = rng.normal(a_i, a_s)
+        n = 2
+        while a < 0:
+            a = rng.normal(a_i, a_s / n)
+            n += 1
+
+        M = rng.normal(M_i, M_ss)
+        n = 2
+        while M < 0:
+            M = rng.normal(M_i, M_ss / n)
+            n += 1
+
+        M_s = rng.normal(M_s_i, M_s_s)
+        n = 2
+        while M_s < 0:
+            M_s = rng.normal(M_i, M_s_s / n)
+            n += 1
+
+        t = rng.normal(t_i, t_s)
+        n = 2
+        while t < 0:
+            t = rng.normal(t_i, t_s / n)
+            n += 1
 
         highS_Mdot = t ** (-1.23) * 10 ** 3
         lowS_Mdot = t ** (-0.9) * 10 ** 3
@@ -141,7 +155,7 @@ for i in df.iterrows():
         sigma = 1  # Jupiter conductivity
         # d *= 3.26156
 
-        exo = Exoplanet(name, a, R, M, p, B, M_s_i, Mdot, d)
+        exo = Exoplanet(name, a, R, M, p, B, M_s, Mdot, d)
 
         p_c = density(p)
         w_p = rotation(T, a)
@@ -168,48 +182,48 @@ for i in df.iterrows():
 
         intenss.append(I)
 
-    y_maxerr.append(max(intenss) - I)
-    y_minerr.append(I - min(intenss))
-    x_maxerr.append(max(freqs) - nu)
-    x_minerr.append(nu - min(freqs))
+    nu = np.percentile(freqs, 50)
+    I = np.percentile(intenss, 50)
 
-    nu = np.array(freqs).mean()
-    I = np.array(intenss).mean()
+    y_maxerr.append(np.percentile(intenss, 84) - I)
+    y_minerr.append(I - np.percentile(intenss, 16))
+    x_maxerr.append(np.percentile(freqs, 84) - nu)
+    x_minerr.append(nu - np.percentile(freqs, 16))
 
     obs = ""
 
-    EXO = Exoplanet(name, a, R, M, p, B, M_s_i, Mdot, d, freq=nu, intensity=I)
+    EXO = Exoplanet(name, a, R, M, p, B, M_s, Mdot, d, freq=nu, intensity=I)
     if EXO.magnetic_field != 0:
         exoplanets.append(EXO)
 
-    names.append(name)
-    a = np.log10(a)
+    names.append(EXO.name)
+    a = np.log10(EXO.semi_major_axis)
     semis.append(a)
-    distances.append(d)
-    magnetic_fields.append(B)
-    frequencies.append(nu)
-    intensities.append(I)
+    distances.append(EXO.distance)
+    magnetic_fields.append(EXO.magnetic_field)
+    frequencies.append(EXO.freq)
+    intensities.append(EXO.intensity)
 
     if 30 <= nu <= 180:
         for i in range(6):
             if Freq[i] <= nu <= Freq[i + 1]:
                 if I >= (L_EU[i+1] - L_EU[i]) / (Freq[i+1] - Freq[i]) * (nu - Freq[i]) + L_EU[i]:
-                    obs = str(exo.name)
+                    obs = str(EXO.name)
                     print(obs, Freq[i], L_EU[i])
 
     if 120 <= nu < 850 or 1050 < nu <= 1450:
         for i in range(4):
             if uGMRT["Frequencies"][i][0] <= nu <= uGMRT["Frequencies"][i][1] and I > uGMRT["RMS Noise"][i][0]:
-                obs = str(exo.name)
+                obs = str(EXO.name)
                 print(obs)
 
-    if exo.name == "tau Boo b":
-        obs = exo.name
+    if EXO.name == "tau Boo b":
+        obs = EXO.name
 
     labels.append(obs)
 
-    selected = "GJ 887 b"
-    if exo.name == selected:
+    selected = "AU Mic b"
+    if EXO.name == selected:
         plt.subplot(1, 2, 1)
         plt.hist(intenss, edgecolor="black")
         # plt.xscale("log")
@@ -226,7 +240,7 @@ for i in df.iterrows():
         plt.xlabel("Frequency (MHz)")
         plt.ylabel("Bin Count")
         plt.show()
-        plt.close()
+        # plt.close()
 
 
 arr = np.array(labels)

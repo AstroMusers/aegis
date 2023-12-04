@@ -67,14 +67,14 @@ y_maxerr = []
 x_maxerr = []
 x_minerr = []
 
-#indices
+# indices
 pl_orbper = 2
 pl_orbsmax = 6
 pl_bmassj = 14
 st_mass = 28
 st_age = 32
 
-for i in df.iterrows():
+for i in df.iterrows():  # The loop that reads exoplanets from NASA file
     j = i[1]
     name = j[0]
 
@@ -116,36 +116,26 @@ for i in df.iterrows():
     freqs = []
     intenss = []
 
-    for k in range(1000):
+    for k in range(1000):  # The loop for Monte Carlo iterations
         T = rng.normal(T_i, T_s)
-        n = 2
         while T < 0:
-            T = rng.normal(T_i, T_s / n)
-            n += 1
+            T = rng.normal(T_i, T_s)
 
         a = rng.normal(a_i, a_s)
-        n = 2
         while a < 0:
-            a = rng.normal(a_i, a_s / n)
-            n += 1
+            a = rng.normal(a_i, a_s)
 
         M = rng.normal(M_i, M_ss)
-        n = 2
         while M < 0:
-            M = rng.normal(M_i, M_ss / n)
-            n += 1
+            M = rng.normal(M_i, M_ss)
 
         M_s = rng.normal(M_s_i, M_s_s)
-        n = 2
         while M_s < 0:
-            M_s = rng.normal(M_i, M_s_s / n)
-            n += 1
+            M_s = rng.normal(M_i, M_s_s)
 
         t = rng.normal(t_i, t_s)
-        n = 2
         while t < 0:
-            t = rng.normal(t_i, t_s / n)
-            n += 1
+            t = rng.normal(t_i, t_s)
 
         highS_Mdot = t ** (-1.23) * 10 ** 3
         lowS_Mdot = t ** (-0.9) * 10 ** 3
@@ -205,24 +195,24 @@ for i in df.iterrows():
     intensities.append(EXO.intensity)
 
     if 30 <= nu <= 180:
-        for i in range(6):
-            if Freq[i] <= nu <= Freq[i + 1]:
-                if I >= (L_EU[i+1] - L_EU[i]) / (Freq[i+1] - Freq[i]) * (nu - Freq[i]) + L_EU[i]:
+        for m in range(6):
+            if Freq[m] <= nu <= Freq[m + 1]:
+                if I >= (L_EU[m + 1] - L_EU[m]) / (Freq[m + 1] - Freq[m]) * (nu - Freq[m]) + L_EU[m]:
                     obs = str(EXO.name)
-                    print(obs, Freq[i], L_EU[i])
+                    print(obs, Freq[m], L_EU[m])
 
     if 120 <= nu < 850 or 1050 < nu <= 1450:
-        for i in range(4):
-            if uGMRT["Frequencies"][i][0] <= nu <= uGMRT["Frequencies"][i][1] and I > uGMRT["RMS Noise"][i][0]:
+        for m in range(4):
+            if uGMRT["Frequencies"][m][0] <= nu <= uGMRT["Frequencies"][m][1] and I > uGMRT["RMS Noise"][m][0]:
                 obs = str(EXO.name)
                 print(obs)
 
-    if EXO.name == "tau Boo b":
+    if EXO.name == "tau Boo b":  # Special interest
         obs = EXO.name
 
     labels.append(obs)
 
-    selected = "AU Mic b"
+    selected = "tau Boo b"
     if EXO.name == selected:
         plt.subplot(1, 2, 1)
         plt.hist(intenss, edgecolor="black")
@@ -285,7 +275,7 @@ ax0.errorbar(df1.x, df1.y,
 # adjust_text(texts)
 for i, txt in enumerate(labels):
     if txt:
-        ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(1,1), textcoords="offset pixels", fontsize=8)
+        ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(1, 1), textcoords="offset pixels", fontsize=8)
 
 # lofar.plot(ax=ax0, x="Freq.", y="NL Core", style ="--", linewidth=0.2)
 # lofar.plot(ax=ax0, x="Freq.", y="Full EU", style="g--", linewidth=0.5)
@@ -385,4 +375,3 @@ file_name = file_names[2]
 with open(file_name, 'w') as f:
     f.write(tabulate(table))
     f.close()
-

@@ -229,7 +229,7 @@ for i in df.iterrows():  # The loop that reads exoplanets from NASA file
         plt.title(f"Distribution of Emission Frequency for {selected}")
         plt.xlabel("Frequency (MHz)")
         plt.ylabel("Bin Count")
-        plt.show()
+        # plt.show()
         # plt.close()
 
 

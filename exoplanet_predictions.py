@@ -19,6 +19,16 @@ rc = {"font.family": "times new roman",
       "mathtext.fontset": "stix"}
 plt.rcParams.update(rc)
 
+
+def retro_noir(ax):
+    ax.grid(alpha=0.2)
+    ax.tick_params(direction="in", length=7, right=True, top=True, width=1.5)
+    ax.spines['top'].set_linewidth(1.5)
+    ax.spines['bottom'].set_linewidth(1.5)
+    ax.spines['left'].set_linewidth(1.5)
+    ax.spines['right'].set_linewidth(1.5)
+
+
 # LOFAR:
 lofar = pd.read_csv("sensitivities.csv")  # Obtained from van Haarlem et al. (2017), 8h integration time, 4.66MHz effective bandwidth
 lofar.columns = lofar.iloc[0]
@@ -73,6 +83,40 @@ pl_orbsmax = 6
 pl_bmassj = 14
 st_mass = 28
 st_age = 32
+
+orbs, smas, ms, Ms, ts = np.genfromtxt("NASA0808.csv", usecols=(pl_orbper, pl_orbsmax, pl_bmassj, st_mass, st_age), skip_header=56, filling_values=0, delimiter=",", unpack=True)
+hists = [orbs, smas, ms, Ms, ts]
+
+fig, axes = plt.subplots(1, 5, figsize=(15, 3))
+plt.rcParams['font.size'] = 8
+
+ax1 = axes[0]
+ax2 = axes[1]
+ax3 = axes[2]
+ax4 = axes[3]
+ax5 = axes[4]
+
+bins = [np.logspace(-1, 6, 15), np.logspace(-3, 3, 13), np.logspace(-3, 2, 11), np.logspace(-2, 1, 11), np.logspace(-2, 2, 13)]
+
+ax1.hist(orbs, bins=bins[0], edgecolor="black")
+ax2.hist(smas, bins=bins[1], edgecolor="black")
+ax3.hist(ms,  bins=bins[2], edgecolor="black")
+ax4.hist(Ms,  bins=bins[3], edgecolor="black")
+ax5.hist(ts,  bins=bins[4], edgecolor="black")
+
+xlabels = ["Orbital Period (Days)", "Semi-major Axis (AU)", f"Planet Mass ($M_j$)", "Star Mass ($M_\odot$)", "Star Age (Gyr)"]
+for i in range(len(axes)):
+    axes[i].set_xlabel(xlabels[i])
+    axes[i].set_xscale("log")
+    axes[i].set_yscale("log")
+
+fig.supylabel('Bin count', va='center', rotation='vertical', fontsize=11)
+fig.suptitle('Distribution of Initial Parameters for the Exoplanet Sample', fontsize=11)
+
+plt.show()
+
+plt.rcParams['font.size'] = 11
+
 
 for i in df.iterrows():  # The loop that reads exoplanets from NASA file
     j = i[1]
@@ -257,8 +301,8 @@ df1 = pd.DataFrame({"x": frequencies,
                     "s": semis,
                     "l": labels})
 
-print(uGMRT)
-print(lofar)
+# print(uGMRT)
+# print(lofar)
 # print(lofar.dtypes)
 
 fig0, ax0 = plt.subplots()
@@ -322,8 +366,9 @@ rc = {"font.family": "times new roman",
       "mathtext.fontset": "stix"}
 plt.rcParams.update(rc)
 
-fig1, ax1 = plt.subplots()
+fig1, axs = plt.subplots(1, 2, sharey="row", figsize=[10, 5])
 
+ax1, ax2 = axs[0], axs[1]
 
 ax1.hist(intensities, bins=TheBins1, edgecolor="black")
 if IsBurst:
@@ -335,9 +380,6 @@ else:
 
 ax1.set_xscale("log")
 ax1.set_yscale("log")
-ax1.set_ylabel("Number of Exoplanets")
-
-fig2, ax2 = plt.subplots()
 
 TheBins2 = np.logspace(-4, 4, 17)
 
@@ -346,7 +388,7 @@ ax2.set_xlabel("Magnetic Field Strength at the Surface (Gauss)")
 ax2.set_title("Histogram of the Magnetic Field Strengths")
 
 ax2.set_xscale("log")
-ax2.set_ylabel("Number of Exoplanets")
+fig1.supylabel("Number of Exoplanets")
 
 plt.show()
 

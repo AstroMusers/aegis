@@ -61,6 +61,28 @@ df = pd.read_csv("NASA0808.csv", skiprows=55)
 # ----------------------------
 # MWA
 
+
+# indices
+name = 0 #
+pl_orbper = 2 #
+pl_orbsmax = 6 #
+radius = 10 #
+pl_bmassj = 14 #
+pl_massprov = 18 #
+dens = 19 #
+st_mass = 28 #
+st_age = 32 #
+distance = 36
+
+(names, orbs, orb1, orb2, rads, rad1, rad2, smas, smas1, smas2, ms, ms1, ms2,
+ massprov, rhos, rho1, rho2, Ms, Ms1, Ms2, ts, t1, t2, ds, d1, d2) = np.genfromtxt("NASA0808.csv",
+                                                   usecols=(name, pl_orbper, pl_orbper+1, pl_orbper+2, radius, radius+1, radius+2,
+                                                            pl_orbsmax, pl_orbsmax+1, pl_orbsmax+2, pl_bmassj, pl_bmassj+1, pl_bmassj+2,
+                                                            pl_massprov, dens, dens+1, dens+2, st_mass, st_mass+1, st_mass+2,
+                                                            st_age, st_age+1, st_age+2, distance, distance+1, distance+2),
+                                                   skip_header=56, filling_values=0, delimiter=",", unpack=True)
+hists = [orbs, smas, ms, Ms, ts]
+
 exoplanets = []
 IsBurst = 1
 
@@ -76,16 +98,6 @@ y_minerr = []
 y_maxerr = []
 x_maxerr = []
 x_minerr = []
-
-# indices
-pl_orbper = 2
-pl_orbsmax = 6
-pl_bmassj = 14
-st_mass = 28
-st_age = 32
-
-orbs, smas, ms, Ms, ts = np.genfromtxt("NASA0808.csv", usecols=(pl_orbper, pl_orbsmax, pl_bmassj, st_mass, st_age), skip_header=56, filling_values=0, delimiter=",", unpack=True)
-hists = [orbs, smas, ms, Ms, ts]
 
 fig, axes = plt.subplots(1, 5, figsize=(15, 3))
 plt.rcParams['font.size'] = 8

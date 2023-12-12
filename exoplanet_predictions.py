@@ -12,7 +12,7 @@ rng = np.random.default_rng()
 mpl.use('Qt5Agg')
 
 mpl.rcParams["figure.autolayout"] = True
-plt.rcParams['figure.figsize'] = [8, 4]
+plt.rcParams['figure.figsize'] = [10, 5]
 
 rc = {"font.family": "times new roman",
       "font.size": 11,
@@ -81,7 +81,7 @@ distance = 36
                                                             pl_massprov, dens, dens+1, dens+2, st_mass, st_mass+1, st_mass+2,
                                                             st_age, st_age+1, st_age+2, distance, distance+1, distance+2),
                                                    skip_header=56, filling_values=0, delimiter=",", unpack=True)
-hists = [orbs, smas, ms, Ms, ts]
+hists = [orbs, smas, ms, Ms, ts, ds]
 
 exoplanets = []
 IsBurst = 1
@@ -99,31 +99,39 @@ y_maxerr = []
 x_maxerr = []
 x_minerr = []
 
-fig, axes = plt.subplots(1, 5, figsize=(15, 3))
+fig, axs = plt.subplots(2, 3, figsize=(12, 5))
 plt.rcParams['font.size'] = 8
 
-ax1 = axes[0]
-ax2 = axes[1]
-ax3 = axes[2]
-ax4 = axes[3]
-ax5 = axes[4]
+ax1 = axs[0, 0]
+ax2 = axs[0, 1]
+ax3 = axs[0, 2]
+ax4 = axs[1, 0]
+ax5 = axs[1, 1]
+ax6 = axs[1, 2]
 
-bins = [np.logspace(-1, 6, 15), np.logspace(-3, 3, 13), np.logspace(-3, 2, 11), np.logspace(-2, 1, 11), np.logspace(-2, 2, 13)]
+axes = [ax1, ax2, ax3, ax4, ax5, ax6]
+
+bins = [np.logspace(-1, 6, 15), np.logspace(-3, 3, 13), np.logspace(-3, 2, 11),
+        np.logspace(-2, 1, 11), np.logspace(-2, 2, 13), np.logspace(1, 2, 11)]
 
 ax1.hist(orbs, bins=bins[0], edgecolor="black")
 ax2.hist(smas, bins=bins[1], edgecolor="black")
 ax3.hist(ms,  bins=bins[2], edgecolor="black")
 ax4.hist(Ms,  bins=bins[3], edgecolor="black")
 ax5.hist(ts,  bins=bins[4], edgecolor="black")
+ax6.hist(ds, bins=bins[5], edgecolor="black")
 
-xlabels = ["Orbital Period (Days)", "Semi-major Axis (AU)", f"Planet Mass ($M_j$)", "Star Mass ($M_\odot$)", "Star Age (Gyr)"]
+xlabels = ["Orbital Period (Days)", "Semi-major Axis (AU)", f"Planet Mass ($M_j$)", "Star Mass ($M_\odot$)", "Star Age (Gyr)", "Distance (pc)"]
 for i in range(len(axes)):
     axes[i].set_xlabel(xlabels[i])
     axes[i].set_xscale("log")
     axes[i].set_yscale("log")
 
-fig.supylabel('Bin count', va='center', rotation='vertical', fontsize=11)
-fig.suptitle('Distribution of Initial Parameters for the Exoplanet Sample', fontsize=11)
+fig.text(0.02, 0.30, 'Bin Count', va='center', rotation='vertical', fontsize=10)
+fig.text(0.02, 0.75, 'Bin Count', va='center', rotation='vertical', fontsize=10)
+
+fig.supylabel(' \n', va='center', rotation='vertical', fontsize=11)
+fig.suptitle('Distribution of Initial Parameters for the Exoplanet Sample', fontsize=13)
 
 plt.show()
 
@@ -255,7 +263,7 @@ for i in df.iterrows():  # The loop that reads exoplanets from NASA file
             if Freq[m] <= nu <= Freq[m + 1]:
                 if I >= (L_EU[m + 1] - L_EU[m]) / (Freq[m + 1] - Freq[m]) * (nu - Freq[m]) + L_EU[m]:
                     obs = str(EXO.name)
-                    print(obs, Freq[m], L_EU[m])
+                    print(obs)
 
     if 120 <= nu < 850 or 1050 < nu <= 1450:
         for m in range(4):

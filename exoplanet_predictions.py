@@ -259,17 +259,18 @@ for i in df.iterrows():  # The loop that reads exoplanets from NASA file
     intensities.append(EXO.intensity)
 
     if 30 <= nu <= 180:
-        for m in range(6):
+        for m in range(7):
             if Freq[m] <= nu <= Freq[m + 1]:
                 if I >= (L_EU[m + 1] - L_EU[m]) / (Freq[m + 1] - Freq[m]) * (nu - Freq[m]) + L_EU[m]:
                     obs = str(EXO.name)
                     print(obs)
-
+                    break
     if 120 <= nu < 850 or 1050 < nu <= 1450:
         for m in range(4):
             if uGMRT["Frequencies"][m][0] <= nu <= uGMRT["Frequencies"][m][1] and I > uGMRT["RMS Noise"][m][0]:
                 obs = str(EXO.name)
                 print(obs)
+                break
 
     if EXO.name == "tau Boo b":  # Special interest
         obs = EXO.name

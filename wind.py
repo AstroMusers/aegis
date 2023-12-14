@@ -1,8 +1,6 @@
 import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
-from scipy.optimize import root
 
 semi_column = 6
 age_column = 32
@@ -23,18 +21,18 @@ def non_decreasing(x):
 
 def v_at_1_AU(t):
     """
-
+    Taken from Lynch2018, citing Newkirk1980
     :param t: Age of the star in yr
     :return: 1 AU speed of the stellar wind in km/s
     """
     v0 = 3.971 * 10**3
-    tau = (2.56 * 10 ** 7)
+    tau = (2.56 * 10 ** (-2))
     return v0 * (1 + t / tau) ** (-0.43)
 
 
 def sound_speed(T):
     """
-
+    Parker Model
     :param T: Coronal Temperature in K
     :return: sound speed in km/s
     """
@@ -43,15 +41,14 @@ def sound_speed(T):
 
 def critical_radius(M, T):
     """
-
-    :param M:
-    :param T:
+    Parker Model
+    :param M: Stellar mss in M_sun
+    :param T: Coronal Temperature in K
     :return: critical radius in AU
     """
     return m_p * G * M / (4 * k_b * T)
 
 
-ages *= 10**9
 targets = np.vectorize(v_at_1_AU)(ages)
 print(ages)
 print(masses)
@@ -60,24 +57,18 @@ print(targets)
 # plt.hist(targets)
 # plt.show()
 
-trg_lst = targets.tolist()
-age_lst = ages.tolist()
-mas_lst = masses.tolist()
-
 temperatures = []
 
-for i in range(len(trg_lst)):
-    v = trg_lst[i]
+for i in range(len(ages)):
+    v = targets[i]
     M = masses[i]
-    t = ages[i] * 10**(-9)
-    print(v, M, t)
+    t = ages[i]
 
     def func(T):
         T = 10**T
         return (v**2 * m_p / (k_b * T)) - np.log((v**2 * m_p / (k_b * T))) - 4 * np.log((4 * k_b * T * 1) / (m_p * G * M)) - (m_p * G * M) / (4 * k_b * T * 1) +3
 
     guess = 6.74
-    print(guess)
     soln = fsolve(func, guess)
     actual = 10**soln[0]
 
@@ -88,7 +79,7 @@ print(temperatures)
 radial_ranges = []
 wind_speeds = []
 
-for j in range(len(age_lst)):
+for j in range(len(ages)):
     M = masses[j]
     t = ages[j]
     T = temperatures[j]

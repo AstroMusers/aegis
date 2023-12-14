@@ -1,13 +1,21 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
+import csv
+import pandas as pd
 
 semi_column = 6
 age_column = 32
 st_mass_column = 28
 
-names, semis, masses, ages = np.genfromtxt("NASA0808.csv", usecols=(0, semi_column, st_mass_column, age_column), skip_header=56,
-                                    filling_values=0, delimiter=",", unpack=True)
+# Read CSV using pandas
+data = pd.read_csv("NASA0808.csv", usecols=[0, semi_column, st_mass_column, age_column], skiprows=56, header=None, names=['Name', 'Column6', 'Column28', 'Column32'])
+
+# Extract columns into separate arrays
+names = data['Name'].to_numpy()
+semis = data['Column6'].to_numpy()
+masses = data['Column28'].to_numpy()
+ages = data['Column32'].to_numpy()
 
 k_b = 1.380649 * 10 ** (-29)  # Boltzmann Constant in kg km2 / s2 K
 m_p = 1.67262192 * 10 ** (-27)  # Proton mass in kg
@@ -19,7 +27,7 @@ def non_decreasing(x):
     return np.all(dx >= 0)
 
 
-def v_at_1_AU(t):
+def v_at_1_au(t):
     """
     Taken from Lynch2018, citing Newkirk1980
     :param t: Age of the star in yr
@@ -49,13 +57,7 @@ def critical_radius(M, T):
     return m_p * G * M / (4 * k_b * T)
 
 
-targets = np.vectorize(v_at_1_AU)(ages)
-print(ages)
-print(masses)
-print(targets)
-
-# plt.hist(targets)
-# plt.show()
+targets = np.vectorize(v_at_1_au)(ages)
 
 temperatures = []
 
@@ -66,15 +68,13 @@ for i in range(len(ages)):
 
     def func(T):
         T = 10**T
-        return (v**2 * m_p / (k_b * T)) - np.log((v**2 * m_p / (k_b * T))) - 4 * np.log((4 * k_b * T * 1) / (m_p * G * M)) - (m_p * G * M) / (4 * k_b * T * 1) +3
+        return (v**2 * m_p / (k_b * T)) - np.log((v**2 * m_p / (k_b * T))) - 4 * np.log((4 * k_b * T * 1) / (m_p * G * M)) - (m_p * G * M) / (4 * k_b * T * 1) + 3
 
-    guess = 6.74
+    guess = np.array([6.74])
     soln = fsolve(func, guess)
     actual = 10**soln[0]
 
     temperatures.append(actual)
-
-print(temperatures)
 
 radial_ranges = []
 wind_speeds = []
@@ -90,14 +90,17 @@ for j in range(len(ages)):
     def fn(v, r):
         v = 10**v
         # r = a
-        return (v**2 * m_p / (k_b * T)) - np.log((v**2 * m_p / (k_b * T))) - 4 * np.log((4 * k_b * T * r) / (m_p * G * M)) - (m_p * G * M) / (4 * k_b * T * r) +3
+        return (v**2 * m_p / (k_b * T)) - np.log((v**2 * m_p / (k_b * T))) - 4 * np.log((4 * k_b * T * r) / (m_p * G * M)) - (m_p * G * M) / (4 * k_b * T * r) + 3
 
     cond = True
+
     def v_for_r(r):
 
         guess = 3
         if j == 792:
             guess = 3.5
+
+        guess = np.array([guess])
 
         def func(v):
             return fn(v, r=r)
@@ -105,15 +108,11 @@ for j in range(len(ages)):
         soln = fsolve(func, guess)
         return 10**soln[0]
 
-    # upper = max(a + 1, 200*r_c)
     r_values = np.linspace(0.1*r_c, 200*r_c, 100)
     v_values = [v_for_r(r) for r in r_values]
 
     radial_ranges.append(r_values)
     wind_speeds.append(v_values)
-
-    # print(r_values)
-    # print(v_values)
 
     plt.plot(r_values, v_values, alpha=0.2)
 
@@ -132,11 +131,19 @@ if not problem:
         v = v_for_r(a)
         speeds_at_distance.append(v)
 
-print(speeds_at_distance)
+temperatures = np.round(np.array(temperatures))
+speeds_at_distance = np.round(np.array(speeds_at_distance))
+results = np.vstack((names, temperatures, speeds_at_distance))
+results = results.T
 
+column_headers = ["Name", "Corona Temp. (K)", "Wind Speed (km/s)"]
+filename = "wind_info.txt"
+with open("wind_info.txt", mode="w") as file:
+    writer = csv.writer(file, delimiter="\t")
+    writer.writerow(column_headers)
+    writer.writerows(results)
 
-# Code takes 19 seconds to run end to end when radial profile linspace has 100 elements
+print(f"Results saved to {filename}")
 
 plt.show()
-# print(wind_speeds)
-
+# Code takes 19 seconds to run end to end when radial profile linspace has 100 elements

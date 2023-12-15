@@ -211,7 +211,7 @@ def Rm(B, R, n, T, v_eff, B_star):
     """
     k_b = 1.38 * 10**(-23)  # Boltzmann constant in J/K
     m_p = 1.76 * 10**(-27)  # Mass of proton
-    R_magnet = ((B / (80 * np.pi * (n * k_b * T + m_p * n * 10**6 * v_eff**2 + B_star/(80 * np.pi)))) ** (1/6)) * R
+    R_magnet = ((B / (8 * np.pi * (2 * n * k_b * T + m_p * n * 10**6 * v_eff**2 + B_star/(8 * np.pi)))) ** (1/6)) * R
     if R_magnet > R:
         return R_magnet
     else:
@@ -226,7 +226,7 @@ def P_input(imf_perp, v_eff, R_m):
     :param R_m: Radius of planet Magnetosphere in m
     :return: Input Radio Power in Watts
     """
-    return imf_perp**2 / 8 * v_eff * R_m**2
+    return imf_perp**2 / 80 * v_eff * R_m**2
 
 
 def radio_power(P_input, nu, d):
@@ -237,8 +237,8 @@ def radio_power(P_input, nu, d):
     :param d: Distance from Earth to the Source.
     :return: Expected observed radio flux density in Jy.
     """
-    epsilon = 0.015
-    return epsilon * P_input / (1.6 * nu * d**2) * 10**(-23)
+    epsilon = 0.00015
+    return epsilon * P_input / (1.6 * nu * d**2) * 10**(26)
 
 def magnetic_moment(p_c, w_p, r_c, sigma):
     """

@@ -243,7 +243,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         assert nu > 0, f"Maximum emission frequency must be positive, instead got {nu=}."
         nu /= 10 ** 6
         freqs.append(nu)
-        # nu *= 10**6
+        nu *= 10**6
 
         I = complete(B, a, M_s, Mdot, D)
         assert I > 0, f"Radio brightness must be positive, instead got {I=}."
@@ -256,7 +256,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         R_m = Rm(B, R, n, T_wind, v_wind, B_star)
 
         P_in = P_input(B_perp, veff*10**3, R_m*7*10**8)
-        P_rad = radio_power(P_in, nu, d)
+        P_rad = radio_power(P_in, nu, D)
 
         if IsBurst:
             I = I * (10 ** 1.53)

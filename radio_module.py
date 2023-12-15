@@ -117,10 +117,11 @@ def B_r(B0, R0, r):
     """
 
     :param B0: Surface magentic field of the Star
-    :param R0: Radius of the Star
-    :param r: distance from the star
+    :param R0: Radius of the Star in solar radii
+    :param r: distance from the star in AU
     :return: Radial component of the interplanetary magnetic field of the star.
     """
+    R0 /= 215  # Conversion from solar radii to AU
     return B0 * (R0 / r)**2
 
 
@@ -162,7 +163,7 @@ def imf_perp(B_r, B_phi, v_k, v):
     :param v: Stellar wind velocity at planet distance
     :return:
     """
-    return np.sqrt(B_r**2 + B_phi**2) * np.sin(np.arctan(B_phi/B_r) - np.arctan(v_k/v))
+    return np.sqrt(B_r**2 + B_phi**2) * abs(np.sin(np.arctan(B_phi/B_r) - np.arctan(v_k/v)))
 
 
 def imf_perp_complete(M, r, R, age, v_wind):
@@ -185,17 +186,25 @@ def imf_perp_complete(M, r, R, age, v_wind):
     return B_perp
 
 
-def number_density(Mdot, v_eff, r):
-    """
+# def number_density(Mdot, v_eff, r):
+#     """
+#
+#     :param Mdot: Mass loss rate of the star in 10^-15 Msun/yr
+#     :param v_eff: stellar wind speed in km/s
+#     :param r: distance in AU
+#     :return: number density in m^-3
+#     """
+#     # Mdot *= 2 * 10**16
+#     # v_eff *= 10**3
+#     # r *= 1.49 * 10**11
+#     # m_p = 1.76 * 10**(-27)  # Mass of proton
+#     # return Mdot / (4 * np.pi * m_p * v_eff * r**2)
 
-    :param Mdot: Mass loss rate of the star in 10^-15 Msun/yr
-    :param v_eff: stellar wind speed in km/s
-    :param r: distance in AU
-    :return: number density in m^-3
-    """
-    k = 1.03 * 10**(-15)  # Combined unit conversion constant
-    m_p = 1.76 * 10**(-27)  # Mass of proton
-    return k * Mdot / (4 * np.pi * m_p * v_eff * r**2)
+def number_density(age):
+    n0 = 1.04 * 10**11
+    tau = 2.56 * 10**(-2)
+    return n0 * (1 + age/tau)**(-1.86)
+
 
 
 def Rm(B, R, n, T, v_eff, B_star):
@@ -226,7 +235,9 @@ def P_input(imf_perp, v_eff, R_m):
     :param R_m: Radius of planet Magnetosphere in m
     :return: Input Radio Power in Watts
     """
-    return imf_perp**2 / 80 * v_eff * R_m**2
+    mu_0 = 4 * np.pi * 10**(-7)
+    # return imf_perp**2 / (2*mu_0) * v_eff * R_m**2
+    return imf_perp**2 / (8*np.pi) * v_eff * R_m**2
 
 
 def radio_power(P_input, nu, d):
@@ -237,8 +248,8 @@ def radio_power(P_input, nu, d):
     :param d: Distance from Earth to the Source.
     :return: Expected observed radio flux density in Jy.
     """
-    epsilon = 0.00015
-    return epsilon * P_input / (1.6 * nu * d**2) * 10**(26)
+    epsilon = 10**(-3)
+    return epsilon * P_input / (1.6 * nu * d**2) * 10**26
 
 def magnetic_moment(p_c, w_p, r_c, sigma):
     """

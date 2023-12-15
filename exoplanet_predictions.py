@@ -219,7 +219,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
 
         highS_Mdot = t ** (-1.23) * 10 ** 3
         lowS_Mdot = t ** (-0.9) * 10 ** 3
-        Mdot = 8.1 * t ** (-1.37)  # 10^-15 M_sun / yr = Mdot_sun / 10
+        Mdot = 8.1 * t ** (-1.37)  # 10^-14 M_sun / yr = Mdot_sun /
 
         B = 1  # Tentative
         sigma = 1  # Jupiter conductivity
@@ -248,11 +248,13 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         I = complete(B, a, M_s, Mdot, D)
         assert I > 0, f"Radio brightness must be positive, instead got {I=}."
 
+        # br = B_
+
         B_perp = imf_perp_complete(M_s, a, Rs, t, v_wind)
         v_k = keplerian(M_s, a)
         veff = v_eff(v_wind, v_k)
-        B_star = imf_complete(M_s, a, v_wind, T_wind, Rs)
-        n = number_density(Mdot, veff, a)
+        B_star = imf_complete(M_s, a, v_wind, t, Rs)
+        n = number_density(t)
         R_m = Rm(B, R, n, T_wind, v_wind, B_star)
 
         P_in = P_input(B_perp, veff*10**3, R_m*7*10**8)
@@ -264,6 +266,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
 
         intenss.append(P_rad)
 
+    # print(f"{B_perp=}, {B_star=}, {n=}, {R_m=}. {Mdot=}, {P_in}, {P_rad}")
     nu = np.percentile(freqs, 50)
     I = np.percentile(intenss, 50)
 
@@ -394,8 +397,8 @@ ax0.axvline(x=10, color="black", linestyle="dashed")
 ax0.set_xscale("log")
 ax0.set_yscale("log")
 # ax0.set_xlim(6, 30)
-ax0.set_xlim(left=0.5)
-ax0.set_ylim(bottom=10**(-8), top=10**1)
+# ax0.set_xlim(left=0.5)
+# ax0.set_ylim(bottom=10**(-8), top=10**1)
 
 ax0.axvspan(0, 10, alpha=0.2, color="teal")
 fig0.tight_layout()

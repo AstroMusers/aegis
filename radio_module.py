@@ -219,12 +219,26 @@ def Rm(B, R, n, T, v_eff, B_star):
 
 
 def P_input(imf_perp, v_eff, R_m):
+    """
+    I'm actually not sure about the units.
+    :param imf_perp: Perpendicular component of IMF flux density in G
+    :param v_eff: EFfective speed near the exoplanet in m/s
+    :param R_m: Radius of planet Magnetosphere in m
+    :return: Input Radio Power in Watts
+    """
     return imf_perp**2 / 8 * v_eff * R_m**2
 
 
 def radio_power(P_input, nu, d):
-    epsilon = 1
-    return epsilon * P_input / (1.6 * nu * d**2)
+    """
+
+    :param P_input: Input power in Watts
+    :param nu: Bandwidth of observation (Assumed to be maximum emission frequency)
+    :param d: Distance from Earth to the Source.
+    :return: Expected observed radio flux density in Jy.
+    """
+    epsilon = 0.015
+    return epsilon * P_input / (1.6 * nu * d**2) * 10**(-23)
 
 def magnetic_moment(p_c, w_p, r_c, sigma):
     """

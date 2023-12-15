@@ -56,7 +56,7 @@ integration_time = 8 * 60  # minutes
 bandwidth = 100  # MHZ
 uGMRT["RMS Noise"] = uGMRT["RMS Noise"] * (np.sqrt((100 * 10) / (bandwidth * integration_time))) * 10**(-6) * 5  # 5 sigma sensitivity in Jy
 
-df = pd.read_csv("NASA0808.csv", skiprows=55)
+df = pd.read_csv("NASA1512.csv", skiprows=61)
 # print(df)
 # ----------------------------
 # MWA
@@ -70,17 +70,18 @@ radius = 10 #
 pl_bmassj = 14 #
 pl_massprov = 18 #
 dens = 19 #
-st_mass = 28 #
-st_age = 32 #
-distance = 36
+st_rad = 28
+st_mass = 32 #
+st_age = 36 #
+distance = 40
 
 (names, orbs, orb1, orb2, rads, rad1, rad2, smas, smas1, smas2, ms, ms1, ms2,
- massprov, rhos, rho1, rho2, Ms, Ms1, Ms2, ts, t1, t2, ds, d1, d2) = np.genfromtxt("NASA0808.csv",
+ massprov, rhos, rho1, rho2, Rs, Rs1, Rs2, Ms, Ms1, Ms2, ts, t1, t2, ds, d1, d2) = np.genfromtxt("NASA1512.csv",
                                                    usecols=(name, pl_orbper, pl_orbper+1, pl_orbper+2, radius, radius+1, radius+2,
                                                             pl_orbsmax, pl_orbsmax+1, pl_orbsmax+2, pl_bmassj, pl_bmassj+1, pl_bmassj+2,
-                                                            pl_massprov, dens, dens+1, dens+2, st_mass, st_mass+1, st_mass+2,
+                                                            pl_massprov, dens, dens+1, dens+2, st_rad, st_rad+1, st_rad+2, st_mass, st_mass+1, st_mass+2,
                                                             st_age, st_age+1, st_age+2, distance, distance+1, distance+2),
-                                                   skip_header=56, filling_values=0, delimiter=",", unpack=True)
+                                                   skip_header=62, filling_values=0, delimiter=",", unpack=True)
 
 wind_temperatures, wind_speeds = np.genfromtxt("wind_info.txt", usecols=(1, 2), skip_header=1, delimiter="\t", unpack=True)
 
@@ -177,10 +178,15 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     if np.isnan(t_s):
         t_s = 0
 
+    Rs_i = j[st_rad]
+    Rs_s = (j[st_rad+1] - j[st_rad+2]) / 2
+    if np.isnan(Rs_s):
+        Rs_s = 0
+
     T_wind = wind_temperatures[i]
     v_wind = wind_speeds[i]
 
-    d = j[36]
+    d = j[40]
     d *= 3.261561
 
     freqs = []
@@ -206,6 +212,10 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         t = rng.normal(t_i, t_s)
         while t < 0:
             t = rng.normal(t_i, t_s)
+
+        Rs = rng.normal(Rs_i, Rs_s)
+        while Rs < 0:
+            Rs = rng.normal(Rs_i, Rs_s)
 
         highS_Mdot = t ** (-1.23) * 10 ** 3
         lowS_Mdot = t ** (-0.9) * 10 ** 3
@@ -233,17 +243,26 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         assert nu > 0, f"Maximum emission frequency must be positive, instead got {nu=}."
         nu /= 10 ** 6
         freqs.append(nu)
-        nu *= 10**6
+        # nu *= 10**6
 
         I = complete(B, a, M_s, Mdot, D)
         assert I > 0, f"Radio brightness must be positive, instead got {I=}."
 
-        B_perp = imf_perp_complete(M_s, a, )
+        B_perp = imf_perp_complete(M_s, a, Rs, t, v_wind)
+        v_k = keplerian(M_s, a)
+        veff = v_eff(v_wind, v_k)
+        B_star = imf_complete(M_s, a, v_wind, T_wind, Rs)
+        n = number_density(Mdot, veff, a)
+        R_m = Rm(B, R, n, T_wind, v_wind, B_star)
+
+        P_in = P_input(B_perp, veff*10**3, R_m*7*10**8)
+        P_rad = radio_power(P_in, nu, d)
 
         if IsBurst:
             I = I * (10 ** 1.53)
+            P_rad *= 10**1.53
 
-        intenss.append(I)
+        intenss.append(P_rad)
 
     nu = np.percentile(freqs, 50)
     I = np.percentile(intenss, 50)
@@ -376,7 +395,7 @@ ax0.set_xscale("log")
 ax0.set_yscale("log")
 # ax0.set_xlim(6, 30)
 ax0.set_xlim(left=0.5)
-ax0.set_ylim(top=10**1)
+ax0.set_ylim(bottom=10**(-8), top=10**1)
 
 ax0.axvspan(0, 10, alpha=0.2, color="teal")
 fig0.tight_layout()

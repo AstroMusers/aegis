@@ -218,6 +218,14 @@ def Rm(B, R, n, T, v_eff, B_star):
         return R
 
 
+def P_input(imf_perp, v_eff, R_m):
+    return imf_perp**2 / 8 * v_eff * R_m**2
+
+
+def radio_power(P_input, nu, d):
+    epsilon = 1
+    return epsilon * P_input / (1.6 * nu * d**2)
+
 def magnetic_moment(p_c, w_p, r_c, sigma):
     """
     Finds the magnetic moment of the exoplanet using the density of its convective core, rotation rate, radius of its

@@ -31,6 +31,7 @@ def max_freq(B):
     # return nuJ * B / Bj
     return 2.8 * 10**6 * B
 
+
 def density(p):
     """
     Returns the density of a planet in Jovian density
@@ -70,6 +71,151 @@ def convective_radius(M, p, r):
     else:
         R = M ** 0.75 * r ** (-0.96)  # Grießmeier (2004)
     return min(R, r) / 0.830
+
+
+def keplerian(M, r):
+    """
+
+    :param M: Host star's mass in M_sun
+    :param r: Semi-major axis in AU
+    :return: Keplerian velocity in km/s
+    """
+    G = 8.87129 * 10 ** 2  # Gravitational constant in AU (M_sun)-1 (km/s)2
+    return np.sqrt(G * M / r)
+
+
+def v_eff(v_wind, v_kepler):
+    """
+
+    :param v_wind: Stellar wind speed
+    :param v_kepler: Keplerian speed of the planet
+    :return: effective speed of the planet in stellar wind, in units of the provided speeds.
+    """
+    return np.sqrt(v_wind**2 + v_kepler**2)
+
+
+def star_surface_b(age):
+    """
+
+    :param age: Age of the star in Gyr
+    :return: Surface magentic field of the star in Gauss
+    """
+    return 0.7 * age**0.655
+
+
+def star_period(age):
+    """
+
+    :param age: Age of the STar in Gyr
+    :return: Rotational period of the star in days.
+    """
+    tau = 2.56 * 10**(-2)
+    return 0.67 * (1 + age / tau)**0.7
+
+
+def B_r(B0, R0, r):
+    """
+
+    :param B0: Surface magentic field of the Star
+    :param R0: Radius of the Star
+    :param r: distance from the star
+    :return: Radial component of the interplanetary magnetic field of the star.
+    """
+    return B0 * (R0 / r)**2
+
+
+def B_phi(B_r, P, r, v_eff):
+    """
+
+    :param B_r: Radial component of IMF
+    :param P: Stellar rotation period in days
+    :param r: Distance from star (sma) in AU
+    :param v_eff: Effective speed of the planet in stellar wind.
+    :return: Phi component of the IMF.
+    """
+    P *= 8.64 * 10**4  # Converted from days to seconds
+    r *= 1.496 * 10**8  # Converted from AU to km
+    Omega = 2 * np.pi / P
+    return B_r * Omega * r / v_eff
+
+
+def imf(B_r, B_phi):
+    return np.sqrt(B_r**2 + B_phi**2)
+
+
+def imf_complete(M, r, v_wind, age, R):
+    v_k = keplerian(M, r)
+    veff = v_eff(v_wind, v_k)
+    B0 = star_surface_b(age)
+    P = star_period(age)
+    Br = B_r(B0, R, r)
+    Bphi = B_phi(Br, P, r, veff)
+    return imf(Br, Bphi)
+
+
+def imf_perp(B_r, B_phi, v_k, v):
+    """
+
+    :param B_r: Radial component of IMF
+    :param B_phi: Phi component of IMF
+    :param v_k: Keplerian velocity of the planet
+    :param v: Stellar wind velocity at planet distance
+    :return:
+    """
+    return np.sqrt(B_r**2 + B_phi**2) * np.sin(np.arctan(B_phi/B_r) - np.arctan(v_k/v))
+
+
+def imf_perp_complete(M, r, R, age, v_wind):
+    """
+
+    :param M: Mass of the Star
+    :param r: Distance from the star
+    :param R: Radius of the star
+    :param age: Age of the star
+    :param v_wind: Wind velocity of the star at planet distance
+    :return: Perpendicular component of the Inteplanetary Magnetic Field at the distance of the planet
+    """
+    v_k = keplerian(M, r)
+    veff = v_eff(v_wind, v_k)
+    B0 = star_surface_b(age)
+    P = star_period(age)
+    Br = B_r(B0, R, r)
+    Bphi = B_phi(Br, P, r, veff)
+    B_perp = imf_perp(Br, Bphi, v_k, v_wind)
+    return B_perp
+
+
+def number_density(Mdot, v_eff, r):
+    """
+
+    :param Mdot: Mass loss rate of the star in 10^-15 Msun/yr
+    :param v_eff: stellar wind speed in km/s
+    :param r: distance in AU
+    :return: number density in m^-3
+    """
+    k = 1.03 * 10**(-15)  # Combined unit conversion constant
+    m_p = 1.76 * 10**(-27)  # Mass of proton
+    return k * Mdot / (4 * np.pi * m_p * v_eff * r**2)
+
+
+def Rm(B, R, n, T, v_eff, B_star):
+    """
+
+    :param B: Planetary surface magnetic flux ddensity in G
+    :param R: Radius of the planet in
+    :param n: Number density of the stellar wind in m^-3
+    :param T: Temperature of the stellar wind in K
+    :param v_eff: Speed of the stellar wind in km/s
+    :param B_star: Magnetic field flux density of the star in G
+    :return: Magnetopause distance of the planet.
+    """
+    k_b = 1.38 * 10**(-23)  # Boltzmann constant in J/K
+    m_p = 1.76 * 10**(-27)  # Mass of proton
+    R_magnet = ((B / (80 * np.pi * (n * k_b * T + m_p * n * 10**6 * v_eff**2 + B_star/(80 * np.pi)))) ** (1/6)) * R
+    if R_magnet > R:
+        return R_magnet
+    else:
+        return R
 
 
 def magnetic_moment(p_c, w_p, r_c, sigma):

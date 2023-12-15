@@ -81,6 +81,9 @@ distance = 36
                                                             pl_massprov, dens, dens+1, dens+2, st_mass, st_mass+1, st_mass+2,
                                                             st_age, st_age+1, st_age+2, distance, distance+1, distance+2),
                                                    skip_header=56, filling_values=0, delimiter=",", unpack=True)
+
+wind_temperatures, wind_speeds = np.genfromtxt("wind_info.txt", usecols=(1, 2), skip_header=1, delimiter="\t", unpack=True)
+
 hists = [orbs, smas, ms, Ms, ts, ds]
 
 exoplanets = []
@@ -138,8 +141,8 @@ plt.show()
 plt.rcParams['font.size'] = 11
 
 
-for i in df.iterrows():  # The loop that reads exoplanets from NASA file
-    j = i[1]
+for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
+
     name = j[0]
 
     T_i = j[pl_orbper]
@@ -173,6 +176,9 @@ for i in df.iterrows():  # The loop that reads exoplanets from NASA file
     t_s = (j[st_age+1] - j[st_age+2]) / 2
     if np.isnan(t_s):
         t_s = 0
+
+    T_wind = wind_temperatures[i]
+    v_wind = wind_speeds[i]
 
     d = j[36]
     d *= 3.261561
@@ -227,9 +233,12 @@ for i in df.iterrows():  # The loop that reads exoplanets from NASA file
         assert nu > 0, f"Maximum emission frequency must be positive, instead got {nu=}."
         nu /= 10 ** 6
         freqs.append(nu)
+        nu *= 10**6
 
-        I = complete(B, a, M_s_i, Mdot, D)
+        I = complete(B, a, M_s, Mdot, D)
         assert I > 0, f"Radio brightness must be positive, instead got {I=}."
+
+        B_perp = imf_perp_complete(M_s, a, )
 
         if IsBurst:
             I = I * (10 ** 1.53)

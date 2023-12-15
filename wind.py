@@ -5,11 +5,11 @@ import csv
 import pandas as pd
 
 semi_column = 6
-age_column = 32
-st_mass_column = 28
+age_column = 36
+st_mass_column = 32
 
 # Read CSV using pandas
-data = pd.read_csv("NASA0808.csv", usecols=[0, semi_column, st_mass_column, age_column], skiprows=56, header=None, names=['Name', 'Column6', 'Column28', 'Column32'])
+data = pd.read_csv("NASA1512.csv", usecols=[0, semi_column, st_mass_column, age_column], skiprows=62, header=None, names=['Name', 'Column6', 'Column28', 'Column32'])
 
 # Extract columns into separate arrays
 names = data['Name'].to_numpy()

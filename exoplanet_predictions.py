@@ -203,7 +203,7 @@ for i in df.iterrows():  # The loop that reads exoplanets from NASA file
 
         highS_Mdot = t ** (-1.23) * 10 ** 3
         lowS_Mdot = t ** (-0.9) * 10 ** 3
-        Mdot = 8.1 * t ** (-1.37)
+        Mdot = 8.1 * t ** (-1.37)  # 10^-15 M_sun / yr = Mdot_sun / 10
 
         B = 1  # Tentative
         sigma = 1  # Jupiter conductivity

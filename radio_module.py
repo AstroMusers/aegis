@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 
 class Exoplanet:
@@ -60,7 +62,10 @@ def convective_radius(M, p, r):
     Calculates the radius of the convective core of the exoplanet with the scaling provided in Curtis & Ness 1986.
     If the calculation exceeds planetary radius, planetary radius is returned. Jovain convective radius of 0.830 R_j
     is taken from Sharan 2022.
-    :param exo: the exoplanet
+    :param M: Mass of the planet in Mj
+    :param p: Density of the planet in g/cm3
+    :param r: Radius of the planet in Rj
+
     :return: Radius of the convective core
     """
     # M = exo.mass
@@ -72,6 +77,11 @@ def convective_radius(M, p, r):
         R = M ** 0.75 * r ** (-0.96)  # Grießmeier (2004)
     return min(R, r) / 0.830
 
+
+def freq_condition(nu, n):
+    n /= 10**6
+    nu_p = 8.98 * np.sqrt(n) * 10**(-3)
+    return nu > nu_p
 
 def keplerian(M, r):
     """
@@ -248,7 +258,7 @@ def radio_power(P_input, nu, d):
     :param d: Distance from Earth to the Source.
     :return: Expected observed radio flux density in Jy.
     """
-    epsilon = 10**(-3)
+    epsilon = 3.32 * 10**(-5)
     return epsilon * P_input / (1.6 * nu * d**2) * 10**26
 
 def magnetic_moment(p_c, w_p, r_c, sigma):
@@ -338,3 +348,25 @@ def complete(B, a, M, Mdot, D):
     L = radio_lum(Rmp, a, M, Mdot)
     I = radio_brightness(L, nu, D)
     return I
+
+# Plotting
+
+
+mpl.use('Qt5Agg')
+
+mpl.rcParams["figure.autolayout"] = True
+plt.rcParams['figure.figsize'] = [10, 5]
+
+rc = {"font.family": "times new roman",
+      "font.size": 11,
+      "mathtext.fontset": "stix"}
+plt.rcParams.update(rc)
+
+
+def retro_noir(ax):
+    ax.grid(alpha=0.2)
+    ax.tick_params(direction="in", length=7, right=True, top=True, width=1.5)
+    ax.spines['top'].set_linewidth(1.5)
+    ax.spines['bottom'].set_linewidth(1.5)
+    ax.spines['left'].set_linewidth(1.5)
+    ax.spines['right'].set_linewidth(1.5)

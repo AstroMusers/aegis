@@ -4,18 +4,15 @@ from scipy.optimize import fsolve
 import csv
 import pandas as pd
 
-semi_column = 6
-age_column = 36
-st_mass_column = 32
-
 # Read CSV using pandas
-data = pd.read_csv("NASA1512.csv", usecols=[0, semi_column, st_mass_column, age_column], skiprows=62, header=None, names=['Name', 'Column6', 'Column28', 'Column32'])
+filename = "NASA1512.csv"
+data = pd.read_csv(filename, comment="#")
 
 # Extract columns into separate arrays
-names = data['Name'].to_numpy()
-semis = data['Column6'].to_numpy()
-masses = data['Column28'].to_numpy()
-ages = data['Column32'].to_numpy()
+names = data['pl_name'].to_numpy()
+semis = data['pl_orbsmax'].to_numpy()
+masses = data['st_mass'].to_numpy()
+ages = data['st_age'].to_numpy()
 
 k_b = 1.380649 * 10 ** (-29)  # Boltzmann Constant in kg km2 / s2 K
 m_p = 1.67262192 * 10 ** (-27)  # Proton mass in kg

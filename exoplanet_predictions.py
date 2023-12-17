@@ -1,33 +1,9 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import matplotlib as mpl
 import pandas as pd
 from tabulate import tabulate
 from adjustText import adjust_text
-
 from radio_module import *
 
 rng = np.random.default_rng()
-
-mpl.use('Qt5Agg')
-
-mpl.rcParams["figure.autolayout"] = True
-plt.rcParams['figure.figsize'] = [10, 5]
-
-rc = {"font.family": "times new roman",
-      "font.size": 11,
-      "mathtext.fontset": "stix"}
-plt.rcParams.update(rc)
-
-
-def retro_noir(ax):
-    ax.grid(alpha=0.2)
-    ax.tick_params(direction="in", length=7, right=True, top=True, width=1.5)
-    ax.spines['top'].set_linewidth(1.5)
-    ax.spines['bottom'].set_linewidth(1.5)
-    ax.spines['left'].set_linewidth(1.5)
-    ax.spines['right'].set_linewidth(1.5)
-
 
 # LOFAR:
 lofar = pd.read_csv("sensitivities.csv")  # Obtained from van Haarlem et al. (2017), 8h integration time, 4.66MHz effective bandwidth
@@ -56,34 +32,26 @@ integration_time = 8 * 60  # minutes
 bandwidth = 100  # MHZ
 uGMRT["RMS Noise"] = uGMRT["RMS Noise"] * (np.sqrt((100 * 10) / (bandwidth * integration_time))) * 10**(-6) * 5  # 5 sigma sensitivity in Jy
 
-df = pd.read_csv("NASA1512.csv", skiprows=61)
-# print(df)
 # ----------------------------
 # MWA
 
+# Retrieve Data
+filename = "NASA1512.csv"
+df = pd.read_csv(filename, comment="#")
 
-# indices
-name = 0 #
-pl_orbper = 2 #
-pl_orbsmax = 6 #
-radius = 10 #
-pl_bmassj = 14 #
-pl_massprov = 18 #
-dens = 19 #
-st_rad = 28
-st_mass = 32 #
-st_age = 36 #
-distance = 40
-
-(names, orbs, orb1, orb2, rads, rad1, rad2, smas, smas1, smas2, ms, ms1, ms2,
- massprov, rhos, rho1, rho2, Rs, Rs1, Rs2, Ms, Ms1, Ms2, ts, t1, t2, ds, d1, d2) = np.genfromtxt("NASA1512.csv",
-                                                   usecols=(name, pl_orbper, pl_orbper+1, pl_orbper+2, radius, radius+1, radius+2,
-                                                            pl_orbsmax, pl_orbsmax+1, pl_orbsmax+2, pl_bmassj, pl_bmassj+1, pl_bmassj+2,
-                                                            pl_massprov, dens, dens+1, dens+2, st_rad, st_rad+1, st_rad+2, st_mass, st_mass+1, st_mass+2,
-                                                            st_age, st_age+1, st_age+2, distance, distance+1, distance+2),
-                                                   skip_header=62, filling_values=0, delimiter=",", unpack=True)
+headers_to_find = ["pl_name", "pl_orbper", "pl_orbsmax", "pl_radj", "pl_bmassj", "pl_bmassprov", "pl_dens", "st_rad", "st_mass", "st_age", "sy_dist"]
+indices = [df.columns.get_loc(header) for header in headers_to_find]
+pl_name, pl_orbper, pl_orbsmax, radius, pl_bmassj, pl_bmassprov, dens, st_rad, st_mass, st_age, distance = indices
 
 wind_temperatures, wind_speeds = np.genfromtxt("wind_info.txt", usecols=(1, 2), skip_header=1, delimiter="\t", unpack=True)
+
+# Plot initial distributions
+orbs = df["pl_orbper"].to_numpy()
+smas = df["pl_orbsmax"].to_numpy()
+ms = df["pl_bmassj"].to_numpy()
+Ms = df["st_mass"].to_numpy()
+ts = df["st_age"].to_numpy()
+ds = df["sy_dist"].to_numpy()
 
 hists = [orbs, smas, ms, Ms, ts, ds]
 
@@ -141,10 +109,10 @@ plt.show()
 
 plt.rcParams['font.size'] = 11
 
-
+# Calculate Frequencies and intensities
 for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
 
-    name = j[0]
+    name = j[pl_name]
 
     T_i = j[pl_orbper]
     T_s = (j[pl_orbper+1] - j[pl_orbper+2]) / 2
@@ -156,9 +124,9 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     if np.isnan(a_s):
         a_s = 0
 
-    R = j[10]
+    R = j[radius]
 
-    if j[18] == "Mass" or j[18] == "Msin(i)/sin(i)":
+    if j[pl_bmassprov] == "Mass" or j[pl_bmassprov] == "Msin(i)/sin(i)":
         M_i = j[pl_bmassj]
     else:
         M_i = j[pl_bmassj] * 1.15  # Expected Value of the mass based on projected mass
@@ -166,7 +134,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     if np.isnan(M_ss):
         M_ss = 0
 
-    p = j[19]
+    p = j[dens]
 
     M_s_i = j[st_mass]
     M_s_s = (j[st_mass+1] - j[st_mass+2]) / 2
@@ -186,7 +154,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     T_wind = wind_temperatures[i]
     v_wind = wind_speeds[i]
 
-    d = j[40]
+    d = j[distance]
     d *= 3.261561
 
     freqs = []
@@ -239,15 +207,6 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
 
         D = d * 9.46 * 10 ** 15  # conversion to meters
 
-        nu = max_freq(B)
-        assert nu > 0, f"Maximum emission frequency must be positive, instead got {nu=}."
-        nu /= 10 ** 6
-        freqs.append(nu)
-        nu *= 10**6
-
-        I = complete(B, a, M_s, Mdot, D)
-        assert I > 0, f"Radio brightness must be positive, instead got {I=}."
-
         # br = B_
 
         B_perp = imf_perp_complete(M_s, a, Rs, t, v_wind)
@@ -257,14 +216,32 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         n = number_density(t)
         R_m = Rm(B, R, n, T_wind, v_wind, B_star)
 
-        P_in = P_input(B_perp, veff*10**3, R_m*7*10**8)
-        P_rad = radio_power(P_in, nu, D)
+        nu = max_freq(B)
+        assert nu > 0, f"Maximum emission frequency must be positive, instead got {nu=}."
 
-        if IsBurst:
-            I = I * (10 ** 1.53)
-            P_rad *= 10**1.53
+        nu /= 10 ** 6
 
-        intenss.append(P_rad)
+        flag = True
+
+        if freq_condition(nu, n):
+            flag = False
+            freqs.append(nu)
+            nu *= 10**6
+
+            I = complete(B, a, M_s, Mdot, D)
+            assert I > 0, f"Radio brightness must be positive, instead got {I=}."
+
+            P_in = P_input(B_perp, veff*10**3, R_m*7*10**8)
+            P_rad = radio_power(P_in, nu, D)
+
+            if IsBurst:
+                I = I * (10 ** 1.53)
+                P_rad *= 10**1.53
+
+            intenss.append(P_rad)
+
+    if flag:
+        continue
 
     # print(f"{B_perp=}, {B_star=}, {n=}, {R_m=}. {Mdot=}, {P_in}, {P_rad}")
     nu = np.percentile(freqs, 50)
@@ -397,8 +374,8 @@ ax0.axvline(x=10, color="black", linestyle="dashed")
 ax0.set_xscale("log")
 ax0.set_yscale("log")
 # ax0.set_xlim(6, 30)
-# ax0.set_xlim(left=0.5)
-# ax0.set_ylim(bottom=10**(-8), top=10**1)
+ax0.set_xlim(left=0.5)
+ax0.set_ylim(bottom=10**(-10), top=10**1)
 
 ax0.axvspan(0, 10, alpha=0.2, color="teal")
 fig0.tight_layout()

@@ -72,9 +72,9 @@ def convective_radius(M, p, r):
     # p = exo.density
     # r = exo.radius
     if p < 1.6 and M > 0.4:
-        R = M ** 0.44  # Curtis & Ness (1986)
+        R = 0.049 * M ** 0.44  # Curtis & Ness (1986)
     else:
-        R = M ** 0.75 * r ** (-0.96)  # Grießmeier (2004)
+        R = 0.830 * M ** 0.75 * r ** (-0.96)  # Grießmeier (2004)
     return min(R, r) / 0.830
 
 

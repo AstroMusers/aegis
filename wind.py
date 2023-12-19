@@ -134,13 +134,13 @@ results = np.vstack((names, temperatures, speeds_at_distance))
 results = results.T
 
 column_headers = ["Name", "Corona Temp. (K)", "Wind Speed (km/s)"]
-filename = "wind_info.txt"
-with open("wind_info.txt", mode="w") as file:
+windfile = "wind_info" + filename[4:-4] + ".txt"
+with open(windfile, mode="w") as file:
     writer = csv.writer(file, delimiter="\t")
     writer.writerow(column_headers)
     writer.writerows(results)
 
-print(f"Results saved to {filename}")
+print(f"Results saved to {windfile}")
 
 plt.show()
 # Code takes 19 seconds to run end to end when radial profile linspace has 100 elements

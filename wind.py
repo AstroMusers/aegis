@@ -5,7 +5,7 @@ import csv
 import pandas as pd
 
 # Read CSV using pandas
-filename = "NASA1512.csv"
+filename = "NASA1912.csv"
 data = pd.read_csv(filename, comment="#")
 
 # Extract columns into separate arrays
@@ -93,8 +93,10 @@ for j in range(len(ages)):
 
     def v_for_r(r):
 
+        fast_bois_1512 = [792]
+        fast_bois_1912 = [1940, 3643]
         guess = 3
-        if j == 792:
+        if j in fast_bois_1912:
             guess = 3.5
 
         guess = np.array([guess])
@@ -113,6 +115,7 @@ for j in range(len(ages)):
 
     plt.plot(r_values, v_values, alpha=0.2)
 
+plt.show()
 problem = False
 for i in range(len(wind_speeds)):
     profile = wind_speeds[i]
@@ -142,5 +145,5 @@ with open(windfile, mode="w") as file:
 
 print(f"Results saved to {windfile}")
 
-plt.show()
+# plt.show()
 # Code takes 19 seconds to run end to end when radial profile linspace has 100 elements

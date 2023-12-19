@@ -38,12 +38,13 @@ uGMRT["RMS Noise"] = uGMRT["RMS Noise"] * (np.sqrt((100 * 10) / (bandwidth * int
 # Retrieve Data
 filename = "NASA1512.csv"
 df = pd.read_csv(filename, comment="#")
+windfile = "wind_info" + filename[4:-4] + ".txt"
 
 headers_to_find = ["pl_name", "pl_orbper", "pl_orbsmax", "pl_radj", "pl_bmassj", "pl_bmassprov", "pl_dens", "st_rad", "st_mass", "st_age", "sy_dist"]
 indices = [df.columns.get_loc(header) for header in headers_to_find]
 pl_name, pl_orbper, pl_orbsmax, radius, pl_bmassj, pl_bmassprov, dens, st_rad, st_mass, st_age, distance = indices
 
-wind_temperatures, wind_speeds = np.genfromtxt("wind_info.txt", usecols=(1, 2), skip_header=1, delimiter="\t", unpack=True)
+wind_temperatures, wind_speeds = np.genfromtxt(windfile, usecols=(1, 2), skip_header=1, delimiter="\t", unpack=True)
 
 # Plot initial distributions
 orbs = df["pl_orbper"].to_numpy()
@@ -84,7 +85,7 @@ ax6 = axs[1, 2]
 axes = [ax1, ax2, ax3, ax4, ax5, ax6]
 
 bins = [np.logspace(-1, 6, 15), np.logspace(-3, 3, 13), np.logspace(-3, 2, 11),
-        np.logspace(-2, 1, 11), np.logspace(-2, 2, 13), np.logspace(1, 2, 11)]
+        np.logspace(-2, 1, 11), np.logspace(-2, 2, 13), np.logspace(1, 4, 13)]
 
 ax1.hist(orbs, bins=bins[0], edgecolor="black")
 ax2.hist(smas, bins=bins[1], edgecolor="black")

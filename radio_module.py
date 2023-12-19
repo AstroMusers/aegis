@@ -78,10 +78,37 @@ def convective_radius(M, p, r):
     return min(R, r) / 0.830
 
 
+def magnetic_moment(p_c, w_p, r_c, sigma):
+    """
+    Finds the magnetic moment of the exoplanet using the density of its convective core, rotation rate, radius of its
+    convective core, and the conductivity of its convective core. Results is in Jovian magnetic moments when all parameter
+    values are given with respect to Jupiter.
+    :param p_c: Density of the convective core.
+    :param w_p: Planetary rotation rate.
+    :param r_c: Radius of the convective core
+    :param sigma: Conductivity of the convective core
+    :return: Magnetic moment of the exoplanet.
+    """
+    return p_c ** (1 / 2) * w_p ** (1 / 2) * r_c ** 3 * sigma ** (-1 / 2)
+
+
+def magnetic_field(mu, R):
+    """
+    Calculates the magnetic field strength at the surface of an exopplanet from its magnetic moment and radius. Given
+    in Ashtari2022
+    :param mu: Magnetic moment in A m^2
+    :param R:Radius in Jupiter radii.
+    :return: Magnetic field strength at the surface.
+    """
+    B_j = 4.17  # Gauss
+    return mu / R ** 3 * B_j
+
+
 def freq_condition(nu, n):
     n /= 10**6
     nu_p = 8.98 * np.sqrt(n) * 10**(-3)
     return nu > nu_p
+
 
 def keplerian(M, r):
     """
@@ -260,31 +287,6 @@ def radio_power(P_input, nu, d):
     """
     epsilon = 3.32 * 10**(-5)
     return epsilon * P_input / (1.6 * nu * d**2) * 10**26
-
-def magnetic_moment(p_c, w_p, r_c, sigma):
-    """
-    Finds the magnetic moment of the exoplanet using the density of its convective core, rotation rate, radius of its
-    convective core, and the conductivity of its convective core. Results is in Jovian magnetic moments when all parameter
-    values are given with respect to Jupiter.
-    :param p_c: Density of the convective core.
-    :param w_p: Planetary rotation rate.
-    :param r_c: Radius of the convective core
-    :param sigma: Conductivity of the convective core
-    :return: Magnetic moment of the exoplanet.
-    """
-    return p_c ** (1 / 2) * w_p ** (1 / 2) * r_c ** 3 * sigma ** (-1 / 2)
-
-
-def magnetic_field(mu, R):
-    """
-    Calculates the magnetic field strength at the surface of an exopplanet from its magnetic moment and radius. Given
-    in Ashtari2022
-    :param mu: Magnetic moment in A m^2
-    :param R:Radius in Jupiter radii.
-    :return: Magnetic field strength at the surface.
-    """
-    B_j = 4.17  # Gauss
-    return mu / R ** 3 * B_j
 
 
 def magnetopause(B, a):

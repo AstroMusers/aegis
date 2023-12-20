@@ -257,7 +257,7 @@ def Rm(B, R, n, T, v_eff, B_star):
     """
     k_b = 1.38 * 10**(-23)  # Boltzmann constant in J/K
     m_p = 1.76 * 10**(-27)  # Mass of proton
-    R_magnet = ((B / (8 * np.pi * (2 * n * k_b * T + m_p * n * 10**6 * v_eff**2 + B_star/(8 * np.pi)))) ** (1/6)) * R
+    R_magnet = 2.44**(1/3) * ((B**2 / (80 * np.pi * (2 * n * k_b * T + m_p * n * 10**6 * v_eff**2 + B_star**2/(80 * np.pi)))) ** (1/6)) * R
     if R_magnet > R:
         return R_magnet
     else:

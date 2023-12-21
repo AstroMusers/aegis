@@ -125,7 +125,10 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     if np.isnan(a_s):
         a_s = 0
 
-    R = j[radius]
+    R_i = j[radius]
+    R_s = (j[radius+1] - j[radius+2]) / 2
+    if np.isnan(R_s):
+        R_s = 0
 
     if j[pl_bmassprov] == "Mass" or j[pl_bmassprov] == "Msin(i)/sin(i)":
         M_i = j[pl_bmassj]
@@ -135,7 +138,10 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     if np.isnan(M_ss):
         M_ss = 0
 
-    p = j[dens]
+    p_i = j[dens]
+    p_s = (j[dens+1] - j[dens+2]) / 2
+    if np.isnan(p_s):
+        p_s = 0
 
     M_s_i = j[st_mass]
     M_s_s = (j[st_mass+1] - j[st_mass+2]) / 2
@@ -170,9 +176,17 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         while a < 0:
             a = rng.normal(a_i, a_s)
 
+        R = rng.normal(R_i, R_s)
+        while R < 0:
+            R = rng.normal(R_i, R_s)
+
         M = rng.normal(M_i, M_ss)
         while M < 0:
             M = rng.normal(M_i, M_ss)
+
+        p = rng.normal(p_i, p_s)
+        while p < 0:
+            p = rng.normal(p_i, p_s)
 
         M_s = rng.normal(M_s_i, M_s_s)
         while M_s < 0:
@@ -232,8 +246,9 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
             I = complete(B, a, M_s, Mdot, D)
             assert I > 0, f"Radio brightness must be positive, instead got {I=}."
 
-            P_in = P_input(B_perp, veff*10**3, R_m*7*10**8)
-            P_rad = radio_power(P_in, nu, D)
+            P_in_mag = P_input_mag(B_perp, veff*10**3, R_m*7*10**8, n)
+            P_in_kin = P_input_kin(B_perp, veff*10**3, R_m*7*10**8, n)
+            P_rad = radio_power(P_in_mag, 0, nu, D)
 
             if IsBurst:
                 I = I * (10 ** 1.53)

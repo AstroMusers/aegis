@@ -302,8 +302,8 @@ def radio_power(P_input_mag, P_input_kin, nu, d):
     :param d: Distance from Earth to the Source.
     :return: Expected observed radio flux density in Jy.
     """
-    epsilon_mag = 3.32 * 10**(-4)  # for magnetic power
-    epsilon_kin = 7.86 * 10**(-7)  # Only if you combine incident kinetic and magnetic power
+    epsilon_mag = 6.37 * 10**(-4)  # for magnetic power
+    epsilon_kin = 1.48 * 10**(-6)  # Only if you combine incident kinetic and magnetic power
     return (epsilon_mag * P_input_mag + epsilon_kin * P_input_kin) / (1.6 * nu * d**2) * 10**26
 
 

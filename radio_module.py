@@ -17,6 +17,7 @@ class Exoplanet:
         self.distance = distance
         self.freq = freq
         self.intensity = intensity
+
     def __repr__(self):
         return f"Exoplanet {self.name} with: a={self.semi_major_axis}, Bs={self.magnetic_field}, M={self.star_mass}," \
                f" Mdot={self.star_mass_loss}, D={self.distance} \n"
@@ -223,24 +224,24 @@ def imf_perp_complete(M, r, R, age, v_wind):
     return B_perp
 
 
-# def number_density(Mdot, v_eff, r):
-#     """
-#
-#     :param Mdot: Mass loss rate of the star in 10^-15 Msun/yr
-#     :param v_eff: stellar wind speed in km/s
-#     :param r: distance in AU
-#     :return: number density in m^-3
-#     """
-#     # Mdot *= 2 * 10**16
-#     # v_eff *= 10**3
-#     # r *= 1.49 * 10**11
-#     # m_p = 1.76 * 10**(-27)  # Mass of proton
-#     # return Mdot / (4 * np.pi * m_p * v_eff * r**2)
+def number_density(Mdot, v_eff, r):
+    """
 
-def number_density(age):
-    n0 = 1.04 * 10**11
-    tau = 2.56 * 10**(-2)
-    return n0 * (1 + age/tau)**(-1.86)
+    :param Mdot: Mass loss rate of the star in 10^-14 Msun/yr
+    :param v_eff: stellar wind speed in km/s
+    :param r: distance in AU
+    :return: number density in m^-3
+    """
+    Mdot *= 2 * 10**16 / (3.15 * 10**7)  # Conversion to kg/s
+    v_eff *= 10**3
+    r *= 1.49 * 10**11
+    m_p = 1.76 * 10**(-27)  # Mass of proton
+    return Mdot / (4 * np.pi * m_p * v_eff * r**2)
+
+# def number_density(age):
+#     n0 = 1.04 * 10**11
+#     tau = 2.56 * 10**(-2)
+#     return n0 * (1 + age/tau)**(-1.86)
 
 
 

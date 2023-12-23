@@ -202,7 +202,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
 
         highS_Mdot = t ** (-1.23) * 10 ** 3
         lowS_Mdot = t ** (-0.9) * 10 ** 3
-        Mdot = 8.1 * t ** (-1.37)  # 10^-14 M_sun / yr = Mdot_sun /
+        Mdot = 8.1 * t ** (-1.37)  # 10^-14 M_sun / yr = Mdot_sun
 
         B = 1  # Tentative
         sigma = 1  # Jupiter conductivity
@@ -228,7 +228,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         v_k = keplerian(M_s, a)
         veff = v_eff(v_wind, v_k)
         B_star = imf_complete(M_s, a, v_wind, t, Rs)
-        n = number_density(t)
+        n = number_density(Mdot, veff, a)
         R_m = Rm(B, R, n, T_wind, v_wind, B_star)
 
         nu = max_freq(B)

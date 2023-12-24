@@ -57,7 +57,7 @@ ds = df["sy_dist"].to_numpy()
 hists = [orbs, smas, ms, Ms, ts, ds]
 
 exoplanets = []
-IsBurst = 0
+IsBurst = 1
 
 names = []
 frequencies = []
@@ -391,7 +391,7 @@ ax0.set_xscale("log")
 ax0.set_yscale("log")
 # ax0.set_xlim(6, 30)
 ax0.set_xlim(left=0.5)
-ax0.set_ylim(bottom=10**(-10), top=10**0)
+ax0.set_ylim(bottom=10**(-10), top=10**1)
 
 ax0.axvspan(0, 10, alpha=0.2, color="teal")
 fig0.tight_layout()

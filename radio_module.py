@@ -73,7 +73,7 @@ def convective_radius(M, p, r):
     # p = exo.density
     # r = exo.radius
     if p < 1.6 and M > 0.4:
-        R = 0.049 * M ** 0.44  # Curtis & Ness (1986)
+        R = 0.830 * M ** 0.44  # Curtis & Ness (1986)
     else:
         R = 0.830 * M ** 0.75 * r ** (-0.96)  # Grießmeier (2004)
     return min(R, r) / 0.830
@@ -102,6 +102,7 @@ def magnetic_field(mu, R):
     :return: Magnetic field strength at the surface.
     """
     B_j = 4.17  # Gauss
+    # B_j = 14  # Gauss
     return mu / R ** 3 * B_j
 
 
@@ -303,8 +304,10 @@ def radio_power(P_input_mag, P_input_kin, nu, d):
     :param d: Distance from Earth to the Source.
     :return: Expected observed radio flux density in Jy.
     """
-    epsilon_mag = 6.37 * 10**(-4)  # for magnetic power
-    epsilon_kin = 1.48 * 10**(-6)  # Only if you combine incident kinetic and magnetic power
+    epsilon_mag = 6.37 * 10**(-5)  # for magnetic power R_mpJ = 65 Rj
+    epsilon_mag = 1.37 * 10**(-4)  # R_mpJ = 43 RJ
+    epsilon_kin = 1.48 * 10**(-6)  # Only if you combine incident kinetic and magnetic power R_mpJ = 65 Rj
+    epsilon_kin = 3.26 * 10**(-6)  # R_mpJ = 43 Rj
     return (epsilon_mag * P_input_mag + epsilon_kin * P_input_kin) / (1.6 * nu * d**2) * 10**26
 
 

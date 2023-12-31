@@ -5,7 +5,7 @@ import csv
 import pandas as pd
 
 # Read CSV using pandas
-filename = "NASA1912.csv"
+filename = "NASA3112.csv"
 data = pd.read_csv(filename, comment="#")
 
 # Extract columns into separate arrays
@@ -95,8 +95,9 @@ for j in range(len(ages)):
 
         fast_bois_1512 = [792]
         fast_bois_1912 = [1940, 3643]
+        fast_bois_3112 = [1164]
         guess = 3
-        if j in fast_bois_1912:
+        if j in fast_bois_3112:
             guess = 3.5
 
         guess = np.array([guess])

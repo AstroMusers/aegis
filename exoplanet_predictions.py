@@ -403,7 +403,7 @@ else:
 ax0.set_xlabel("Emission Frequency (MHz)")
 ax0.set_ylabel("Radio Brightness (Jy)")
 
-TheBins1 = np.logspace(-9, 2, 12)
+TheBins1 = np.logspace(-13, 0, 14)
 
 plt.rcParams['figure.figsize'] = [6, 4]
 rc = {"font.family": "times new roman",
@@ -426,7 +426,7 @@ else:
 ax1.set_xscale("log")
 ax1.set_yscale("log")
 
-TheBins2 = np.logspace(-4, 4, 17)
+TheBins2 = np.logspace(-1, 3, 17)
 
 ax2.hist(magnetic_fields, bins=TheBins2, edgecolor="black")
 ax2.set_xlabel("Magnetic Field Strength at the Surface (Gauss)")

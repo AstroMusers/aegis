@@ -36,7 +36,7 @@ uGMRT["RMS Noise"] = uGMRT["RMS Noise"] * (np.sqrt((100 * 10) / (bandwidth * int
 # MWA
 
 # Retrieve Data
-filename = "NASA1512.csv"
+filename = "NASA3112.csv"
 df = pd.read_csv(filename, comment="#")
 windfile = "wind_info" + filename[4:-4] + ".txt"
 
@@ -57,7 +57,7 @@ ds = df["sy_dist"].to_numpy()
 hists = [orbs, smas, ms, Ms, ts, ds]
 
 exoplanets = []
-IsBurst = 1
+IsBurst = 0
 
 names = []
 frequencies = []
@@ -364,11 +364,11 @@ ax0.errorbar(df1.x, df1.y,
 # adjust_text(texts)
 for i, txt in enumerate(labels):
     if txt:
-        ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(1, 1), textcoords="offset pixels", fontsize=8)
+        ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(2, 2), textcoords="offset pixels", fontsize=8)
 
 # lofar.plot(ax=ax0, x="Freq.", y="NL Core", style ="--", linewidth=0.2)
 # lofar.plot(ax=ax0, x="Freq.", y="Full EU", style="g--", linewidth=0.5)
-ax0.plot(Freq, L_EU, "g--", linewidth=0.5)
+ax0.plot(Freq, L_EU, linestyle="dashed", color="purple", linewidth=0.5)
 
 for i in range(4):
     x = uGMRT["Frequencies"][i]
@@ -379,7 +379,7 @@ for i in range(4):
     else:
         ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1)
 
-ax0.fill_between(Freq, L_EU, 10**6, color="green", alpha=0.1, label="LOFAR")
+ax0.fill_between(Freq, L_EU, 10**6, color="purple", alpha=0.1, label="LOFAR")
 plt.legend()
 # ax0.fill_between(Freq, L_NL, 10**6, color="green", alpha=0.1)
 
@@ -391,7 +391,7 @@ ax0.set_xscale("log")
 ax0.set_yscale("log")
 # ax0.set_xlim(6, 30)
 ax0.set_xlim(left=0.5)
-ax0.set_ylim(bottom=10**(-10), top=10**1)
+ax0.set_ylim(bottom=10**(-10), top=10**0)
 
 ax0.axvspan(0, 10, alpha=0.2, color="teal")
 fig0.tight_layout()

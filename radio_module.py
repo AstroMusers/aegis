@@ -29,10 +29,10 @@ def max_freq(B):
     :param B: Magnetic Field Strength at the surface of the exoplanet, must be given in Gauss.
     :return: Maximum CMI emission frequency of the exoplanet, given in Hz
     """
-    # Bj = 14  # gauss
-    # nuJ = 24 * 10 ** 6  # Hz
-    # return nuJ * B / Bj
-    return 2.8 * 10**6 * B
+    Bj = 14  # gauss
+    nuJ = 24 * 10 ** 6  # Hz
+    return nuJ * B / Bj
+    # return 2.8 * 10**6 * B
 
 
 def density(p):
@@ -101,8 +101,8 @@ def magnetic_field(mu, R):
     :param R:Radius in Jupiter radii.
     :return: Magnetic field strength at the surface.
     """
-    B_j = 4.17  # Gauss
-    # B_j = 14  # Gauss
+    # B_j = 4.17  # Gauss
+    B_j = 14  # Gauss
     return mu / R ** 3 * B_j
 
 
@@ -305,9 +305,9 @@ def radio_power(P_input_mag, P_input_kin, nu, d):
     :return: Expected observed radio flux density in Jy.
     """
     epsilon_mag = 6.37 * 10**(-5)  # for magnetic power R_mpJ = 65 Rj
-    epsilon_mag = 1.37 * 10**(-4)  # R_mpJ = 43 RJ
+    # epsilon_mag = 1.37 * 10**(-4)  # R_mpJ = 43 RJ
     epsilon_kin = 1.48 * 10**(-6)  # Only if you combine incident kinetic and magnetic power R_mpJ = 65 Rj
-    epsilon_kin = 3.26 * 10**(-6)  # R_mpJ = 43 Rj
+    # epsilon_kin = 3.26 * 10**(-6)  # R_mpJ = 43 Rj
     return (epsilon_mag * P_input_mag + epsilon_kin * P_input_kin) / (1.6 * nu * d**2) * 10**26
 
 

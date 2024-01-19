@@ -445,6 +445,11 @@ l1 = [arr.tolist() for arr in l1]
 l2 = [names]
 l2.extend(l1)
 
+detectable_data = [[exo.name, exo.freq, exo.intensity] for exo in detectables]
+with open("detectables.txt", "w") as fn:
+    fn.write(tabulate(detectable_data))
+    fn.close()
+
 table = list(zip(*l2))
 file_names = ["names.txt", "freq.txt", "intens.txt"]
 

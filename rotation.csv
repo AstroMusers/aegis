@@ -1,0 +1,11 @@
+Body Name,Body Type,Rotational Period ,Flag
+Mercury,Planet,58.64,0
+Venus,Planet,243.02,0
+Earth,Planet,1,0
+Mars,Planet,1.03,0
+Jupiter,Planet,9h 55m 29s,1
+Saturn,Planet,10h 39m 22s,1
+Uranus,Planet,17h 14m 24s,1
+Neptune,Planet,16h 6m 36s,1
+Himalia (JVI),Moon,0.4,0
+Elara (JVII),Moon,0.5,0

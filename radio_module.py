@@ -44,7 +44,7 @@ def density(p):
     return p / 1.326
 
 
-def rotation(T, a):
+def rotation(T, a, L, M ,R):
     """
     Returns the planetary rotation rate in Jovian rotation rate. Assume tidally locked if orbit semi major axis is less
     than 0.1 AU.
@@ -55,7 +55,7 @@ def rotation(T, a):
     if a <= 0.1:
         return T / 0.414
     else:
-        return 1
+        return 5 * L / 2 * M * R**2
 
 
 def convective_radius(M, p, r):

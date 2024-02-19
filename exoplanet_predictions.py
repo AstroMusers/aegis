@@ -2,6 +2,7 @@ import pandas as pd
 from tabulate import tabulate
 from adjustText import adjust_text
 from radio_module import *
+import rotation_script
 
 rng = np.random.default_rng()
 
@@ -202,23 +203,22 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         while Rs < 0:
             Rs = rng.normal(Rs_i, Rs_s)
 
+        L = 10 ** rotation_script.kde.resample(1)[0][0]
+
         highS_Mdot = t ** (-1.23) * 10 ** 3
         lowS_Mdot = t ** (-0.9) * 10 ** 3
         Mdot = 8.1 * t ** (-1.37)  # 10^-14 M_sun / yr = Mdot_sun
 
-        B = 1  # Tentative
         sigma = 1  # Jupiter conductivity
         # d *= 3.26156
 
-        exo = Exoplanet(name, a, R, M, p, B, M_s, Mdot, d)
-
         p_c = density(p)
-        w_p = rotation(T, a)
+        w_p = rotation(T, a, L, M, R)
 
         r_c = convective_radius(M, p_c, R)
         mu = magnetic_moment(p_c, w_p, r_c, sigma)
-        B = magnetic_field(mu, exo.radius)
-        exo.magnetic_field = B
+        B = magnetic_field(mu, R)
+
         if B == 0:
             continue
 
@@ -393,7 +393,7 @@ ax0.axvline(x=10, color="black", linestyle="dashed")
 ax0.set_xscale("log")
 ax0.set_yscale("log")
 # ax0.set_xlim(6, 30)
-ax0.set_xlim(left=0.5)
+ax0.set_xlim(left=0.05)
 ax0.set_ylim(bottom=10**(-10), top=10**0)
 
 ax0.axvspan(0, 10, alpha=0.2, color="teal")

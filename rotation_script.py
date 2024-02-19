@@ -2,7 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
 
-names, types, per, flag = np.genfromtxt("rotation.csv", delimiter=",", dtype=str, skip_header=1, unpack=True)
+names, types, per = np.genfromtxt("rotation.csv", delimiter=",", dtype=str, skip_header=1, skip_footer=2, unpack=True, usecols=(0,1,2))
+flag, mass, radius = np.genfromtxt("rotation.csv", delimiter=",", dtype=float, skip_header=1, skip_footer=2, unpack=True, usecols=(3,4,5))
 
 def time_string_to_days(time_str):
     # Split the time string into components
@@ -29,19 +30,33 @@ days = time_string_to_days(time_str)
 
 periods = []
 for i in range(len(names)):
-    if flag[i] == "1":
+    if flag[i] == 1:
         p = time_string_to_days(per[i])
     else:
         p = float(per[i])
     periods.append(p)
 
 # print(periods)
+periods = np.array(periods)
 
-log_periods = np.log10(periods)
+MJ = mass[np.where(names == "Jupiter")][0]
+RJ = radius[np.where(names == "Jupiter")][0]
+print(MJ, RJ)
+
+mass /= MJ
+radius /= RJ
+omega = 2*np.pi/periods
+
+wJ = omega[np.where(names == "Jupiter")][0]
+omega /= wJ
+
+momenta = 2 / 5 * mass * radius**2 * omega
+momenta /= momenta[np.where(names == "Jupiter")][0]
+log_momenta = np.log10(momenta)
 
 # print(log_periods)
 
-kde = gaussian_kde(log_periods)
+kde = gaussian_kde(log_momenta)
 
 num_samples = 500
 samples = kde.resample(size=num_samples)
@@ -52,14 +67,14 @@ true_samples = true_samples.T
 samples = samples.T
 
 plt.figure(1)
-plt.hist(log_periods, bins=29, color="teal", edgecolor="black")
-plt.xlabel('$\log_{10}{\mathrm{(Rotational\,\, Period / days)}}$')
+plt.hist(log_momenta, bins=29, color="teal", edgecolor="black")
+plt.xlabel('$\log_{10}{\mathrm{(Spin \, Angular \, Momentum \, [L_J])}}$')
 plt.ylabel("Occurence")
-plt.title("Histogram of Solar System Bodies' Rotation Periods")
+plt.title("Histogram of Solar System Bodies' Spin Angular Momenta")
 # Create histogram
 plt.figure(2)
 plt.hist(samples, bins=30, color='skyblue', edgecolor='black')
-plt.xlabel('$\log_{10}{\mathrm{(Simulated\,\, Rotational\,\, Period / days)}}$')
+plt.xlabel('$\log_{10}{\mathrm{(Simulated \, Spin \, Angular \, Momentum \, [L_J])}}$')
 plt.ylabel('Density (arbitrary units)')
 plt.title('Histogram of Random Samples')
 #

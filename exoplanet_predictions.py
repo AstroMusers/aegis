@@ -109,7 +109,7 @@ fig.suptitle('Distribution of Initial Parameters for the Exoplanet Sample', font
 
 plt.show()
 
-plt.rcParams['font.size'] = 11
+plt.rcParams['font.size'] = 9
 
 detectables = []
 
@@ -334,6 +334,7 @@ distances *= 10 ** 2.7
 intensities = np.array(intensities)
 
 semis = np.array(semis)
+cond = np.where(semis < 2)
 
 y_err = [y_minerr, y_maxerr]
 x_err = [x_minerr, x_maxerr]
@@ -367,7 +368,7 @@ ax0.errorbar(df1.x, df1.y,
 # adjust_text(texts)
 for i, txt in enumerate(labels):
     if txt:
-        ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(2, 2), textcoords="offset pixels", fontsize=8)
+        ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(2, 2), textcoords="offset pixels", fontsize=7)
 
 # lofar.plot(ax=ax0, x="Freq.", y="NL Core", style ="--", linewidth=0.2)
 # lofar.plot(ax=ax0, x="Freq.", y="Full EU", style="g--", linewidth=0.5)
@@ -406,12 +407,12 @@ else:
 ax0.set_xlabel("Emission Frequency (MHz)")
 ax0.set_ylabel("Radio Brightness (Jy)")
 
+retro_noir(ax0)
+
 TheBins1 = np.logspace(-13, 0, 14)
 
 plt.rcParams['figure.figsize'] = [6, 4]
-rc = {"font.family": "times new roman",
-      "font.size": 14,
-      "mathtext.fontset": "stix"}
+rc = {"font.size": 12}
 plt.rcParams.update(rc)
 
 fig1, axs = plt.subplots(1, 2, sharey="row", figsize=[10, 5])

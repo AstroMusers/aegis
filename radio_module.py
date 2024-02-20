@@ -381,16 +381,15 @@ mpl.use('Qt5Agg')
 mpl.rcParams["figure.autolayout"] = True
 plt.rcParams['figure.figsize'] = [10, 5]
 
-rc = {"font.family": "times new roman",
-      "font.size": 11,
-      "mathtext.fontset": "stix"}
+rc = {"font.size": 10}
 plt.rcParams.update(rc)
 
 
 def retro_noir(ax):
     ax.grid(alpha=0.2)
-    ax.tick_params(direction="in", length=7, right=True, top=True, width=1.5)
-    ax.spines['top'].set_linewidth(1.5)
-    ax.spines['bottom'].set_linewidth(1.5)
-    ax.spines['left'].set_linewidth(1.5)
-    ax.spines['right'].set_linewidth(1.5)
+    ax.tick_params(direction="in", which="major", length=7, right=True, top=True, width=1.25)
+    ax.tick_params(direction="in", which="minor", length=4, right=True, top=True, width=1.25)
+    ax.spines['top'].set_linewidth(1.25)
+    ax.spines['bottom'].set_linewidth(1.25)
+    ax.spines['left'].set_linewidth(1.25)
+    ax.spines['right'].set_linewidth(1.25)

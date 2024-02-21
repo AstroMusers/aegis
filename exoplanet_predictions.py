@@ -284,6 +284,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     frequencies.append(EXO.freq)
     intensities.append(EXO.intensity)
 
+    observable_flag = False
     if 30 <= nu <= 180:
         for m in range(7):
             if Freq[m] <= nu <= Freq[m + 1]:
@@ -291,16 +292,19 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
                     obs = str(EXO.name)
                     print(obs)
                     detectables.append(EXO)
+                    observable_flag = True
                     break
-    elif 120 <= nu < 850 or 1050 < nu <= 1450:
-        for m in range(4):
-            if uGMRT["Frequencies"][m][0] <= nu <= uGMRT["Frequencies"][m][1] and I > uGMRT["RMS Noise"][m][0]:
-                obs = str(EXO.name)
-                print(obs)
-                detectables.append(EXO)
-                break
 
-    elif EXO.name == "tau Boo b":  # Special interest
+    if not observable_flag:
+        if 120 <= nu < 850 or 1050 < nu <= 1450:
+            for m in range(4):
+                if uGMRT["Frequencies"][m][0] <= nu <= uGMRT["Frequencies"][m][1] and I > uGMRT["RMS Noise"][m][0]:
+                    obs = str(EXO.name)
+                    print(obs)
+                    detectables.append(EXO)
+                    break
+
+    if EXO.name == "tau Boo b":  # Special interest
         obs = EXO.name
 
     labels.append(obs)

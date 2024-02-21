@@ -85,8 +85,8 @@ ax6 = axs[1, 2]
 
 axes = [ax1, ax2, ax3, ax4, ax5, ax6]
 
-bins = [np.logspace(-1, 6, 15), np.logspace(-3, 3, 13), np.logspace(-3, 2, 11),
-        np.logspace(-2, 1, 11), np.logspace(-2, 2, 13), np.logspace(1, 4, 13)]
+bins = [np.logspace(-1, 6, 15), np.logspace(-2.5, 1.5, 13), np.logspace(-3, 1.5, 9),
+        np.logspace(-1.5, 1, 11), np.logspace(-2, 1.5, 15), np.logspace(0.5, 3.5, 10)]
 
 ax1.hist(orbs, bins=bins[0], edgecolor="black")
 ax2.hist(smas, bins=bins[1], edgecolor="black")
@@ -356,7 +356,7 @@ df1 = pd.DataFrame({"x": frequencies,
 
 fig0, ax0 = plt.subplots()
 
-im = ax0.scatter(df1.x, df1.y, c=df1.s, s=df1.d, cmap="jet_r")
+im = ax0.scatter(df1.x, df1.y, c=df1.s, s=df1.d, cmap="magma_r")
 ax0.errorbar(df1.x, df1.y,
              yerr=y_err,
              xerr=x_err,
@@ -387,7 +387,7 @@ ax0.fill_between(Freq, L_EU, 10**6, color="purple", alpha=0.1, label="LOFAR")
 plt.legend()
 # ax0.fill_between(Freq, L_NL, 10**6, color="green", alpha=0.1)
 
-fig0.colorbar(im, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)")
+fig0.colorbar(im, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)", aspect=25, extend="both")
 
 ax0.axvline(x=10, color="black", linestyle="dashed")
 
@@ -409,10 +409,10 @@ ax0.set_ylabel("Radio Brightness (Jy)")
 
 retro_noir(ax0)
 
-TheBins1 = np.logspace(-13, 0, 14)
+TheBins1 = np.logspace(-12, 0, 13)
 
 plt.rcParams['figure.figsize'] = [6, 4]
-rc = {"font.size": 12}
+rc = {"font.size": 10}
 plt.rcParams.update(rc)
 
 fig1, axs = plt.subplots(1, 2, sharey="row", figsize=[10, 5])
@@ -430,7 +430,7 @@ else:
 ax1.set_xscale("log")
 ax1.set_yscale("log")
 
-TheBins2 = np.logspace(-1, 3, 17)
+TheBins2 = np.logspace(-3, 3, 13)
 
 ax2.hist(magnetic_fields, bins=TheBins2, edgecolor="black")
 ax2.set_xlabel("Magnetic Field Strength at the Surface (Gauss)")

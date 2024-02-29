@@ -133,13 +133,13 @@ def v_eff(v_wind, v_kepler):
     return np.sqrt(v_wind**2 + v_kepler**2)
 
 
-def star_surface_b(age):
+def star_surface_b(age, exponent):
     """
 
     :param age: Age of the star in Gyr
     :return: Surface magentic field of the star in Gauss
     """
-    return 0.7 * age**0.655
+    return 0.7 * age**exponent
 
 
 def star_period(age):
@@ -183,10 +183,10 @@ def imf(B_r, B_phi):
     return np.sqrt(B_r**2 + B_phi**2)
 
 
-def imf_complete(M, r, v_wind, age, R):
+def imf_complete(M, r, v_wind, age, R, b0_exponent):
     v_k = keplerian(M, r)
     veff = v_eff(v_wind, v_k)
-    B0 = star_surface_b(age)
+    B0 = star_surface_b(age, b0_exponent)
     P = star_period(age)
     Br = B_r(B0, R, r)
     Bphi = B_phi(Br, P, r, veff)
@@ -205,7 +205,7 @@ def imf_perp(B_r, B_phi, v_k, v):
     return np.sqrt(B_r**2 + B_phi**2) * abs(np.sin(np.arctan(B_phi/B_r) - np.arctan(v_k/v)))
 
 
-def imf_perp_complete(M, r, R, age, v_wind):
+def imf_perp_complete(M, r, R, age, v_wind, b0_exponent):
     """
 
     :param M: Mass of the Star
@@ -217,7 +217,7 @@ def imf_perp_complete(M, r, R, age, v_wind):
     """
     v_k = keplerian(M, r)
     veff = v_eff(v_wind, v_k)
-    B0 = star_surface_b(age)
+    B0 = star_surface_b(age, b0_exponent)
     P = star_period(age)
     Br = B_r(B0, R, r)
     Bphi = B_phi(Br, P, r, veff)

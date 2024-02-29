@@ -203,6 +203,8 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         while Rs < 0:
             Rs = rng.normal(Rs_i, Rs_s)
 
+        b0_exponent = rng.normal(-0.655, 0.045)
+
         L = 10 ** rotation_script.kde.resample(1)[0][0]
 
         highS_Mdot = t ** (-1.23) * 10 ** 3
@@ -226,10 +228,10 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
 
         # br = B_
 
-        B_perp = imf_perp_complete(M_s, a, Rs, t, v_wind)
+        B_perp = imf_perp_complete(M_s, a, Rs, t, v_wind, b0_exponent)
         v_k = keplerian(M_s, a)
         veff = v_eff(v_wind, v_k)
-        B_star = imf_complete(M_s, a, v_wind, t, Rs)
+        B_star = imf_complete(M_s, a, v_wind, t, Rs, b0_exponent)
         n = number_density(Mdot, veff, a)
         R_m = Rm(B, R, n, T_wind, v_wind, B_star)
 
@@ -399,7 +401,7 @@ ax0.set_xscale("log")
 ax0.set_yscale("log")
 # ax0.set_xlim(6, 30)
 ax0.set_xlim(left=0.05)
-ax0.set_ylim(bottom=10**(-10), top=10**0)
+ax0.set_ylim(bottom=10**(-12), top=10**-1)
 
 ax0.axvspan(0, 10, alpha=0.2, color="teal")
 fig0.tight_layout()
@@ -412,8 +414,7 @@ ax0.set_xlabel("Emission Frequency (MHz)")
 ax0.set_ylabel("Radio Brightness (Jy)")
 
 retro_noir(ax0)
-
-TheBins1 = np.logspace(-12, 0, 13)
+TheBins1 = np.logspace(-13, 0, 14)
 
 plt.rcParams['figure.figsize'] = [6, 4]
 rc = {"font.size": 10}

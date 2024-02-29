@@ -79,6 +79,10 @@ def convective_radius(M, p, r):
     return min(R, r) / 0.830
 
 
+def mass_loss(age, flux_exponent, loss_exponent):
+    return 8.1 * age**(flux_exponent * loss_exponent)
+
+
 def magnetic_moment(p_c, w_p, r_c, sigma):
     """
     Finds the magnetic moment of the exoplanet using the density of its convective core, rotation rate, radius of its

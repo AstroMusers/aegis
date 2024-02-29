@@ -20,6 +20,11 @@ L_NL = lofar["NL Core"]
 L_EU = lofar["Full EU"]
 Freq = lofar["Freq."]
 
+L_EU_1 = L_EU[:4]
+L_EU_2 = L_EU[4:]
+Freq_1 = Freq[:4]
+Freq_2 = Freq[4:]
+
 # ----------------------------
 
 # uGMRT:
@@ -203,13 +208,16 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         while Rs < 0:
             Rs = rng.normal(Rs_i, Rs_s)
 
-        b0_exponent = rng.normal(-0.655, 0.045)
+        b0_exponent = rng.normal(-0.655, 0.045)  # Vidotto 2014
+
+        flux_exponent = rng.normal(-1.74, 0.34)  # Ayres 1997 in Lynch 2018
+        loss_exponent = rng.normal(0.79, 0.17)  # Alvarado-Gomez 2016 in Lynch 2018
 
         L = 10 ** rotation_script.kde.resample(1)[0][0]
 
         highS_Mdot = t ** (-1.23) * 10 ** 3
         lowS_Mdot = t ** (-0.9) * 10 ** 3
-        Mdot = 8.1 * t ** (-1.37)  # 10^-14 M_sun / yr = Mdot_sun
+        Mdot = mass_loss(t, flux_exponent, loss_exponent)
 
         sigma = 1  # Jupiter conductivity
         # d *= 3.26156
@@ -287,10 +295,20 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     intensities.append(EXO.intensity)
 
     observable_flag = False
-    if 30 <= nu <= 180:
-        for m in range(7):
-            if Freq[m] <= nu <= Freq[m + 1]:
-                if I >= (L_EU[m + 1] - L_EU[m]) / (Freq[m + 1] - Freq[m]) * (nu - Freq[m]) + L_EU[m]:
+    if 30 <= nu <= 75:
+        for m in range(4):
+            if Freq_1[m] <= nu <= Freq_1[m + 1]:
+                if I >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
+                    obs = str(EXO.name)
+                    print(obs)
+                    detectables.append(EXO)
+                    observable_flag = True
+                    break
+
+    if 120 <= nu <= 180:
+        for m in range(4, 7):
+            if Freq_2[m] <= nu <= Freq_2[m+1]:
+                if I >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
                     obs = str(EXO.name)
                     print(obs)
                     detectables.append(EXO)
@@ -378,7 +396,8 @@ for i, txt in enumerate(labels):
 
 # lofar.plot(ax=ax0, x="Freq.", y="NL Core", style ="--", linewidth=0.2)
 # lofar.plot(ax=ax0, x="Freq.", y="Full EU", style="g--", linewidth=0.5)
-ax0.plot(Freq, L_EU, linestyle="dashed", color="purple", linewidth=0.5)
+ax0.plot(Freq_1, L_EU_1, linestyle="dashed", color="purple", linewidth=0.5)
+ax0.plot(Freq_2, L_EU_2, linestyle="dashed", color="red", linewidth=0.5)
 
 for i in range(4):
     x = uGMRT["Frequencies"][i]
@@ -389,8 +408,9 @@ for i in range(4):
     else:
         ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1)
 
-ax0.fill_between(Freq, L_EU, 10**6, color="purple", alpha=0.1, label="LOFAR")
-plt.legend()
+ax0.fill_between(Freq_1, L_EU_1, 10**6, color="purple", alpha=0.1, label="LOFAR LBA")
+ax0.fill_between(Freq_2, L_EU_2, 10**6, color="red", alpha=0.1, label="LOFAR HBA")
+plt.legend(loc="upper left")
 # ax0.fill_between(Freq, L_NL, 10**6, color="green", alpha=0.1)
 
 fig0.colorbar(im, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)", aspect=25, extend="both")

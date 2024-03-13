@@ -80,7 +80,8 @@ def convective_radius(M, p, r):
 
 
 def mass_loss(age, flux_exponent, loss_exponent):
-    return 8.1 * age**(flux_exponent * loss_exponent)
+    coeff = 1 / (4.603 ** (flux_exponent * loss_exponent))
+    return coeff * age**(flux_exponent * loss_exponent)
 
 
 def magnetic_moment(p_c, w_p, r_c, sigma):
@@ -143,7 +144,9 @@ def star_surface_b(age, exponent):
     :param age: Age of the star in Gyr
     :return: Surface magentic field of the star in Gauss
     """
-    return 0.7 * age**exponent
+    # 5.14
+    coeff = 1.89 / (4.6**(-0.655))
+    return coeff * age**exponent
 
 
 def star_period(age):
@@ -397,3 +400,4 @@ def retro_noir(ax):
     ax.spines['bottom'].set_linewidth(1.25)
     ax.spines['left'].set_linewidth(1.25)
     ax.spines['right'].set_linewidth(1.25)
+

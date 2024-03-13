@@ -1,8 +1,9 @@
 import pandas as pd
+import math
 from tabulate import tabulate
 from adjustText import adjust_text
 from radio_module import *
-import rotation_script
+from rotation_script import *
 
 rng = np.random.default_rng()
 
@@ -126,17 +127,17 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     T_i = j[pl_orbper]
     T_s = (j[pl_orbper+1] - j[pl_orbper+2]) / 2
     if np.isnan(T_s):
-        T_s = 0
+        T_s = T_i / 5
 
     a_i = j[pl_orbsmax]
     a_s = (j[pl_orbsmax+1] - j[pl_orbsmax+2]) / 2
     if np.isnan(a_s):
-        a_s = 0
+        a_s = a_i / 5
 
     R_i = j[radius]
     R_s = (j[radius+1] - j[radius+2]) / 2
     if np.isnan(R_s):
-        R_s = 0
+        R_s = R_i / 5
 
     if j[pl_bmassprov] == "Mass" or j[pl_bmassprov] == "Msin(i)/sin(i)":
         M_i = j[pl_bmassj]
@@ -144,27 +145,27 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         M_i = j[pl_bmassj] * 1.15  # Expected Value of the mass based on projected mass
     M_ss = (j[pl_bmassj + 1] - j[pl_bmassj + 2]) / 2
     if np.isnan(M_ss):
-        M_ss = 0
+        M_ss = M_i / 5
 
     p_i = j[dens]
     p_s = (j[dens+1] - j[dens+2]) / 2
     if np.isnan(p_s):
-        p_s = 0
+        p_s = p_i / 5
 
     M_s_i = j[st_mass]
     M_s_s = (j[st_mass+1] - j[st_mass+2]) / 2
     if np.isnan(M_s_s):
-        M_s_s = 0
+        M_s_s = M_s_i / 5
 
     t_i = j[st_age]
     t_s = (j[st_age+1] - j[st_age+2]) / 2
     if np.isnan(t_s):
-        t_s = 0
+        t_s = t_i / 5
 
     Rs_i = j[st_rad]
     Rs_s = (j[st_rad+1] - j[st_rad+2]) / 2
     if np.isnan(Rs_s):
-        Rs_s = 0
+        Rs_s = Rs_i / 5
 
     T_wind = wind_temperatures[i]
     v_wind = wind_speeds[i]
@@ -213,7 +214,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         flux_exponent = rng.normal(-1.74, 0.34)  # Ayres 1997 in Lynch 2018
         loss_exponent = rng.normal(0.79, 0.17)  # Alvarado-Gomez 2016 in Lynch 2018
 
-        L = 10 ** rotation_script.kde.resample(1)[0][0]
+        L = moment_sampler()
 
         highS_Mdot = t ** (-1.23) * 10 ** 3
         lowS_Mdot = t ** (-0.9) * 10 ** 3
@@ -374,95 +375,108 @@ df1 = pd.DataFrame({"x": frequencies,
                     "s": semis,
                     "l": labels})
 
-# print(uGMRT)
-# print(lofar)
-# print(lofar.dtypes)
 
-fig0, ax0 = plt.subplots()
+def scatter_plot(df1, y_err, x_err, labels, zoom=False, save=False):
+    fig0, ax0 = plt.subplots()
+    im = ax0.scatter(df1.x, df1.y, c=df1.s, s=df1.d, cmap="magma_r")
+    ax0.errorbar(df1.x, df1.y,
+                 yerr=y_err,
+                 xerr=x_err,
+                 fmt="None",
+                 ecolor="black",
+                 elinewidth=0.5)
+    ax0.plot(Freq_1, L_EU_1, linestyle="dashed", color="purple", linewidth=0.5)
+    ax0.plot(Freq_2, L_EU_2, linestyle="dashed", color="red", linewidth=0.5)
+    for i in range(4):
+        x = uGMRT["Frequencies"][i]
+        y = uGMRT["RMS Noise"][i]
+        plt.plot(x, y, "b--", linewidth=0.5)
+        if i == 0:
+            ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1, label="uGMRT")
+        else:
+            ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1)
+    ax0.fill_between(Freq_1, L_EU_1, 10**6, color="purple", alpha=0.1, label="LOFAR LBA")
+    ax0.fill_between(Freq_2, L_EU_2, 10**6, color="red", alpha=0.1, label="LOFAR HBA")
+    plt.colorbar(im, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)", aspect=25, extend="both")
+    ax0.axvline(x=10, color="black", linestyle="dashed")
+    ax0.set_xscale("log")
+    ax0.set_yscale("log")
+    ax0.axvspan(0, 10, alpha=0.2, color="teal")
 
-im = ax0.scatter(df1.x, df1.y, c=df1.s, s=df1.d, cmap="magma_r")
-ax0.errorbar(df1.x, df1.y,
-             yerr=y_err,
-             xerr=x_err,
-             fmt="None",
-             ecolor="black",
-             elinewidth=0.5)
+    if zoom:
+        ax0.set_xlim(left=110, right=510)
+        ax0.set_ylim(bottom=3* 10**(-5), top=0.04)
+        texts = [plt.text(df1.x[i], df1.y[i], labels[i], ha='center', va='center', fontsize=8) for i in range(len(labels)) if labels[i] != ""]
+        adjust_text(texts, arrowprops=dict(arrowstyle="-", color="r", lw=0.5))
+        plt.legend()
 
-# texts = [plt.text(df1.x[i], df1.y[i], labels[i], ha='center', va='center', fontsize=8) for i in range(len(labels)) if labels[i] != ""]
-# adjust_text(texts)
-for i, txt in enumerate(labels):
-    if txt:
-        ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(2, 2), textcoords="offset pixels", fontsize=7)
-
-# lofar.plot(ax=ax0, x="Freq.", y="NL Core", style ="--", linewidth=0.2)
-# lofar.plot(ax=ax0, x="Freq.", y="Full EU", style="g--", linewidth=0.5)
-ax0.plot(Freq_1, L_EU_1, linestyle="dashed", color="purple", linewidth=0.5)
-ax0.plot(Freq_2, L_EU_2, linestyle="dashed", color="red", linewidth=0.5)
-
-for i in range(4):
-    x = uGMRT["Frequencies"][i]
-    y = uGMRT["RMS Noise"][i]
-    plt.plot(x, y, "b--", linewidth=0.5)
-    if i == 0:
-        ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1, label="uGMRT")
     else:
-        ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1)
+        ax0.set_xlim(left=0.05)
+        ax0.set_ylim(bottom=10 ** (-11), top=10 ** -0)
+        # for i, txt in enumerate(labels):
+        #     if txt:
+        #         ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(2, 2), textcoords="offset pixels", fontsize=7)
+        plt.legend(loc="upper left")
 
-ax0.fill_between(Freq_1, L_EU_1, 10**6, color="purple", alpha=0.1, label="LOFAR LBA")
-ax0.fill_between(Freq_2, L_EU_2, 10**6, color="red", alpha=0.1, label="LOFAR HBA")
-plt.legend(loc="upper left")
-# ax0.fill_between(Freq, L_NL, 10**6, color="green", alpha=0.1)
+    if IsBurst:
+        ax0.set_title("Frequency and Intensity of Burst CMI Emissions of the Exoplanet Sample")
+    else:
+        ax0.set_title("Frequency and Intensity of Quiescent CMI Emissions of the Exoplanet Sample")
+    ax0.set_xlabel("Emission Frequency (MHz)")
+    ax0.set_ylabel("Radio Brightness (Jy)")
+    retro_noir(ax0)
+    fig0.tight_layout()
 
-fig0.colorbar(im, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)", aspect=25, extend="both")
+    if save:
+        if zoom:
+            plt.savefig("zoom.pdf")
+        else:
+            plt.savefig("scatter.pdf")
 
-ax0.axvline(x=10, color="black", linestyle="dashed")
 
-ax0.set_xscale("log")
-ax0.set_yscale("log")
-# ax0.set_xlim(6, 30)
-ax0.set_xlim(left=0.05)
-ax0.set_ylim(bottom=10**(-12), top=10**-1)
+def outcome_dist_hists(intensities, magnetic_fields, save=False):
+    bin1_lower = math.floor(math.log10(min(intensities)))
+    bin1_higher = math.floor(math.log10(max(intensities))) + 1
+    n = (bin1_higher - bin1_lower) + 1
+    TheBins1 = np.logspace(bin1_lower, bin1_higher, n)
 
-ax0.axvspan(0, 10, alpha=0.2, color="teal")
-fig0.tight_layout()
+    plt.rcParams['figure.figsize'] = [6, 4]
+    rc = {"font.size": 10}
+    plt.rcParams.update(rc)
 
-if IsBurst:
-    ax0.set_title("Frequency and Intensity of Burst CMI Emissions of the Exoplanet Sample")
-else:
-    ax0.set_title("Frequency and Intensity of Quiescent CMI Emissions of the Exoplanet Sample")
-ax0.set_xlabel("Emission Frequency (MHz)")
-ax0.set_ylabel("Radio Brightness (Jy)")
+    fig1, axs = plt.subplots(1, 2, sharey="row", figsize=[10, 5])
 
-retro_noir(ax0)
-TheBins1 = np.logspace(-13, 0, 14)
+    ax1, ax2 = axs[0], axs[1]
 
-plt.rcParams['figure.figsize'] = [6, 4]
-rc = {"font.size": 10}
-plt.rcParams.update(rc)
+    ax1.hist(intensities, bins=TheBins1, edgecolor="black")
+    if IsBurst:
+        ax1.set_xlabel("Intensity of Burst Emission (Jy)")
+        ax1.set_title("Histogram of Burst Emission Intensities")
+    else:
+        ax1.set_xlabel("Intensity of Quiescent Emission (Jy)")
+        ax1.set_title("Histogram of Quiescent Emission Intensities")
 
-fig1, axs = plt.subplots(1, 2, sharey="row", figsize=[10, 5])
+    ax1.set_xscale("log")
+    ax1.set_yscale("log")
 
-ax1, ax2 = axs[0], axs[1]
+    bin2_lower = math.floor(math.log10(min(magnetic_fields)))
+    bin2_higher = math.floor(math.log10(max(magnetic_fields)))
+    n = (bin2_higher - bin2_lower) * 2 + 1
+    TheBins2 = np.logspace(bin2_lower, bin2_higher, n)
 
-ax1.hist(intensities, bins=TheBins1, edgecolor="black")
-if IsBurst:
-    ax1.set_xlabel("Intensity of Burst Emission (Jy)")
-    ax1.set_title("Histogram of Burst Emission Intensities")
-else:
-    ax1.set_xlabel("Intensity of Quiescent Emission (Jy)")
-    ax1.set_title("Histogram of Quiescent Emission Intensities")
+    ax2.hist(magnetic_fields, bins=TheBins2, edgecolor="black")
+    ax2.set_xlabel("Magnetic Field Strength at the Surface (Gauss)")
+    ax2.set_title("Histogram of the Magnetic Field Strengths")
 
-ax1.set_xscale("log")
-ax1.set_yscale("log")
+    ax2.set_xscale("log")
+    fig1.supylabel("Number of Exoplanets")
 
-TheBins2 = np.logspace(-3, 3, 13)
+    if save:
+        plt.savefig("hist.eps")
 
-ax2.hist(magnetic_fields, bins=TheBins2, edgecolor="black")
-ax2.set_xlabel("Magnetic Field Strength at the Surface (Gauss)")
-ax2.set_title("Histogram of the Magnetic Field Strengths")
 
-ax2.set_xscale("log")
-fig1.supylabel("Number of Exoplanets")
+scatter_plot(df1, y_err, x_err, labels)
+outcome_dist_hists(intensities, magnetic_fields)
 
 plt.show()
 

@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
+from numba import njit
+from numba import jit
+
 
 names, types, per = np.genfromtxt("rotation.csv", delimiter=",", dtype=str, skip_header=1, skip_footer=2, unpack=True, usecols=(0,1,2))
 flag, mass, radius = np.genfromtxt("rotation.csv", delimiter=",", dtype=float, skip_header=1, skip_footer=2, unpack=True, usecols=(3,4,5))
@@ -82,4 +85,5 @@ plt.title('Histogram of Random Samples')
 plt.show()
 
 
-
+def moment_sampler():
+    return 10 ** kde.resample(1)[0][0]

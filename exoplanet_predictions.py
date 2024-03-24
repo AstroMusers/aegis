@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import math
 from tabulate import tabulate
@@ -68,14 +69,18 @@ IsBurst = 0
 
 names = []
 frequencies = []
-intensities = []
+intensities_mag = []
+intensities_kin = []
 distances = []
 semis = []
 magnetic_fields = []
-labels = []
+labels_mag = []
+labels_kin = []
 
-y_minerr = []
-y_maxerr = []
+y_mag_minerr = []
+y_mag_maxerr = []
+y_kin_minerr = []
+y_kin_maxerr = []
 x_maxerr = []
 x_minerr = []
 
@@ -117,7 +122,9 @@ plt.show()
 
 plt.rcParams['font.size'] = 9
 
-detectables = []
+detectables_mag = []
+detectables_kin = []
+
 
 # Calculate Frequencies and intensities
 for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
@@ -174,7 +181,8 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     d *= 3.261561
 
     freqs = []
-    intenss = []
+    intens_mag = []
+    intens_kin = []
 
     for k in range(1000):  # The loop for Monte Carlo iterations
         T = rng.normal(T_i, T_s)
@@ -261,29 +269,36 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
 
             P_in_mag = P_input_mag(B_perp, veff*10**3, R_m*7*10**8, n)
             P_in_kin = P_input_kin(B_perp, veff*10**3, R_m*7*10**8, n)
-            P_rad = radio_power(P_in_mag, 0, nu, D)
+            P_rad_mag = radio_power(P_in_mag, 0, nu, D)
+            P_rad_kin = radio_power(0, P_in_kin, nu, D)
 
             if IsBurst:
                 I = I * (10 ** 1.53)
-                P_rad *= 10**1.53
+                P_rad_mag *= 10**1.53
 
-            intenss.append(P_rad)
+            intens_mag.append(P_rad_mag)
+            intens_kin.append(P_rad_kin)
 
     if flag:
         continue
 
     # print(f"{B_perp=}, {B_star=}, {n=}, {R_m=}. {Mdot=}, {P_in}, {P_rad}")
     nu = np.percentile(freqs, 50)
-    I = np.percentile(intenss, 50)
+    I_mag = np.percentile(intens_mag, 50)
+    I_kin = np.percentile(intens_kin, 50)
 
-    y_maxerr.append(np.percentile(intenss, 84) - I)
-    y_minerr.append(I - np.percentile(intenss, 16))
+    y_mag_maxerr.append(np.percentile(intens_mag, 84) - I_mag)
+    y_mag_minerr.append(I_mag - np.percentile(intens_mag, 16))
+    y_kin_maxerr.append(np.percentile(intens_kin, 84) - I_kin)
+    y_kin_minerr.append(I_kin - np.percentile(intens_kin, 16))
+
     x_maxerr.append(np.percentile(freqs, 84) - nu)
     x_minerr.append(nu - np.percentile(freqs, 16))
 
-    obs = ""
+    obs_mag = ""
+    obs_kin = ""
 
-    EXO = Exoplanet(name, a, R, M, p, B, M_s, Mdot, d, freq=nu, intensity=I)
+    EXO = Exoplanet(name, a, R, M, p, B, M_s, Mdot, d, freq=nu, intensity_mag=I_mag, intensity_kin=I_kin)
     if EXO.magnetic_field != 0:
         exoplanets.append(EXO)
 
@@ -293,47 +308,70 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     distances.append(EXO.distance)
     magnetic_fields.append(EXO.magnetic_field)
     frequencies.append(EXO.freq)
-    intensities.append(EXO.intensity)
+    intensities_mag.append(EXO.intensity_mag)
+    intensities_kin.append(EXO.intensity_kin)
 
-    observable_flag = False
+    observable_mag = False
+    observable_kin = False
     if 30 <= nu <= 75:
         for m in range(4):
             if Freq_1[m] <= nu <= Freq_1[m + 1]:
-                if I >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
-                    obs = str(EXO.name)
-                    print(obs)
-                    detectables.append(EXO)
+                if I_mag >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
+                    obs_mag = str(EXO.name)
+                    print(obs_mag)
+                    detectables_mag.append(EXO)
+                    observable_mag = True
                     observable_flag = True
-                    break
+                if I_kin >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
+                    obs_kin = str(EXO.name)
+                    print(obs_kin)
+                    detectables_kin.append(EXO)
+                    observable_flag = True
+                    observable_kin = True
+
 
     if 120 <= nu <= 180:
         for m in range(4, 7):
             if Freq_2[m] <= nu <= Freq_2[m+1]:
-                if I >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
-                    obs = str(EXO.name)
-                    print(obs)
-                    detectables.append(EXO)
-                    observable_flag = True
-                    break
+                if I_mag >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
+                    obs_mag = str(EXO.name)
+                    print(obs_mag)
+                    detectables_mag.append(EXO)
+                    observable_mag = True
+                if I_kin >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
+                    obs_kin = str(EXO.name)
+                    print(obs_kin)
+                    detectables_kin.append(EXO)
+                    observable_kin = True
 
-    if not observable_flag:
+
+    if not observable_mag and not observable_kin:
         if 120 <= nu < 850 or 1050 < nu <= 1450:
             for m in range(4):
-                if uGMRT["Frequencies"][m][0] <= nu <= uGMRT["Frequencies"][m][1] and I > uGMRT["RMS Noise"][m][0]:
-                    obs = str(EXO.name)
-                    print(obs)
-                    detectables.append(EXO)
+                if uGMRT["Frequencies"][m][0] <= nu <= uGMRT["Frequencies"][m][1] and I_mag > uGMRT["RMS Noise"][m][0]:
+                    obs_mag = str(EXO.name)
+                    print(obs_mag)
+                    detectables_mag.append(EXO)
+                    observable_mag = True
+                if uGMRT["Frequencies"][m][0] <= nu <= uGMRT["Frequencies"][m][1] and I_kin > uGMRT["RMS Noise"][m][0]:
+                    obs_kin = str(EXO.name)
+                    print(obs_kin)
+                    detectables_kin.append(EXO)
+                    observable_kin = True
                     break
 
     if EXO.name == "tau Boo b":  # Special interest
         obs = EXO.name
 
-    labels.append(obs)
+    labels_mag.append(obs_mag)
+    labels_kin.append(obs_kin)
+
+    labels = [labels_mag, labels_kin]
 
     selected = "tau Boo b"
     if EXO.name == selected:
         plt.subplot(1, 2, 1)
-        plt.hist(intenss, edgecolor="black")
+        plt.hist(intens_mag, edgecolor="black")
         # plt.xscale("log")
         # plt.yscale("log")
         plt.title(f"Distribution of Emission Intensity for {selected}")
@@ -350,36 +388,68 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         # plt.show()
         # plt.close()
 
-arr = np.array(labels)
+# arr = np.array(labels)
 frequencies = np.array(frequencies)
 distances = np.array(distances)
 distances = np.reciprocal(distances)
 distances *= 10 ** 2.7
 
-intensities = np.array(intensities)
+intensities_mag = np.array(intensities_mag)
+intensities_kin = np.array(intensities_kin)
+intensities = [intensities_mag, intensities_kin]
 
 semis = np.array(semis)
 cond = np.where(semis < 2)
 
-y_err = [y_minerr, y_maxerr]
+y_mag_minerr = np.array(y_mag_minerr)
+y_mag_maxerr = np.array(y_mag_maxerr)
+y_kin_minerr = np.array(y_kin_minerr)
+y_kin_maxerr = np.array(y_kin_maxerr)
+x_minerr = np.array(x_minerr)
+x_maxerr = np.array(x_maxerr)
+
+y_mag_err = [y_mag_minerr, y_mag_maxerr]
+y_kin_err = [y_kin_minerr, y_kin_maxerr]
+y_err = [y_mag_err, y_kin_err]
 x_err = [x_minerr, x_maxerr]
 
-for i in range(len(labels)):
-    if labels[i] == "":
-        y_err[0][i], y_err[1][i] = 0, 0
-        x_err[0][i], x_err[1][i] = 0, 0
-
-df1 = pd.DataFrame({"x": frequencies,
-                    "y": intensities,
+df = pd.DataFrame({"x": frequencies,
+                    "y_mag": intensities_mag,
+                    "y_kin": intensities_kin,
                     "d": distances,
                     "s": semis,
-                    "l": labels})
+                    "l_mag": labels_mag,
+                    "l_kin": labels_kin})
 
+def scatter_plot(df, which, y_err, x_err, zoom=False, save=False):
 
-def scatter_plot(df1, y_err, x_err, labels, zoom=False, save=False):
+    plt.rcParams['figure.figsize'] = [10, 5]
+
+    # x_err_clone = [i for i in x_err]
+    y_mag_err, y_kin_err = y_err[0], y_err[1]
+
+    df["labels"] = df.apply(lambda row: str(row['l_mag']) + row['l_kin'], axis=1)
+
+    cond = df["labels"][df["labels"] == ""].index
+    y_mag_err[0][cond] = 0
+    y_mag_err[1][cond] = 0
+    y_kin_err[0][cond] = 0
+    y_kin_err[1][cond] = 0
+    x_err[0][cond] = 0
+    x_err[1][cond] = 0
+
     fig0, ax0 = plt.subplots()
-    im = ax0.scatter(df1.x, df1.y, c=df1.s, s=df1.d, cmap="magma_r")
-    ax0.errorbar(df1.x, df1.y,
+
+    if which == "mag":
+        y_err = [y_mag_minerr, y_mag_maxerr]
+        df["y"] = df["y_mag"]
+
+    else:
+        y_err = [y_kin_minerr, y_kin_maxerr]
+        df["y"] = df["y_kin"]
+
+    im = ax0.scatter(df.x, df.y, c=df.s, s=df.d, cmap="magma_r")
+    ax0.errorbar(df.x, df.y,
                  yerr=y_err,
                  xerr=x_err,
                  fmt="None",
@@ -406,7 +476,7 @@ def scatter_plot(df1, y_err, x_err, labels, zoom=False, save=False):
     if zoom:
         ax0.set_xlim(left=110, right=510)
         ax0.set_ylim(bottom=3* 10**(-5), top=0.04)
-        texts = [plt.text(df1.x[i], df1.y[i], labels[i], ha='center', va='center', fontsize=8) for i in range(len(labels)) if labels[i] != ""]
+        texts = [plt.text(df.x[i], df.y[i], df.labels[i], ha='center', va='center', fontsize=8) for i in range(len(df.labels)) if df.labels[i] != ""]
         adjust_text(texts, arrowprops=dict(arrowstyle="-", color="r", lw=0.5))
         plt.legend()
 
@@ -434,7 +504,11 @@ def scatter_plot(df1, y_err, x_err, labels, zoom=False, save=False):
             plt.savefig("scatter.pdf")
 
 
-def outcome_dist_hists(intensities, magnetic_fields, save=False):
+def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
+    if which == "mag":
+        intensities = intensities[0]
+    elif which == "kin":
+        intensities = intensities[1]
     bin1_lower = math.floor(math.log10(min(intensities)))
     bin1_higher = math.floor(math.log10(max(intensities))) + 1
     n = (bin1_higher - bin1_lower) + 1
@@ -475,38 +549,47 @@ def outcome_dist_hists(intensities, magnetic_fields, save=False):
         plt.savefig("hist.eps")
 
 
-scatter_plot(df1, y_err, x_err, labels)
-outcome_dist_hists(intensities, magnetic_fields)
+scatter_plot(df, "mag", y_err, x_err)
+outcome_dist_hists(intensities, "mag", magnetic_fields)
 
 plt.show()
 
-l1 = [frequencies, intensities]
-l1 = [arr.tolist() for arr in l1]
-l2 = [names]
-l2.extend(l1)
+for i in range(len(intensities)):
+    l1 = [frequencies, intensities[i]]
+    l1 = [arr.tolist() for arr in l1]
+    l2 = [names]
+    l2.extend(l1)
 
-detectable_data = [[exo.name, exo.freq, exo.intensity] for exo in detectables]
-with open("detectables.txt", "w") as fn:
-    fn.write(tabulate(detectable_data))
-    fn.close()
+    if i == 0:
+        file_names = ["names_mag.txt", "freq_mag.txt", "intens_mag.txt", "detectables_mag.txt"]
+        detectables = detectables_mag
+        detectable_data = [[exo.name, exo.freq, exo.intensity_mag] for exo in detectables]
 
-table = list(zip(*l2))
-file_names = ["names.txt", "freq.txt", "intens.txt"]
+    else:
+        file_names = ["names_kin.txt", "freq_kin.txt", "intens_kin.txt", "detectables_kin.txt"]
+        detectables = detectables_kin
+        detectable_data = [[exo.name, exo.freq, exo.intensity_kin] for exo in detectables]
 
-table = sorted(table, key=lambda x: x[0].lower())
-file_name = file_names[0]
-with open(file_name, 'w') as f:
-    f.write(tabulate(table))
-    f.close()
+    with open(file_names[3], "w") as fn:
+        fn.write(tabulate(detectable_data))
+        fn.close()
 
-table = sorted(table, key=lambda x: x[1])
-file_name = file_names[1]
-with open(file_name, 'w') as f:
-    f.write(tabulate(table))
-    f.close()
+    table = list(zip(*l2))
 
-table = sorted(table, key=lambda x: x[2], reverse=True)
-file_name = file_names[2]
-with open(file_name, 'w') as f:
-    f.write(tabulate(table))
-    f.close()
+    table = sorted(table, key=lambda x: x[0].lower())
+    file_name = file_names[0]
+    with open(file_name, 'w') as f:
+        f.write(tabulate(table))
+        f.close()
+
+    table = sorted(table, key=lambda x: x[1])
+    file_name = file_names[1]
+    with open(file_name, 'w') as f:
+        f.write(tabulate(table))
+        f.close()
+
+    table = sorted(table, key=lambda x: x[2], reverse=True)
+    file_name = file_names[2]
+    with open(file_name, 'w') as f:
+        f.write(tabulate(table))
+        f.close()

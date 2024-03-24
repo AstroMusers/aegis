@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 class Exoplanet:
     def __init__(self, name, semi_major_axis, radius, mass, density, magnetic_field, star_mass, star_mass_loss,
-                 distance, freq=0, intensity=0):
+                 distance, freq=0, intensity_mag=0, intensity_kin=0):
         self.name = name
         self.semi_major_axis = semi_major_axis
         self.radius = radius
@@ -16,7 +16,9 @@ class Exoplanet:
         self.star_mass_loss = star_mass_loss
         self.distance = distance
         self.freq = freq
-        self.intensity = intensity
+        self.intensity_mag = intensity_mag
+        self.intensity_kin = intensity_kin
+
 
     def __repr__(self):
         return f"Exoplanet {self.name} with: a={self.semi_major_axis}, Bs={self.magnetic_field}, M={self.star_mass}," \

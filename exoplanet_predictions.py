@@ -5,6 +5,7 @@ from tabulate import tabulate
 from adjustText import adjust_text
 from radio_module import *
 from rotation_script import *
+from copy import deepcopy
 
 rng = np.random.default_rng()
 
@@ -421,37 +422,50 @@ df = pd.DataFrame({"x": frequencies,
                     "l_mag": labels_mag,
                     "l_kin": labels_kin})
 
+
 def scatter_plot(df, which, y_err, x_err, zoom=False, save=False):
 
     plt.rcParams['figure.figsize'] = [10, 5]
 
-    # x_err_clone = [i for i in x_err]
     y_mag_err, y_kin_err = y_err[0], y_err[1]
 
     df["labels"] = df.apply(lambda row: str(row['l_mag']) + row['l_kin'], axis=1)
 
     cond = df["labels"][df["labels"] == ""].index
-    y_mag_err[0][cond] = 0
-    y_mag_err[1][cond] = 0
-    y_kin_err[0][cond] = 0
-    y_kin_err[1][cond] = 0
-    x_err[0][cond] = 0
-    x_err[1][cond] = 0
+    cond_mag = df["l_mag"][df["l_mag"] == ""].index
+    cond_kin = df["l_kin"][df["l_kin"] == ""].index
+
+    y_mag_err[0][cond_mag] = 0
+    y_mag_err[1][cond_mag] = 0
+    y_kin_err[0][cond_kin] = 0
+    y_kin_err[1][cond_kin] = 0
+
+    x_mag_err = deepcopy(x_err)
+    x_kin_err = deepcopy(x_err)
+    x_mag_err[0][cond_mag] = 0
+    x_mag_err[1][cond_mag] = 0
+    x_kin_err[0][cond_kin] = 0
+    x_kin_err[1][cond_kin] = 0
+
+    # x_err[0][cond] = 0
+    # x_err[1][cond] = 0
 
     fig0, ax0 = plt.subplots()
 
     if which == "mag":
         y_err = [y_mag_minerr, y_mag_maxerr]
+        x_err_new = x_mag_err
         df["y"] = df["y_mag"]
 
     else:
         y_err = [y_kin_minerr, y_kin_maxerr]
+        x_err_new = x_kin_err
         df["y"] = df["y_kin"]
 
     im = ax0.scatter(df.x, df.y, c=df.s, s=df.d, cmap="magma_r")
     ax0.errorbar(df.x, df.y,
                  yerr=y_err,
-                 xerr=x_err,
+                 xerr=x_err_new,
                  fmt="None",
                  ecolor="black",
                  elinewidth=0.5)
@@ -473,25 +487,32 @@ def scatter_plot(df, which, y_err, x_err, zoom=False, save=False):
     ax0.set_yscale("log")
     ax0.axvspan(0, 10, alpha=0.2, color="teal")
 
+    if which == "mag":
+        lab = df["l_mag"]
+        tit = "(Magnetic Energy)"
+    else:
+        lab = df["l_kin"]
+        tit = "(Kinetic Energy)"
+
     if zoom:
         ax0.set_xlim(left=110, right=510)
         ax0.set_ylim(bottom=3* 10**(-5), top=0.04)
-        texts = [plt.text(df.x[i], df.y[i], df.labels[i], ha='center', va='center', fontsize=8) for i in range(len(df.labels)) if df.labels[i] != ""]
+        texts = [plt.text(df.x[i], df.y[i], lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab)) if lab[i] != ""]
         adjust_text(texts, arrowprops=dict(arrowstyle="-", color="r", lw=0.5))
         plt.legend()
 
     else:
         ax0.set_xlim(left=0.05)
-        ax0.set_ylim(bottom=10 ** (-11), top=10 ** -0)
+        ax0.set_ylim(bottom=min(df.y) * 10, top=max(df.y) * 10)
         # for i, txt in enumerate(labels):
         #     if txt:
         #         ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(2, 2), textcoords="offset pixels", fontsize=7)
         plt.legend(loc="upper left")
 
     if IsBurst:
-        ax0.set_title("Frequency and Intensity of Burst CMI Emissions of the Exoplanet Sample")
+        ax0.set_title(f"Frequency and Intensity of Burst CMI Emissions of the Exoplanet Sample\n{tit}")
     else:
-        ax0.set_title("Frequency and Intensity of Quiescent CMI Emissions of the Exoplanet Sample")
+        ax0.set_title(f"Frequency and Intensity of Quiescent CMI Emissions of the Exoplanet Sample\n{tit}")
     ax0.set_xlabel("Emission Frequency (MHz)")
     ax0.set_ylabel("Radio Brightness (Jy)")
     retro_noir(ax0)

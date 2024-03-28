@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 class Exoplanet:
     def __init__(self, name, semi_major_axis, radius, mass, density, magnetic_field, star_mass, star_mass_loss,
-                 distance, freq=0, intensity_mag=0, intensity_kin=0):
+                 distance, freq=0, intensity_mag=0, intensity_kin=0, intensity_both=0):
         self.name = name
         self.semi_major_axis = semi_major_axis
         self.radius = radius
@@ -18,6 +18,7 @@ class Exoplanet:
         self.freq = freq
         self.intensity_mag = intensity_mag
         self.intensity_kin = intensity_kin
+        self.intensity_both = intensity_both
 
 
     def __repr__(self):
@@ -305,7 +306,7 @@ def P_input_kin(imf_perp, v_eff, R_m, n):
     return m_p * n * v_eff**3 * np.pi * R_m**2
 
 
-def radio_power(P_input_mag, P_input_kin, nu, d):
+def radio_power(P_input_mag, P_input_kin, nu, d, both=False):
     """
 
     :param P_input: Input power in Watts
@@ -313,11 +314,12 @@ def radio_power(P_input_mag, P_input_kin, nu, d):
     :param d: Distance from Earth to the Source.
     :return: Expected observed radio flux density in Jy.
     """
+    a = 1 + int(both)
     epsilon_mag = 6.37 * 10**(-5)  # for magnetic power R_mpJ = 65 Rj
     # epsilon_mag = 1.37 * 10**(-4)  # R_mpJ = 43 RJ
     epsilon_kin = 1.48 * 10**(-6)  # Only if you combine incident kinetic and magnetic power R_mpJ = 65 Rj
     # epsilon_kin = 3.26 * 10**(-6)  # R_mpJ = 43 Rj
-    return (epsilon_mag * P_input_mag + epsilon_kin * P_input_kin) / (1.6 * nu * d**2) * 10**26
+    return (epsilon_mag * P_input_mag + epsilon_kin * P_input_kin) / (a * 1.6 * nu * d**2) * 10**26
 
 
 def magnetopause(B, a):

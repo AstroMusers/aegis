@@ -72,16 +72,20 @@ names = []
 frequencies = []
 intensities_mag = []
 intensities_kin = []
+intensities_both = []
 distances = []
 semis = []
 magnetic_fields = []
 labels_mag = []
 labels_kin = []
+labels_both = []
 
 y_mag_minerr = []
 y_mag_maxerr = []
 y_kin_minerr = []
 y_kin_maxerr = []
+y_both_maxerr = []
+y_both_minerr = []
 x_maxerr = []
 x_minerr = []
 
@@ -125,7 +129,7 @@ plt.rcParams['font.size'] = 9
 
 detectables_mag = []
 detectables_kin = []
-
+detectables_both = []
 
 # Calculate Frequencies and intensities
 for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
@@ -184,6 +188,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     freqs = []
     intens_mag = []
     intens_kin = []
+    intens_both = []
 
     for k in range(1000):  # The loop for Monte Carlo iterations
         T = rng.normal(T_i, T_s)
@@ -272,13 +277,17 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
             P_in_kin = P_input_kin(B_perp, veff*10**3, R_m*7*10**8, n)
             P_rad_mag = radio_power(P_in_mag, 0, nu, D)
             P_rad_kin = radio_power(0, P_in_kin, nu, D)
+            P_rad_both = radio_power(P_in_mag, P_in_kin, nu, D, both=True)
 
             if IsBurst:
                 I = I * (10 ** 1.53)
                 P_rad_mag *= 10**1.53
+                P_rad_kin *= 10**1.53
+                P_rad_both *= 10**1.53
 
             intens_mag.append(P_rad_mag)
             intens_kin.append(P_rad_kin)
+            intens_both.append(P_rad_both)
 
     if flag:
         continue
@@ -287,19 +296,23 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     nu = np.percentile(freqs, 50)
     I_mag = np.percentile(intens_mag, 50)
     I_kin = np.percentile(intens_kin, 50)
+    I_both = np.percentile(intens_both, 50)
 
     y_mag_maxerr.append(np.percentile(intens_mag, 84) - I_mag)
     y_mag_minerr.append(I_mag - np.percentile(intens_mag, 16))
     y_kin_maxerr.append(np.percentile(intens_kin, 84) - I_kin)
     y_kin_minerr.append(I_kin - np.percentile(intens_kin, 16))
+    y_both_maxerr.append(np.percentile(intens_both, 84) - I_both)
+    y_both_minerr.append(I_both - np.percentile(intens_both, 16))
 
     x_maxerr.append(np.percentile(freqs, 84) - nu)
     x_minerr.append(nu - np.percentile(freqs, 16))
 
     obs_mag = ""
     obs_kin = ""
+    obs_both = ""
 
-    EXO = Exoplanet(name, a, R, M, p, B, M_s, Mdot, d, freq=nu, intensity_mag=I_mag, intensity_kin=I_kin)
+    EXO = Exoplanet(name, a, R, M, p, B, M_s, Mdot, d, freq=nu, intensity_mag=I_mag, intensity_kin=I_kin, intensity_both=I_both)
     if EXO.magnetic_field != 0:
         exoplanets.append(EXO)
 
@@ -311,9 +324,11 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     frequencies.append(EXO.freq)
     intensities_mag.append(EXO.intensity_mag)
     intensities_kin.append(EXO.intensity_kin)
+    intensities_both.append(EXO.intensity_both)
 
     observable_mag = False
     observable_kin = False
+    observable_both = False
     if 30 <= nu <= 75:
         for m in range(4):
             if Freq_1[m] <= nu <= Freq_1[m + 1]:
@@ -329,6 +344,12 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
                     detectables_kin.append(EXO)
                     observable_flag = True
                     observable_kin = True
+                if I_both >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
+                    obs_both = str(EXO.name)
+                    print(obs_both)
+                    detectables_both.append(EXO)
+                    observable_both = True
+                    observable_flag = True
 
 
     if 120 <= nu <= 180:
@@ -344,9 +365,14 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
                     print(obs_kin)
                     detectables_kin.append(EXO)
                     observable_kin = True
+                if I_both >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
+                    obs_both = str(EXO.name)
+                    print(obs_both)
+                    detectables_both.append(EXO)
+                    observable_both = True
 
 
-    if not observable_mag and not observable_kin:
+    if not observable_mag and not observable_kin and not observable_both:
         if 120 <= nu < 850 or 1050 < nu <= 1450:
             for m in range(4):
                 if uGMRT["Frequencies"][m][0] <= nu <= uGMRT["Frequencies"][m][1] and I_mag > uGMRT["RMS Noise"][m][0]:
@@ -359,6 +385,11 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
                     print(obs_kin)
                     detectables_kin.append(EXO)
                     observable_kin = True
+                if uGMRT["Frequencies"][m][0] <= nu <= uGMRT["Frequencies"][m][1] and I_both > uGMRT["RMS Noise"][m][0]:
+                    obs_both = str(EXO.name)
+                    print(obs_both)
+                    detectables_both.append(EXO)
+                    observable_both = True
                     break
 
     if EXO.name == "tau Boo b":  # Special interest
@@ -366,8 +397,9 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
 
     labels_mag.append(obs_mag)
     labels_kin.append(obs_kin)
+    labels_both.append(obs_both)
 
-    labels = [labels_mag, labels_kin]
+    labels = [labels_mag, labels_kin, labels_both]
 
     selected = "tau Boo b"
     if EXO.name == selected:
@@ -397,7 +429,8 @@ distances *= 10 ** 2.7
 
 intensities_mag = np.array(intensities_mag)
 intensities_kin = np.array(intensities_kin)
-intensities = [intensities_mag, intensities_kin]
+intensities_both = np.array(intensities_both)
+intensities = [intensities_mag, intensities_kin, intensities_both]
 
 semis = np.array(semis)
 cond = np.where(semis < 2)
@@ -406,46 +439,57 @@ y_mag_minerr = np.array(y_mag_minerr)
 y_mag_maxerr = np.array(y_mag_maxerr)
 y_kin_minerr = np.array(y_kin_minerr)
 y_kin_maxerr = np.array(y_kin_maxerr)
+y_both_maxerr = np.array(y_both_maxerr)
+y_both_minerr = np.array(y_both_minerr)
 x_minerr = np.array(x_minerr)
 x_maxerr = np.array(x_maxerr)
 
 y_mag_err = [y_mag_minerr, y_mag_maxerr]
 y_kin_err = [y_kin_minerr, y_kin_maxerr]
-y_err = [y_mag_err, y_kin_err]
+y_both_err = [y_both_minerr, y_both_maxerr]
+y_err = [y_mag_err, y_kin_err, y_both_err]
 x_err = [x_minerr, x_maxerr]
 
 df = pd.DataFrame({"x": frequencies,
                     "y_mag": intensities_mag,
                     "y_kin": intensities_kin,
+                    "y_both": intensities_both,
                     "d": distances,
                     "s": semis,
                     "l_mag": labels_mag,
-                    "l_kin": labels_kin})
+                    "l_kin": labels_kin,
+                    "l_both": labels_both})
 
 
 def scatter_plot(df, which, y_err, x_err, zoom=False, save=False):
 
     plt.rcParams['figure.figsize'] = [10, 5]
 
-    y_mag_err, y_kin_err = y_err[0], y_err[1]
+    y_mag_err, y_kin_err, y_both_err = y_err[0], y_err[1], y_err[2]
 
-    df["labels"] = df.apply(lambda row: str(row['l_mag']) + row['l_kin'], axis=1)
+    df["labels"] = df.apply(lambda row: str(row['l_mag']) + row['l_kin'] + row["l_both"], axis=1)
 
     cond = df["labels"][df["labels"] == ""].index
     cond_mag = df["l_mag"][df["l_mag"] == ""].index
     cond_kin = df["l_kin"][df["l_kin"] == ""].index
+    cond_both = df["l_both"][df["l_both"] == ""].index
 
     y_mag_err[0][cond_mag] = 0
     y_mag_err[1][cond_mag] = 0
     y_kin_err[0][cond_kin] = 0
     y_kin_err[1][cond_kin] = 0
+    y_both_err[0][cond_both] = 0
+    y_both_err[1][cond_both] = 0
 
     x_mag_err = deepcopy(x_err)
     x_kin_err = deepcopy(x_err)
+    x_both_err = deepcopy(x_err)
     x_mag_err[0][cond_mag] = 0
     x_mag_err[1][cond_mag] = 0
     x_kin_err[0][cond_kin] = 0
     x_kin_err[1][cond_kin] = 0
+    x_both_err[0][cond_both] = 0
+    x_both_err[1][cond_both] = 0
 
     # x_err[0][cond] = 0
     # x_err[1][cond] = 0
@@ -457,18 +501,28 @@ def scatter_plot(df, which, y_err, x_err, zoom=False, save=False):
         x_err_new = x_mag_err
         df["y"] = df["y_mag"]
 
-    else:
+    elif which == "kin":
         y_err = [y_kin_minerr, y_kin_maxerr]
         x_err_new = x_kin_err
         df["y"] = df["y_kin"]
 
-    im = ax0.scatter(df.x, df.y, c=df.s, s=df.d, cmap="magma_r")
-    ax0.errorbar(df.x, df.y,
-                 yerr=y_err,
-                 xerr=x_err_new,
-                 fmt="None",
-                 ecolor="black",
-                 elinewidth=0.5)
+    else:
+        y_err = [y_both_minerr, y_both_maxerr]
+        x_err_new = x_both_err
+        df["y"] = df["y_both"]
+
+    if zoom:
+        size = 20
+    else:
+        size = df.d
+
+    im = ax0.scatter(df.x, df.y, c=df.s, s=size, cmap="magma_r")
+    errorbar = ax0.errorbar(df.x, df.y,
+                     yerr=y_err,
+                     xerr=x_err_new,
+                     fmt="None",
+                     ecolor="black",
+                     elinewidth=0.5)
     ax0.plot(Freq_1, L_EU_1, linestyle="dashed", color="purple", linewidth=0.5)
     ax0.plot(Freq_2, L_EU_2, linestyle="dashed", color="red", linewidth=0.5)
     for i in range(4):
@@ -490,11 +544,17 @@ def scatter_plot(df, which, y_err, x_err, zoom=False, save=False):
     if which == "mag":
         lab = df["l_mag"]
         tit = "(Magnetic Energy)"
-    else:
+    elif which == "kin":
         lab = df["l_kin"]
         tit = "(Kinetic Energy)"
+    else:
+        lab = df["l_both"]
+        tit = "(Both energy input sources considered)"
 
     if zoom:
+        errorbar.remove()
+        # df1 = df[lab != ""]
+        ax0.errorbar(df.x, df.y, yerr=y_err, xerr=x_err_new, fmt="None", ecolor="black", elinewidth=1, capsize=2)
         ax0.set_xlim(left=110, right=510)
         ax0.set_ylim(bottom=3* 10**(-5), top=0.04)
         texts = [plt.text(df.x[i], df.y[i], lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab)) if lab[i] != ""]
@@ -570,7 +630,7 @@ def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
         plt.savefig("hist.eps")
 
 
-scatter_plot(df, "mag", y_err, x_err)
+scatter_plot(df, "both", y_err, x_err)
 outcome_dist_hists(intensities, "mag", magnetic_fields)
 
 plt.show()
@@ -586,10 +646,15 @@ for i in range(len(intensities)):
         detectables = detectables_mag
         detectable_data = [[exo.name, exo.freq, exo.intensity_mag] for exo in detectables]
 
-    else:
+    elif i == 1:
         file_names = ["names_kin.txt", "freq_kin.txt", "intens_kin.txt", "detectables_kin.txt"]
         detectables = detectables_kin
         detectable_data = [[exo.name, exo.freq, exo.intensity_kin] for exo in detectables]
+
+    else:
+        file_names = ["names_both.txt", "freq_both.txt", "intens_both.txt", "detectables_both.txt"]
+        detectables = detectables_both
+        detectable_data = [[exo.name, exo.freq, exo.intensity_both] for exo in detectables]
 
     with open(file_names[3], "w") as fn:
         fn.write(tabulate(detectable_data))

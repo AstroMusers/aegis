@@ -392,7 +392,7 @@ mpl.use('Qt5Agg')
 mpl.rcParams["figure.autolayout"] = True
 plt.rcParams['figure.figsize'] = [10, 5]
 
-rc = {"font.size": 10}
+rc = {"font.family": "sans-serif", "font.weight": "light", "font.variant": "small-caps", "font.size": 10}
 plt.rcParams.update(rc)
 
 

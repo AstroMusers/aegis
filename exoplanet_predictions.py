@@ -351,7 +351,6 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
                     observable_both = True
                     observable_flag = True
 
-
     if 120 <= nu <= 180:
         for m in range(4, 7):
             if Freq_2[m] <= nu <= Freq_2[m+1]:
@@ -371,20 +370,25 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
                     detectables_both.append(EXO)
                     observable_both = True
 
+    # if not observable_mag and not observable_kin and not observable_both:
+    if 120 <= nu < 850 or 1050 < nu <= 1450:
+        for m in range(4):
 
-    if not observable_mag and not observable_kin and not observable_both:
-        if 120 <= nu < 850 or 1050 < nu <= 1450:
-            for m in range(4):
+            if not observable_mag:
                 if uGMRT["Frequencies"][m][0] <= nu <= uGMRT["Frequencies"][m][1] and I_mag > uGMRT["RMS Noise"][m][0]:
                     obs_mag = str(EXO.name)
                     print(obs_mag)
                     detectables_mag.append(EXO)
                     observable_mag = True
+
+            if not observable_kin:
                 if uGMRT["Frequencies"][m][0] <= nu <= uGMRT["Frequencies"][m][1] and I_kin > uGMRT["RMS Noise"][m][0]:
                     obs_kin = str(EXO.name)
                     print(obs_kin)
                     detectables_kin.append(EXO)
                     observable_kin = True
+
+            if not observable_both:
                 if uGMRT["Frequencies"][m][0] <= nu <= uGMRT["Frequencies"][m][1] and I_both > uGMRT["RMS Noise"][m][0]:
                     obs_both = str(EXO.name)
                     print(obs_both)
@@ -461,7 +465,7 @@ df = pd.DataFrame({"x": frequencies,
                     "l_both": labels_both})
 
 
-def scatter_plot(df, which, y_err, x_err, zoom=False, save=False):
+def scatter_plot(df, which, y_err, x_err, zoom=False, save=False, fix_lim=False):
 
     plt.rcParams['figure.figsize'] = [10, 5]
 
@@ -523,8 +527,8 @@ def scatter_plot(df, which, y_err, x_err, zoom=False, save=False):
                      fmt="None",
                      ecolor="black",
                      elinewidth=0.5)
-    ax0.plot(Freq_1, L_EU_1, linestyle="dashed", color="purple", linewidth=0.5)
-    ax0.plot(Freq_2, L_EU_2, linestyle="dashed", color="red", linewidth=0.5)
+    ax0.plot(Freq_1, L_EU_1, linestyle="dashed", color="red", linewidth=0.5)
+    ax0.plot(Freq_2, L_EU_2, linestyle="dashed", color="purple", linewidth=0.5)
     for i in range(4):
         x = uGMRT["Frequencies"][i]
         y = uGMRT["RMS Noise"][i]
@@ -533,8 +537,8 @@ def scatter_plot(df, which, y_err, x_err, zoom=False, save=False):
             ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1, label="uGMRT")
         else:
             ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1)
-    ax0.fill_between(Freq_1, L_EU_1, 10**6, color="purple", alpha=0.1, label="LOFAR LBA")
-    ax0.fill_between(Freq_2, L_EU_2, 10**6, color="red", alpha=0.1, label="LOFAR HBA")
+    ax0.fill_between(Freq_1, L_EU_1, 10**6, color="red", alpha=0.1, label="LOFAR LBA")
+    ax0.fill_between(Freq_2, L_EU_2, 10**6, color="purple", alpha=0.1, label="LOFAR HBA")
     plt.colorbar(im, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)", aspect=25, extend="both")
     ax0.axvline(x=10, color="black", linestyle="dashed")
     ax0.set_xscale("log")
@@ -543,18 +547,23 @@ def scatter_plot(df, which, y_err, x_err, zoom=False, save=False):
 
     if which == "mag":
         lab = df["l_mag"]
-        tit = "(Magnetic Energy)"
+        tit = "\n(Magnetic Energy)"
     elif which == "kin":
         lab = df["l_kin"]
-        tit = "(Kinetic Energy)"
+        tit = "\n(Kinetic Energy)"
     else:
         lab = df["l_both"]
-        tit = "(Both energy input sources considered)"
+        tit = ""
+
+    df["x_errmin"], df["x_errmax"] = x_err_new
+    df["y_errmin"], df["y_errmax"] = y_err
 
     if zoom:
         errorbar.remove()
-        # df1 = df[lab != ""]
-        ax0.errorbar(df.x, df.y, yerr=y_err, xerr=x_err_new, fmt="None", ecolor="black", elinewidth=1, capsize=2)
+        df1 = df[lab != ""]
+        yerr = [df1["y_errmin"], df1["y_errmax"]]
+        xerr = [df1["x_errmin"], df1["x_errmax"]]
+        ax0.errorbar(df1.x, df1.y, yerr=yerr, xerr=xerr, fmt="None", ecolor="black", elinewidth=1, capsize=2)
         ax0.set_xlim(left=110, right=510)
         ax0.set_ylim(bottom=3* 10**(-5), top=0.04)
         texts = [plt.text(df.x[i], df.y[i], lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab)) if lab[i] != ""]
@@ -563,16 +572,19 @@ def scatter_plot(df, which, y_err, x_err, zoom=False, save=False):
 
     else:
         ax0.set_xlim(left=0.05)
-        ax0.set_ylim(bottom=min(df.y) * 10, top=max(df.y) * 10)
+        if fix_lim:
+            ax0.set_ylim(bottom=1e-10, top=1)
+        else:
+            ax0.set_ylim(bottom=min(df.y) * 0.1, top=max(df.y) * 10)
         # for i, txt in enumerate(labels):
         #     if txt:
         #         ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(2, 2), textcoords="offset pixels", fontsize=7)
         plt.legend(loc="upper left")
 
     if IsBurst:
-        ax0.set_title(f"Frequency and Intensity of Burst CMI Emissions of the Exoplanet Sample\n{tit}")
+        ax0.set_title(f"Frequency and Intensity of Burst CMI Emissions of the Exoplanet Sample{tit}")
     else:
-        ax0.set_title(f"Frequency and Intensity of Quiescent CMI Emissions of the Exoplanet Sample\n{tit}")
+        ax0.set_title(f"Frequency and Intensity of Quiescent CMI Emissions of the Exoplanet Sample{tit}")
     ax0.set_xlabel("Emission Frequency (MHz)")
     ax0.set_ylabel("Radio Brightness (Jy)")
     retro_noir(ax0)

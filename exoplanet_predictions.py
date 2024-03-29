@@ -45,7 +45,7 @@ uGMRT["RMS Noise"] = uGMRT["RMS Noise"] * (np.sqrt((100 * 10) / (bandwidth * int
 # MWA
 
 # Retrieve Data
-filename = "NASA3112.csv"
+filename = "NASA2903.csv"
 df = pd.read_csv(filename, comment="#")
 windfile = "wind_info" + filename[4:-4] + ".txt"
 

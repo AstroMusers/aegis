@@ -121,7 +121,7 @@ fig.text(0.02, 0.30, 'Bin Count', va='center', rotation='vertical', fontsize=10)
 fig.text(0.02, 0.75, 'Bin Count', va='center', rotation='vertical', fontsize=10)
 
 fig.supylabel(' \n', va='center', rotation='vertical', fontsize=11)
-fig.suptitle('Distribution of Initial Parameters for the Exoplanet Sample', fontsize=13)
+# fig.suptitle('Distribution of Initial Parameters for the Exoplanet Sample', fontsize=13)
 
 plt.show()
 
@@ -581,10 +581,11 @@ def scatter_plot(df, which, y_err, x_err, zoom=False, save=False, fix_lim=False)
         #         ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(2, 2), textcoords="offset pixels", fontsize=7)
         plt.legend(loc="upper left")
 
-    if IsBurst:
-        ax0.set_title(f"Frequency and Intensity of Burst CMI Emissions of the Exoplanet Sample{tit}")
-    else:
-        ax0.set_title(f"Frequency and Intensity of Quiescent CMI Emissions of the Exoplanet Sample{tit}")
+    # if IsBurst:
+    #     ax0.set_title(f"Frequency and Intensity of Burst CMI Emissions of the Exoplanet Sample{tit}")
+    # else:
+    #     ax0.set_title(f"Frequency and Intensity of Quiescent CMI Emissions of the Exoplanet Sample{tit}")
+
     ax0.set_xlabel("Emission Frequency (MHz)")
     ax0.set_ylabel("Radio Brightness (Jy)")
     retro_noir(ax0)
@@ -602,6 +603,9 @@ def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
         intensities = intensities[0]
     elif which == "kin":
         intensities = intensities[1]
+    else:
+        intensities = intensities[2]
+
     bin1_lower = math.floor(math.log10(min(intensities)))
     bin1_higher = math.floor(math.log10(max(intensities))) + 1
     n = (bin1_higher - bin1_lower) + 1
@@ -618,10 +622,10 @@ def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
     ax1.hist(intensities, bins=TheBins1, edgecolor="black")
     if IsBurst:
         ax1.set_xlabel("Intensity of Burst Emission (Jy)")
-        ax1.set_title("Histogram of Burst Emission Intensities")
+        # ax1.set_title("Histogram of Burst Emission Intensities")
     else:
         ax1.set_xlabel("Intensity of Quiescent Emission (Jy)")
-        ax1.set_title("Histogram of Quiescent Emission Intensities")
+        # ax1.set_title("Histogram of Quiescent Emission Intensities")
 
     ax1.set_xscale("log")
     ax1.set_yscale("log")
@@ -633,7 +637,7 @@ def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
 
     ax2.hist(magnetic_fields, bins=TheBins2, edgecolor="black")
     ax2.set_xlabel("Magnetic Field Strength at the Surface (Gauss)")
-    ax2.set_title("Histogram of the Magnetic Field Strengths")
+    # ax2.set_title("Histogram of the Magnetic Field Strengths")
 
     ax2.set_xscale("log")
     fig1.supylabel("Number of Exoplanets")

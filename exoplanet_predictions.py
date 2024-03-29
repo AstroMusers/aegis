@@ -101,8 +101,8 @@ ax6 = axs[1, 2]
 
 axes = [ax1, ax2, ax3, ax4, ax5, ax6]
 
-bins = [np.logspace(-1, 6, 15), np.logspace(-2.5, 1.5, 13), np.logspace(-3, 1.5, 9),
-        np.logspace(-1.5, 1, 11), np.logspace(-2, 1.5, 15), np.logspace(0.5, 3.5, 10)]
+bins = [np.logspace(-1, 5, 13), np.logspace(-2.5, 1.5, 13), np.logspace(-3, 1.5, 9),
+        np.logspace(-1, 1, 9), np.logspace(-2, 1.5, 15), np.logspace(0.5, 3.5, 10)]
 
 ax1.hist(orbs, bins=bins[0], edgecolor="black")
 ax2.hist(smas, bins=bins[1], edgecolor="black")

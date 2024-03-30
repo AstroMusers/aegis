@@ -467,6 +467,9 @@ df = pd.DataFrame({"x": frequencies,
 
 def scatter_plot(df, which, y_err, x_err, zoom=False, save=False, fix_lim=False):
 
+    rc = {"font.family": "sans-serif", "font.weight": "light", "font.variant": "small-caps", "font.size": 10}
+    plt.rcParams.update(rc)
+
     plt.rcParams['figure.figsize'] = [10, 5]
 
     y_mag_err, y_kin_err, y_both_err = y_err[0], y_err[1], y_err[2]

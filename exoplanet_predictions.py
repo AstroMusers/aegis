@@ -44,6 +44,13 @@ uGMRT["RMS Noise"] = uGMRT["RMS Noise"] * (np.sqrt((100 * 10) / (bandwidth * int
 # ----------------------------
 # MWA
 
+d_mwa = {"Frequencies": [[72.30, 103.04], [103.04, 133.76], [138.88, 169.60], [169.60, 200.32], [200.32, 231.04]],
+         "RMS Noise": [np.array([24, 24]), np.array([14, 14]), np.array([7, 7]), np.array([5, 5]), np.array([5, 5])]}  # mJy, 2min integration time, 40kHz bandwidth
+
+MWA = pd.DataFrame(data=d_mwa)
+integration_time = 8 * 60  # minutes
+MWA["RMS Noise"] *= np.sqrt((2 / integration_time)) * 10**(-3) * 5
+
 # Retrieve Data
 filename = "NASA2903.csv"
 df = pd.read_csv(filename, comment="#")
@@ -104,12 +111,19 @@ axes = [ax1, ax2, ax3, ax4, ax5, ax6]
 bins = [np.logspace(-1, 5, 13), np.logspace(-2.5, 1.5, 13), np.logspace(-3, 1.5, 9),
         np.logspace(-1, 1, 9), np.logspace(-2, 1.5, 15), np.logspace(0.5, 3.5, 10)]
 
-ax1.hist(orbs, bins=bins[0], edgecolor="black")
-ax2.hist(smas, bins=bins[1], edgecolor="black")
-ax3.hist(ms,  bins=bins[2], edgecolor="black")
-ax4.hist(Ms,  bins=bins[3], edgecolor="black")
-ax5.hist(ts,  bins=bins[4], edgecolor="black")
-ax6.hist(ds, bins=bins[5], edgecolor="black")
+ax1.hist(orbs, bins=bins[0], edgecolor="black", color="xkcd:ocean")
+ax2.hist(smas, bins=bins[1], edgecolor="black", color="xkcd:ocean")
+ax3.hist(ms,  bins=bins[2], edgecolor="black", color="xkcd:ocean")
+ax4.hist(Ms,  bins=bins[3], edgecolor="black", color="xkcd:ocean")
+ax5.hist(ts,  bins=bins[4], edgecolor="black", color="xkcd:ocean")
+ax6.hist(ds, bins=bins[5], edgecolor="black", color="xkcd:ocean")
+
+hist_noir(ax1)
+hist_noir(ax2)
+hist_noir(ax3)
+hist_noir(ax4)
+hist_noir(ax5)
+hist_noir(ax6)
 
 xlabels = ["Orbital Period (Days)", "Semi-major Axis (AU)", f"Planet Mass ($M_j$)", "Star Mass ($M_\odot$)", "Star Age (Gyr)", "Distance (pc)"]
 for i in range(len(axes)):
@@ -370,6 +384,31 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
                     detectables_both.append(EXO)
                     observable_both = True
 
+    if 72.30 <= nu <= 231.04:
+        for m in range(5):
+            if not observable_mag:
+                if MWA["Frequencies"][m][0] <= nu <= MWA["Frequencies"][m][1] and I_mag > MWA["RMS Noise"][m][0]:
+                    obs_mag = str(EXO.name)
+                    print(obs_mag)
+                    detectables_mag.append(EXO)
+                    observable_mag = True
+
+            if not observable_kin:
+                if MWA["Frequencies"][m][0] <= nu <= MWA["Frequencies"][m][1] and I_kin > MWA["RMS Noise"][m][0]:
+                    obs_kin = str(EXO.name)
+                    print(obs_kin)
+                    detectables_kin.append(EXO)
+                    observable_kin = True
+
+            if not observable_both:
+                if MWA["Frequencies"][m][0] <= nu <= MWA["Frequencies"][m][1] and I_both > MWA["RMS Noise"][m][0]:
+                    obs_both = str(EXO.name)
+                    print(obs_both)
+                    detectables_both.append(EXO)
+                    observable_both = True
+                    break
+
+
     # if not observable_mag and not observable_kin and not observable_both:
     if 120 <= nu < 850 or 1050 < nu <= 1450:
         for m in range(4):
@@ -464,8 +503,11 @@ df = pd.DataFrame({"x": frequencies,
                     "l_kin": labels_kin,
                     "l_both": labels_both})
 
+det_data = [[exo.name, exo.freq, exo.intensity_both] for exo in detectables_both]
+df_det = pd.DataFrame(det_data[1:], columns=["Name", "Freq", "Flux"])
 
-def scatter_plot(df, which, y_err, x_err, zoom=False, save=False, fix_lim=False):
+
+def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=False):
 
     rc = {"font.family": "sans-serif", "font.weight": "light", "font.variant": "small-caps", "font.size": 10}
     plt.rcParams.update(rc)
@@ -540,6 +582,16 @@ def scatter_plot(df, which, y_err, x_err, zoom=False, save=False, fix_lim=False)
             ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1, label="uGMRT")
         else:
             ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1)
+
+    for i in range(5):
+        x = MWA["Frequencies"][i]
+        y = MWA["RMS Noise"][i]
+        plt.plot(x, y, "k--", linewidth=0.5)
+        if i == 0:
+            ax0.fill_between(x, y, 10 ** 6, color="grey", alpha=0.1, label="MWA")
+        else:
+            ax0.fill_between(x, y, 10 ** 6, color="grey", alpha=0.1)
+
     ax0.fill_between(Freq_1, L_EU_1, 10**6, color="red", alpha=0.1, label="LOFAR LBA")
     ax0.fill_between(Freq_2, L_EU_2, 10**6, color="purple", alpha=0.1, label="LOFAR HBA")
     plt.colorbar(im, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)", aspect=25, extend="both")
@@ -567,8 +619,8 @@ def scatter_plot(df, which, y_err, x_err, zoom=False, save=False, fix_lim=False)
         yerr = [df1["y_errmin"], df1["y_errmax"]]
         xerr = [df1["x_errmin"], df1["x_errmax"]]
         ax0.errorbar(df1.x, df1.y, yerr=yerr, xerr=xerr, fmt="None", ecolor="black", elinewidth=1, capsize=2)
-        ax0.set_xlim(left=110, right=510)
-        ax0.set_ylim(bottom=3* 10**(-5), top=0.04)
+        ax0.set_xlim(left=min(det["Freq"]) * 0.5, right=max(det["Freq"]) * 2)
+        ax0.set_ylim(bottom=min(det["Flux"]) * 0.5, top=max(det["Flux"]) * 2)
         texts = [plt.text(df.x[i], df.y[i], lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab)) if lab[i] != ""]
         adjust_text(texts, arrowprops=dict(arrowstyle="-", color="r", lw=0.5))
         plt.legend()
@@ -622,7 +674,7 @@ def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
 
     ax1, ax2 = axs[0], axs[1]
 
-    ax1.hist(intensities, bins=TheBins1, edgecolor="black")
+    ax1.hist(intensities, bins=TheBins1, edgecolor="black", color="xkcd:sea")
     if IsBurst:
         ax1.set_xlabel("Intensity of Burst Emission (Jy)")
         # ax1.set_title("Histogram of Burst Emission Intensities")
@@ -638,19 +690,21 @@ def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
     n = (bin2_higher - bin2_lower) * 2 + 1
     TheBins2 = np.logspace(bin2_lower, bin2_higher, n)
 
-    ax2.hist(magnetic_fields, bins=TheBins2, edgecolor="black")
+    ax2.hist(magnetic_fields, bins=TheBins2, edgecolor="black", color="xkcd:sea")
     ax2.set_xlabel("Magnetic Field Strength at the Surface (Gauss)")
     # ax2.set_title("Histogram of the Magnetic Field Strengths")
 
     ax2.set_xscale("log")
+    hist_noir(ax1)
+    hist_noir(ax2)
     fig1.supylabel("Number of Exoplanets")
 
     if save:
-        plt.savefig("hist.eps")
+        plt.savefig("hist.pdf")
 
 
-scatter_plot(df, "both", y_err, x_err)
-outcome_dist_hists(intensities, "mag", magnetic_fields)
+scatter_plot(df, "both", y_err, x_err, df_det)
+outcome_dist_hists(intensities, "both", magnetic_fields)
 
 plt.show()
 

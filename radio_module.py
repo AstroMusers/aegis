@@ -405,3 +405,15 @@ def retro_noir(ax):
     ax.spines['left'].set_linewidth(1.25)
     ax.spines['right'].set_linewidth(1.25)
 
+
+def hist_noir(ax):
+    ax.minorticks_on()
+    ax.grid(alpha=0.15, which="major")
+    ax.grid(alpha=0.05, which="minor")
+    ax.tick_params(direction="in", which="major", length=5, right=True, top=True, width=1.5)
+    ax.tick_params(direction="in", which="minor", length=3, right=True, top=True, width=1.5)
+    ax.spines['top'].set_linewidth(1.5)
+    ax.spines['bottom'].set_linewidth(1.5)
+    ax.spines['left'].set_linewidth(1.5)
+    ax.spines['right'].set_linewidth(1.5)
+

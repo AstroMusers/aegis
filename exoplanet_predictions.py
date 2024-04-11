@@ -715,23 +715,37 @@ for i in range(len(intensities)):
     l2.extend(l1)
 
     if i == 0:
-        file_names = ["names_mag.txt", "freq_mag.txt", "intens_mag.txt", "detectables_mag.txt"]
+        file_names = ["names_mag.txt", "freq_mag.txt", "intens_mag.txt", "detectables_mag.csv"]
         detectables = detectables_mag
-        detectable_data = [[exo.name, exo.freq, exo.intensity_mag] for exo in detectables]
+        detectable_data = pd.DataFrame([[exo.name, exo.freq, exo.intensity_mag] for exo in detectables], columns=["Name", "Freq", "Flux"])
 
     elif i == 1:
-        file_names = ["names_kin.txt", "freq_kin.txt", "intens_kin.txt", "detectables_kin.txt"]
+        file_names = ["names_kin.txt", "freq_kin.txt", "intens_kin.txt", "detectables_kin.csv"]
         detectables = detectables_kin
-        detectable_data = [[exo.name, exo.freq, exo.intensity_kin] for exo in detectables]
+        detectable_data = pd.DataFrame([[exo.name, exo.freq, exo.intensity_kin] for exo in detectables], columns=["Name", "Freq", "Flux"])
 
     else:
-        file_names = ["names_both.txt", "freq_both.txt", "intens_both.txt", "detectables_both.txt"]
+        file_names = ["names_both.txt", "freq_both.txt", "intens_both.txt", "detectables_both.csv"]
         detectables = detectables_both
-        detectable_data = [[exo.name, exo.freq, exo.intensity_both] for exo in detectables]
+        detectable_data = pd.DataFrame([[exo.name, exo.freq, exo.intensity_both] for exo in detectables], columns=["Name", "Freq", "Flux"])
 
-    with open(file_names[3], "w") as fn:
-        fn.write(tabulate(detectable_data))
-        fn.close()
+    # with open(file_names[3], "w") as fn:
+    #     fn.write(tabulate(detectable_data))
+    #     fn.close()
+
+    detectable_data["Flux"] *= 10 ** 3
+
+    def freq_format(x):
+        return '{:.2f}'.format(x)
+
+    def flux_format(x):
+        return '{:.3f}'.format(x)
+
+    detectable_data["Freq"] = detectable_data["Freq"].map(freq_format)
+    detectable_data["Flux"] = detectable_data["Flux"].map(flux_format)
+    detectable_data = detectable_data.sort_values(by="Name")
+    detectable_data.columns = ["Name", "Freq(MHz)", "Flux(mJy)"]
+    detectable_data.to_csv(file_names[3], index=False)
 
     table = list(zip(*l2))
 
@@ -752,3 +766,9 @@ for i in range(len(intensities)):
     with open(file_name, 'w') as f:
         f.write(tabulate(table))
         f.close()
+
+# det = np.genfromtxt("detectables_both.txt", usecols=0, dtype=str, delimiter="  ", skip_header=1, skip_footer=1)
+# detect_data = df[df["pl_name"].isin(det)]
+# enough_data = detect_data[["pl_name", "pl_bmassj", "pl_radj", "pl_orbsmax", "sy_dist", "st_age"]]
+# sorted = enough_data.sort_values(by="pl_name")
+

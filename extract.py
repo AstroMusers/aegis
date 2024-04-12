@@ -41,8 +41,9 @@ def format_ra(ra_string):
 
 
 merged['RA'], merged['DEC'] = zip(*merged["Name"].apply(query_simbad))
-merged.columns = ["Name", "Mass ($M_J$)", "Radius ($R_J$)", "$a$ (AU)", "$d$ (pc)", "$t$ (Gyr)", "$\\nu_\mt{peak}$ (MHz)", "$\Phi$ (mJy)", "RA (J2000)", "DEC (J2000)"]
-final = merged[["Name", "RA (J2000)", "DEC (J2000)","Mass ($M_J$)", "Radius ($R_J$)", "$a$ (AU)", "$d$ (pc)", "$t$ (Gyr)", "$\\nu_\mt{peak}$ (MHz)", "$\Phi$ (mJy)"]]
+merged["vmax"] = merged["Freq(MHz)"] * 40 / 24
+merged.columns = ["Name", "Mass ($M_J$)", "Radius ($R_J$)", "$a$ (AU)", "$d$ (pc)", "$t$ (Gyr)", "$\\nu_\mt{peak}$ (MHz)", "$\Phi$ (mJy)", "RA (J2000)", "DEC (J2000)", "vmax"]
+final = merged[["Name", "RA (J2000)", "DEC (J2000)","Mass ($M_J$)", "Radius ($R_J$)", "$a$ (AU)", "$d$ (pc)", "$t$ (Gyr)", "$\\nu_\mt{peak}$ (MHz)", "vmax", "$\Phi$ (mJy)"]]
 final = final.sort_values(by="Name")
 
 final["RA (J2000)"] = final["RA (J2000)"].apply(format_ra)
@@ -50,9 +51,12 @@ final["DEC (J2000)"] = final["DEC (J2000)"].apply(format_ra)
 
 final["Mass ($M_J$)"] = final["Mass ($M_J$)"].apply(three_format)
 final["$a$ (AU)"] = final["$a$ (AU)"].apply(three_format)
+
 final["Radius ($R_J$)"] = final["Radius ($R_J$)"].apply(two_format)
 final["$d$ (pc)"] = final["$d$ (pc)"].apply(two_format)
 final["$t$ (Gyr)"] = final["$t$ (Gyr)"].apply(two_format)
+final["vmax"] = final["vmax"].apply(two_format)
+
 
 
 final.to_csv("obs_table.csv", index=False)

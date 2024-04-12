@@ -641,8 +641,8 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
     # else:
     #     ax0.set_title(f"Frequency and Intensity of Quiescent CMI Emissions of the Exoplanet Sample{tit}")
 
-    ax0.set_xlabel("Emission Frequency (MHz)")
-    ax0.set_ylabel("Radio Brightness (Jy)")
+    ax0.set_xlabel("Peak Emission Frequency (MHz)")
+    ax0.set_ylabel("Radio Flux Density (Jy)")
     retro_noir(ax0)
     fig0.tight_layout()
 
@@ -676,10 +676,10 @@ def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
 
     ax1.hist(intensities, bins=TheBins1, edgecolor="black", color="xkcd:sea")
     if IsBurst:
-        ax1.set_xlabel("Intensity of Burst Emission (Jy)")
+        ax1.set_xlabel("Flux Density of Burst Emission (Jy)")
         # ax1.set_title("Histogram of Burst Emission Intensities")
     else:
-        ax1.set_xlabel("Intensity of Quiescent Emission (Jy)")
+        ax1.set_xlabel("Flux Density of Quiescent Emission (Jy)")
         # ax1.set_title("Histogram of Quiescent Emission Intensities")
 
     ax1.set_xscale("log")
@@ -766,9 +766,4 @@ for i in range(len(intensities)):
     with open(file_name, 'w') as f:
         f.write(tabulate(table))
         f.close()
-
-# det = np.genfromtxt("detectables_both.txt", usecols=0, dtype=str, delimiter="  ", skip_header=1, skip_footer=1)
-# detect_data = df[df["pl_name"].isin(det)]
-# enough_data = detect_data[["pl_name", "pl_bmassj", "pl_radj", "pl_orbsmax", "sy_dist", "st_age"]]
-# sorted = enough_data.sort_values(by="pl_name")
 

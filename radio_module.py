@@ -255,7 +255,6 @@ def number_density(Mdot, v_eff, r):
 #     return n0 * (1 + age/tau)**(-1.86)
 
 
-
 def Rm(B, R, n, T, v_eff, B_star):
     """
 

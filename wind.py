@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
 import csv
 import pandas as pd
+from radio_module import *
 
 # Read CSV using pandas
 filename = "NASA2903.csv"
@@ -115,9 +116,25 @@ for j in range(len(ages)):
     radial_ranges.append(r_values)
     wind_speeds.append(v_values)
 
-    plt.plot(r_values, v_values, alpha=0.2)
 
-plt.show()
+def profile_plot(rs, ws):
+    plt.rcParams['figure.figsize'] = [5, 4]
+    plt.rcParams["font.size"] = 11
+    fig, ax = plt.subplots()
+
+    for i in range(len(rs)):
+        ax.plot(rs[i], ws[i], color="k", alpha=0.05)
+        ax.set_xlim(-0.2, 7.5)
+        ax.set(xlabel="Distance from Host Star (AU)",
+               ylabel="Parker Wind Speed (km/h)")
+    ax.minorticks_on()
+    retro_noir(ax)
+    plt.show()
+
+
+profile_plot(radial_ranges, wind_speeds)
+
+# plt.show()
 problem = False
 for i in range(len(wind_speeds)):
     profile = wind_speeds[i]

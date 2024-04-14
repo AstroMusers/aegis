@@ -3,10 +3,8 @@
 This repository is a comprehensive one containing anything done as 
 part of the Radio Signatures of Exoplanets research project run by 
 Asaf Kaya and Tansu Daylan. The codes use scientific knowledge acquired
-from various research papers and books, most notably the paper 
-"Detecting Magnetospheric Radio Emission from Giant Exoplanets" by 
-Ashtari et al. 2022.
-#
+from various research papers and books.
+
 ## Python Scripts 
 ### The Main Prediction Script
 The main script that predicts exoplanetary emission quantities is the file

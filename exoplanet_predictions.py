@@ -7,6 +7,8 @@ from radio_module import *
 from rotation_script import *
 from copy import deepcopy
 
+plt.rcParams['figure.figsize'] = [10, 5]
+
 rng = np.random.default_rng()
 
 # LOFAR:

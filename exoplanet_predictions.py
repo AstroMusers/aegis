@@ -98,8 +98,8 @@ y_both_minerr = []
 x_maxerr = []
 x_minerr = []
 
-fig, axs = plt.subplots(2, 3, figsize=(12, 5))
-plt.rcParams['font.size'] = 8
+fig, axs = plt.subplots(2, 3, figsize=(10, 5))
+plt.rcParams['font.size'] = 10
 
 ax1 = axs[0, 0]
 ax2 = axs[0, 1]
@@ -133,11 +133,14 @@ for i in range(len(axes)):
     axes[i].set_xscale("log")
     axes[i].set_yscale("log")
 
-fig.text(0.02, 0.30, 'Bin Count', va='center', rotation='vertical', fontsize=10)
-fig.text(0.02, 0.75, 'Bin Count', va='center', rotation='vertical', fontsize=10)
+fig.tight_layout()
+
+fig.text(0.04, 0.30, 'Bin Count', va='center', rotation='vertical', fontsize=10)
+fig.text(0.04, 0.75, 'Bin Count', va='center', rotation='vertical', fontsize=10)
 
 fig.supylabel(' \n', va='center', rotation='vertical', fontsize=11)
 # fig.suptitle('Distribution of Initial Parameters for the Exoplanet Sample', fontsize=13)
+
 
 plt.show()
 

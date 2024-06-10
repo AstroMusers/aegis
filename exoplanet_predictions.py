@@ -75,7 +75,7 @@ ds = df["sy_dist"].to_numpy()
 hists = [orbs, smas, ms, Ms, ts, ds]
 
 exoplanets = []
-IsBurst = 0
+IsBurst = 1
 
 names = []
 frequencies = []
@@ -209,7 +209,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     intens_kin = []
     intens_both = []
 
-    for k in range(1000):  # The loop for Monte Carlo iterations
+    for k in range(100):  # The loop for Monte Carlo iterations
         T = rng.normal(T_i, T_s)
         while T < 0:
             T = rng.normal(T_i, T_s)

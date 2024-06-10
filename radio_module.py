@@ -33,7 +33,7 @@ def max_freq(B):
     :return: Maximum CMI emission frequency of the exoplanet, given in Hz
     """
     Bj = 14  # gauss
-    nuJ = 24 * 10 ** 6  # Hz
+    nuJ = 40 * 10 ** 6  # Hz
     return nuJ * B / Bj
     # return 2.8 * 10**6 * B
 
@@ -47,7 +47,7 @@ def density(p):
     return p / 1.326
 
 
-def rotation(T, a, L, M ,R):
+def rotation(T, a, L, M, R):
     """
     Returns the planetary rotation rate in Jovian rotation rate. Assume tidally locked if orbit semi major axis is less
     than 0.1 AU.
@@ -56,9 +56,9 @@ def rotation(T, a, L, M ,R):
     :return: Planetary rotation rate in Jovian rotation rate.
     """
     if a <= 0.1:
-        return T / 0.414
+        return 1 / (T / 0.414)
     else:
-        return 5 * L / 2 * M * R**2
+        return 5 * L / (2 * M * R**2)
 
 
 def convective_radius(M, p, r):

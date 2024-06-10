@@ -6,6 +6,42 @@ from adjustText import adjust_text
 from radio_module import *
 from rotation_script import *
 from copy import deepcopy
+import smplotlib
+
+
+def attempt_hershley():
+    from fontTools.ttLib import TTFont
+    from matplotlib.font_manager import FontProperties
+    from matplotlib import font_manager
+    from matplotlib import mathtext
+
+    font_path = '/Users/asafkaya/Documents/My Stuff/Programming/PythonFiles/Hershey_font_TTF-main/ttf/AVHersheyComplexHeavy.ttf'
+    font_manager.fontManager.addfont(font_path)
+    font_prop = font_manager.FontProperties(fname=font_path)
+    custom_font_name = font_prop.get_name()
+    plt.rcParams['font.family'] = custom_font_name
+    plt.rcParams['font.weight'] = "heavy"
+
+    def replace_minus_with_hyphen(s):
+        return s.replace('\u2212', '\u002D')
+
+    # Override the default text rendering to replace minus signs globally
+
+    class CustomScalarFormatter(mpl.ticker.ScalarFormatter):
+        def format_data(self, value):
+            formatted_value = super().format_data(value)
+            return replace_minus_with_hyphen(formatted_value)
+
+    # Apply the custom formatter to tick labels
+    def apply_custom_formatter(ax):
+        ax.xaxis.set_major_formatter(CustomScalarFormatter())
+        ax.yaxis.set_major_formatter(CustomScalarFormatter())
+
+    # Custom math text rendering
+    mpl.rcParams['text.usetex'] = True
+    mpl.rcParams['text.latex.preamble'] = r'\usepackage{textcomp}'
+
+
 
 plt.rcParams['figure.figsize'] = [10, 5]
 
@@ -120,12 +156,12 @@ ax4.hist(Ms,  bins=bins[3], edgecolor="black", color="xkcd:ocean")
 ax5.hist(ts,  bins=bins[4], edgecolor="black", color="xkcd:ocean")
 ax6.hist(ds, bins=bins[5], edgecolor="black", color="xkcd:ocean")
 
-hist_noir(ax1)
-hist_noir(ax2)
-hist_noir(ax3)
-hist_noir(ax4)
-hist_noir(ax5)
-hist_noir(ax6)
+# hist_noir(ax1)
+# hist_noir(ax2)
+# hist_noir(ax3)
+# hist_noir(ax4)
+# hist_noir(ax5)
+# hist_noir(ax6)
 
 xlabels = ["Orbital Period (Days)", "Semi-major Axis (AU)", f"Planet Mass ($M_j$)", "Star Mass ($M_\odot$)", "Star Age (Gyr)", "Distance (pc)"]
 for i in range(len(axes)):
@@ -133,10 +169,10 @@ for i in range(len(axes)):
     axes[i].set_xscale("log")
     axes[i].set_yscale("log")
 
-fig.tight_layout()
+fig.text(0.04, 0.30, 'Bin Count', va='center', rotation='vertical', fontsize=12)
+fig.text(0.04, 0.75, 'Bin Count', va='center', rotation='vertical', fontsize=12)
 
-fig.text(0.04, 0.30, 'Bin Count', va='center', rotation='vertical', fontsize=10)
-fig.text(0.04, 0.75, 'Bin Count', va='center', rotation='vertical', fontsize=10)
+fig.tight_layout()
 
 fig.supylabel(' \n', va='center', rotation='vertical', fontsize=11)
 # fig.suptitle('Distribution of Initial Parameters for the Exoplanet Sample', fontsize=13)
@@ -144,7 +180,7 @@ fig.supylabel(' \n', va='center', rotation='vertical', fontsize=11)
 
 plt.show()
 
-plt.rcParams['font.size'] = 9
+# plt.rcParams['font.size'] = 9
 
 detectables_mag = []
 detectables_kin = []
@@ -299,10 +335,11 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
             P_rad_both = radio_power(P_in_mag, P_in_kin, nu, D, both=True)
 
             if IsBurst:
-                I = I * (10 ** 1.53)
-                P_rad_mag *= 10**1.53
-                P_rad_kin *= 10**1.53
-                P_rad_both *= 10**1.53
+                factor = 10  # 10**1.53 (Ashtari)
+                I = I * factor
+                P_rad_mag *= factor
+                P_rad_kin *= factor
+                P_rad_both *= factor
 
             intens_mag.append(P_rad_mag)
             intens_kin.append(P_rad_kin)
@@ -514,10 +551,13 @@ df_det = pd.DataFrame(det_data[1:], columns=["Name", "Freq", "Flux"])
 
 def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=False):
 
-    rc = {"font.family": "sans-serif", "font.weight": "light", "font.variant": "small-caps", "font.size": 10}
-    plt.rcParams.update(rc)
+    # rc = {"font.family": "sans-serif", "font.weight": "light", "font.variant": "small-caps", "font.size": 10}
+    # rc = {"font": font}
+    # plt.rcParams.update(rc)
 
     plt.rcParams['figure.figsize'] = [10, 5]
+    plt.rcParams['font.size'] = 12
+
 
     y_mag_err, y_kin_err, y_both_err = y_err[0], y_err[1], y_err[2]
 
@@ -565,12 +605,15 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
         x_err_new = x_both_err
         df["y"] = df["y_both"]
 
+    df["xerr_nonzero"] = np.where(df["x"] == 0, np.nan, df["x"])
+    df["yerr_nonzero"] = np.where(df["y"] == 0, np.nan, df["y"])
+
     if zoom:
         size = 20
     else:
         size = df.d
 
-    im = ax0.scatter(df.x, df.y, c=df.s, s=size, cmap="magma_r")
+    im = ax0.scatter(df.xerr_nonzero, df.yerr_nonzero, c=df.s, s=size, cmap="magma_r")
     errorbar = ax0.errorbar(df.x, df.y,
                      yerr=y_err,
                      xerr=x_err_new,
@@ -672,7 +715,8 @@ def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
     TheBins1 = np.logspace(bin1_lower, bin1_higher, n)
 
     plt.rcParams['figure.figsize'] = [6, 4]
-    rc = {"font.size": 10}
+    # rc = {"font": font}
+    rc = {"font.size": 12}
     plt.rcParams.update(rc)
 
     fig1, axs = plt.subplots(1, 2, sharey="row", figsize=[10, 5])

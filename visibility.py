@@ -8,10 +8,10 @@ from astropy.time import Time
 import astropy.units as u
 import matplotlib.colors as mcolors
 from datetime import datetime
-
-
+# import smplotlib
 
 plt.rcParams['figure.figsize'] = [7, 4]
+# plt.rcParams['font.size'] = 10
 
 df = pd.read_csv("obs_table.csv")
 
@@ -131,8 +131,6 @@ for i in range(len(obs)):
     retro_noir(ax1)
 
 
-
 # time_above_elevation(3.1, 17.2, 39.5, 0)
-
 
 plt.show()

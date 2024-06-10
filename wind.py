@@ -4,6 +4,8 @@ from scipy.optimize import fsolve
 import csv
 import pandas as pd
 from radio_module import *
+import smplotlib
+
 
 # Read CSV using pandas
 filename = "NASA2903.csv"
@@ -133,7 +135,7 @@ for j in range(len(ages)):
 
 def profile_plot(rs, ws, save=False):
     plt.rcParams['figure.figsize'] = [5, 4]
-    plt.rcParams["font.size"] = 11
+    plt.rcParams["font.size"] = 13
     fig, ax = plt.subplots()
 
     plotted_spectral_types = set()
@@ -161,7 +163,7 @@ def profile_plot(rs, ws, save=False):
     plt.tight_layout()
     plt.show()
     if save:
-        plt.savefig("wind_profiles.png")
+        plt.savefig("wind_profiles.pdf")
 
 
 profile_plot(radial_ranges, wind_speeds)

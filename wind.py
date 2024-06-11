@@ -157,8 +157,8 @@ def profile_plot(rs, ws, save=False):
         ax.set_xlim(3e-5, 50)
         ax.set(xlabel="Distance from Host Star (AU)",
                ylabel="Parker Wind Speed (km/h)")
-    ax.minorticks_on()
-    retro_noir(ax)
+    # ax.minorticks_on()
+    # retro_noir(ax)
     plt.legend()
     plt.tight_layout()
     plt.show()

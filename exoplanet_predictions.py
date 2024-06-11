@@ -42,7 +42,6 @@ def attempt_hershley():
     mpl.rcParams['text.latex.preamble'] = r'\usepackage{textcomp}'
 
 
-
 plt.rcParams['figure.figsize'] = [10, 5]
 
 rng = np.random.default_rng()
@@ -558,7 +557,6 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
     plt.rcParams['figure.figsize'] = [10, 5]
     plt.rcParams['font.size'] = 12
 
-
     y_mag_err, y_kin_err, y_both_err = y_err[0], y_err[1], y_err[2]
 
     df["labels"] = df.apply(lambda row: str(row['l_mag']) + row['l_kin'] + row["l_both"], axis=1)
@@ -608,46 +606,6 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
     df["xerr_nonzero"] = np.where(df["x"] == 0, np.nan, df["x"])
     df["yerr_nonzero"] = np.where(df["y"] == 0, np.nan, df["y"])
 
-    if zoom:
-        size = 20
-    else:
-        size = df.d
-
-    im = ax0.scatter(df.xerr_nonzero, df.yerr_nonzero, c=df.s, s=size, cmap="magma_r")
-    errorbar = ax0.errorbar(df.x, df.y,
-                     yerr=y_err,
-                     xerr=x_err_new,
-                     fmt="None",
-                     ecolor="black",
-                     elinewidth=0.5)
-    ax0.plot(Freq_1, L_EU_1, linestyle="dashed", color="red", linewidth=0.5)
-    ax0.plot(Freq_2, L_EU_2, linestyle="dashed", color="purple", linewidth=0.5)
-    for i in range(4):
-        x = uGMRT["Frequencies"][i]
-        y = uGMRT["RMS Noise"][i]
-        plt.plot(x, y, "b--", linewidth=0.5)
-        if i == 0:
-            ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1, label="uGMRT")
-        else:
-            ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1)
-
-    for i in range(5):
-        x = MWA["Frequencies"][i]
-        y = MWA["RMS Noise"][i]
-        plt.plot(x, y, "k--", linewidth=0.5)
-        if i == 0:
-            ax0.fill_between(x, y, 10 ** 6, color="grey", alpha=0.1, label="MWA")
-        else:
-            ax0.fill_between(x, y, 10 ** 6, color="grey", alpha=0.1)
-
-    ax0.fill_between(Freq_1, L_EU_1, 10**6, color="red", alpha=0.1, label="LOFAR LBA")
-    ax0.fill_between(Freq_2, L_EU_2, 10**6, color="purple", alpha=0.1, label="LOFAR HBA")
-    plt.colorbar(im, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)", aspect=25, extend="both")
-    ax0.axvline(x=10, color="black", linestyle="dashed")
-    ax0.set_xscale("log")
-    ax0.set_yscale("log")
-    ax0.axvspan(0, 10, alpha=0.2, color="teal")
-
     if which == "mag":
         lab = df["l_mag"]
         tit = "\n(Magnetic Energy)"
@@ -658,11 +616,61 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
         lab = df["l_both"]
         tit = ""
 
+    if zoom:
+        size = lab.apply(lambda x: 0 if x == "" else 60)
+
+    else:
+        size = df.d
+
+    if not zoom:
+        smplotlib.set_style(edgecolor='face')
+    else:
+        smplotlib.set_style(edgecolor='k')
+
+    im = ax0.scatter(df.xerr_nonzero, df.yerr_nonzero, c=df.s, s=size, cmap="magma_r")
+    errorbar = ax0.errorbar(df.x, df.y,
+                     yerr=y_err,
+                     xerr=x_err_new,
+                     fmt="None",
+                     ecolor="black",
+                     elinewidth=0.5,
+                     capsize=0)
+    ax0.plot(Freq_1, L_EU_1, linestyle="-", color="red", linewidth=0.5)
+    ax0.plot(Freq_2, L_EU_2, linestyle="-", color="purple", linewidth=0.5)
+    for i in range(4):
+        x = uGMRT["Frequencies"][i]
+        y = uGMRT["RMS Noise"][i]
+        plt.plot(x, y, "b-", linewidth=0.5)
+        if i == 0:
+            ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1, label="uGMRT")
+        else:
+            ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1)
+
+    for i in range(5):
+        x = MWA["Frequencies"][i]
+        y = MWA["RMS Noise"][i]
+        plt.plot(x, y, "k-", linewidth=0.5)
+        if i == 0:
+            ax0.fill_between(x, y, 10 ** 6, color="grey", alpha=0.1, label="MWA")
+        else:
+            ax0.fill_between(x, y, 10 ** 6, color="grey", alpha=0.1)
+
+    ax0.fill_between(Freq_1, L_EU_1, 10**6, color="red", alpha=0.1, label="LOFAR LBA")
+    ax0.fill_between(Freq_2, L_EU_2, 10**6, color="purple", alpha=0.1, label="LOFAR HBA")
+    cbar = plt.colorbar(im, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)", aspect=25, extend="both")
+    # cbar.ax.tick_params(labelsize=10)
+    # cbar.set_label('my label', size='xx-small')
+    ax0.axvline(x=10, color="black", linestyle="dashed")
+    ax0.set_xscale("log")
+    ax0.set_yscale("log")
+    ax0.axvspan(0, 10, alpha=0.2, color="teal")
+
     df["x_errmin"], df["x_errmax"] = x_err_new
     df["y_errmin"], df["y_errmax"] = y_err
 
     if zoom:
         errorbar.remove()
+        ax0.grid("on", alpha=0.2)
         df1 = df[lab != ""]
         yerr = [df1["y_errmin"], df1["y_errmax"]]
         xerr = [df1["x_errmin"], df1["x_errmax"]]
@@ -670,8 +678,10 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
         ax0.set_xlim(left=min(det["Freq"]) * 0.5, right=max(det["Freq"]) * 2)
         ax0.set_ylim(bottom=min(det["Flux"]) * 0.5, top=max(det["Flux"]) * 2)
         texts = [plt.text(df.x[i], df.y[i], lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab)) if lab[i] != ""]
-        adjust_text(texts, arrowprops=dict(arrowstyle="-", color="r", lw=0.5))
-        plt.legend()
+        plt.legend(fontsize=13, loc="lower left")
+        adjust_text(texts, arrowprops=dict(arrowstyle="-", color="k", lw=0.5),
+                    force_points=(3, 3), force_text=(2, 2), force_objects=(1.5, 1.5),
+                    expand_points=(1.15, 1.15), expand_objects=(1.5, 1.5), expand_align=(1.2, 1.2), precision=20)
 
     else:
         ax0.set_xlim(left=0.05)
@@ -682,7 +692,7 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
         # for i, txt in enumerate(labels):
         #     if txt:
         #         ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(2, 2), textcoords="offset pixels", fontsize=7)
-        plt.legend(loc="upper left")
+        plt.legend(loc="lower right")
 
     # if IsBurst:
     #     ax0.set_title(f"Frequency and Intensity of Burst CMI Emissions of the Exoplanet Sample{tit}")
@@ -691,7 +701,7 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
 
     ax0.set_xlabel("Peak Emission Frequency (MHz)")
     ax0.set_ylabel("Radio Flux Density (Jy)")
-    retro_noir(ax0)
+    # retro_noir(ax0)
     fig0.tight_layout()
 
     if save:
@@ -744,15 +754,15 @@ def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
     # ax2.set_title("Histogram of the Magnetic Field Strengths")
 
     ax2.set_xscale("log")
-    hist_noir(ax1)
-    hist_noir(ax2)
+    # hist_noir(ax1)
+    # hist_noir(ax2)
     fig1.supylabel("Number of Exoplanets")
 
     if save:
         plt.savefig("hist.pdf")
 
 
-scatter_plot(df, "both", y_err, x_err, df_det)
+scatter_plot(df, "both", y_err, x_err, df_det, zoom=True)
 outcome_dist_hists(intensities, "both", magnetic_fields)
 
 plt.show()

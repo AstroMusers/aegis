@@ -123,6 +123,7 @@ magnetic_fields = []
 labels_mag = []
 labels_kin = []
 labels_both = []
+outliers = []
 
 y_mag_minerr = []
 y_mag_maxerr = []
@@ -249,7 +250,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     high_var = ["AU Mic c", "V1298 Tau d", "V1298 Tau b", "V1298 Tau e", "V1298 Tau c"]
     # high_var = []
 
-    for k in range(100):  # The loop for Monte Carlo iterations
+    for k in range(1000):  # The loop for Monte Carlo iterations
         T = rng.normal(T_i, T_s)
         while T < 0:
             T = rng.normal(T_i, T_s)
@@ -357,6 +358,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         continue
 
     # print(f"{B_perp=}, {B_star=}, {n=}, {R_m=}. {Mdot=}, {P_in}, {P_rad}")
+    freqs = np.array(freqs)
     n_p = np.percentile(n_ps, 50)
     nu = np.percentile(freqs, 50)
     I_mag = np.percentile(intens_mag, 50)
@@ -376,6 +378,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     obs_mag = ""
     obs_kin = ""
     obs_both = ""
+    out = ""
 
     EXO = Exoplanet(name, a, R, M, p, B, M_s, Mdot, d, freq=nu, intensity_mag=I_mag, intensity_kin=I_kin, intensity_both=I_both)
     if EXO.magnetic_field != 0:
@@ -394,97 +397,137 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     observable_mag = False
     observable_kin = False
     observable_both = False
-    if 30 <= nu <= 75:
-        for m in range(4):
-            if Freq_1[m] <= nu <= Freq_1[m + 1]:
-                if I_mag >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
-                    obs_mag = str(EXO.name)
-                    print(obs_mag)
-                    detectables_mag.append(EXO)
-                    observable_mag = True
-                    observable_flag = True
-                if I_kin >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
-                    obs_kin = str(EXO.name)
-                    print(obs_kin)
-                    detectables_kin.append(EXO)
-                    observable_flag = True
-                    observable_kin = True
-                if I_both >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
-                    obs_both = str(EXO.name)
-                    print(obs_both)
-                    detectables_both.append(EXO)
-                    observable_both = True
-                    observable_flag = True
+    observable_flag = False
+    # if 30 <= nu <= 75:
+    bw = 4.66  # LOFAR bandwidth of 4.66 MHz
+    for m in range(3):
+        x = freqs[(Freq_1[m] - bw <= freqs) & (freqs <= Freq_1[m + 1] + bw)]
+        frac = len(x) / len(freqs)
 
-    if 120 <= nu <= 180:
-        for m in range(4, 7):
-            if Freq_2[m] <= nu <= Freq_2[m+1]:
-                if I_mag >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
-                    obs_mag = str(EXO.name)
-                    print(obs_mag)
-                    detectables_mag.append(EXO)
-                    observable_mag = True
-                if I_kin >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
-                    obs_kin = str(EXO.name)
-                    print(obs_kin)
-                    detectables_kin.append(EXO)
-                    observable_kin = True
-                if I_both >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
-                    obs_both = str(EXO.name)
-                    print(obs_both)
-                    detectables_both.append(EXO)
-                    observable_both = True
+        if frac > 0.1 and not observable_flag:
+            # if I_mag >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
+            if I_mag >= L_EU_1[m] and not observable_mag:
+                obs_mag = str(EXO.name)
+                print(obs_mag, m, I_mag)
+                detectables_mag.append(EXO)
+                observable_mag = True
+            # if I_kin >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
+            if I_kin >= L_EU_1[m] and not observable_kin:
+                obs_kin = str(EXO.name)
+                print(obs_kin, m, I_kin)
+                detectables_kin.append(EXO)
+                observable_kin = True
+            # if I_both >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
+            if I_both >= L_EU_1[m] and not observable_kin:
+                obs_both = str(EXO.name)
+                print(obs_both, m, I_both)
+                detectables_both.append(EXO)
+                observable_both = True
+                if not Freq_1[0] <= nu <= Freq_1[3]:
+                    out = str(EXO.name)
+                    print(f"{out} Outlier for LOFAR LBA {m=}")
+            observable_flag = observable_both or observable_mag or observable_kin
 
-    if 72.30 <= nu <= 231.04:
-        for m in range(5):
-            if not observable_mag:
-                if MWA["Frequencies"][m][0] <= nu <= MWA["Frequencies"][m][1] and I_mag > MWA["RMS Noise"][m][0]:
-                    obs_mag = str(EXO.name)
-                    print(obs_mag)
-                    detectables_mag.append(EXO)
-                    observable_mag = True
+    # if 120 <= nu <= 180:
+    bw = 4.66  # LOFAR bandwidth of 4.66 MHz
 
-            if not observable_kin:
-                if MWA["Frequencies"][m][0] <= nu <= MWA["Frequencies"][m][1] and I_kin > MWA["RMS Noise"][m][0]:
-                    obs_kin = str(EXO.name)
-                    print(obs_kin)
-                    detectables_kin.append(EXO)
-                    observable_kin = True
+    for m in range(4, 6):
+        x = freqs[(Freq_2[m] - bw <= freqs) & (freqs <= Freq_2[m + 1] + bw)]
+        frac = len(x) / len(freqs)
 
-            if not observable_both:
-                if MWA["Frequencies"][m][0] <= nu <= MWA["Frequencies"][m][1] and I_both > MWA["RMS Noise"][m][0]:
-                    obs_both = str(EXO.name)
-                    print(obs_both)
-                    detectables_both.append(EXO)
-                    observable_both = True
-                    break
+        if frac > 0.1:
+            # if I_mag >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
+            if I_mag >= L_EU_2[m] and not observable_mag:
+                obs_mag = str(EXO.name)
+                print(obs_mag)
+                detectables_mag.append(EXO)
+                observable_mag = True
+
+            # if I_kin >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
+            if I_kin >= L_EU_2[m] and not observable_kin:
+                obs_kin = str(EXO.name)
+                print(obs_kin)
+                detectables_kin.append(EXO)
+                observable_kin = True
+            # if I_both >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
+            if I_both >= L_EU_2[m] and not observable_both:
+                obs_both = str(EXO.name)
+                print(obs_both)
+                detectables_both.append(EXO)
+                observable_both = True
+                if not Freq_2[4] <= nu <= Freq_2[6]:
+                    out = str(EXO.name)
+                    print(f"{out} Outlier for LOFAR HBA {m=} ")
+            observable_flag = observable_both or observable_mag or observable_kin
+
+    # if 72.30 <= nu <= 231.04:
+    for m in range(5):
+        if not observable_mag:
+            x = freqs[(MWA["Frequencies"][m][0] <= freqs) & (freqs <= MWA["Frequencies"][m][1])]
+            frac = len(x) / len(freqs)
+            if frac > 0.1 and I_mag > MWA["RMS Noise"][m][0]:
+                obs_mag = str(EXO.name)
+                print(obs_mag)
+                detectables_mag.append(EXO)
+                observable_mag = True
+
+        if not observable_kin:
+            x = freqs[(MWA["Frequencies"][m][0] <= freqs) & (freqs <= MWA["Frequencies"][m][1])]
+            frac = len(x) / len(freqs)
+            if frac > 0.1 and I_kin > MWA["RMS Noise"][m][0]:
+                obs_kin = str(EXO.name)
+                print(obs_kin)
+                detectables_kin.append(EXO)
+                observable_kin = True
+
+        if not observable_both:
+            x = freqs[(MWA["Frequencies"][m][0] <= freqs) & (freqs <= MWA["Frequencies"][m][1])]
+            frac = len(x) / len(freqs)
+            if frac > 0.1 and I_both > MWA["RMS Noise"][m][0]:
+                obs_both = str(EXO.name)
+                print(obs_both)
+                detectables_both.append(EXO)
+                observable_both = True
+                if not MWA["Frequencies"][0][0] <= nu <= MWA["Frequencies"][4][1]:
+                    out = str(EXO.name)
+                    print(f"{out} Outlier for MWA {m=} ")
+                break
 
 
     # if not observable_mag and not observable_kin and not observable_both:
-    if 120 <= nu < 850 or 1050 < nu <= 1450:
-        for m in range(4):
+    # if 120 <= nu < 850 or 1050 < nu <= 1450:
+    for m in range(4):
 
-            if not observable_mag:
-                if uGMRT["Frequencies"][m][0] <= nu <= uGMRT["Frequencies"][m][1] and I_mag > uGMRT["RMS Noise"][m][0]:
-                    obs_mag = str(EXO.name)
-                    print(obs_mag)
-                    detectables_mag.append(EXO)
-                    observable_mag = True
+        if not observable_mag:
+            x = freqs[(uGMRT["Frequencies"][m][0] <= freqs) & (freqs <= uGMRT["Frequencies"][m][1])]
+            frac = len(x) / len(freqs)
+            if frac > 0.1 and I_mag > uGMRT["RMS Noise"][m][0]:
+                obs_mag = str(EXO.name)
+                print(obs_mag)
+                detectables_mag.append(EXO)
+                observable_mag = True
 
-            if not observable_kin:
-                if uGMRT["Frequencies"][m][0] <= nu <= uGMRT["Frequencies"][m][1] and I_kin > uGMRT["RMS Noise"][m][0]:
-                    obs_kin = str(EXO.name)
-                    print(obs_kin)
-                    detectables_kin.append(EXO)
-                    observable_kin = True
+        if not observable_kin:
+            x = freqs[(uGMRT["Frequencies"][m][0] <= freqs) & (freqs <= uGMRT["Frequencies"][m][1])]
+            frac = len(x) / len(freqs)
+            if frac > 0.1 and I_kin > uGMRT["RMS Noise"][m][0]:
+                obs_kin = str(EXO.name)
+                print(obs_kin)
+                detectables_kin.append(EXO)
+                observable_kin = True
 
-            if not observable_both:
-                if uGMRT["Frequencies"][m][0] <= nu <= uGMRT["Frequencies"][m][1] and I_both > uGMRT["RMS Noise"][m][0]:
-                    obs_both = str(EXO.name)
-                    print(obs_both)
-                    detectables_both.append(EXO)
-                    observable_both = True
-                    break
+        if not observable_both:
+            x = freqs[(uGMRT["Frequencies"][m][0] <= freqs) & (freqs <= uGMRT["Frequencies"][m][1])]
+            frac = len(x) / len(freqs)
+            if frac > 0.1 and I_both > uGMRT["RMS Noise"][m][0]:
+                obs_both = str(EXO.name)
+                print(obs_both)
+                detectables_both.append(EXO)
+                observable_both = True
+                if not uGMRT["Frequencies"][0][0] <= nu <= uGMRT["Frequencies"][3][1]:
+                    out = str(EXO.name)
+                    print(f"{out} Outlier for uGMRT {m=}")
+                break
 
     # if str(EXO.name) in high_var and not observable_both:
     #     obs_both = str(EXO.name)
@@ -496,6 +539,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     labels_mag.append(obs_mag)
     labels_kin.append(obs_kin)
     labels_both.append(obs_both)
+    outliers.append(out)
 
     labels = [labels_mag, labels_kin, labels_both]
 
@@ -561,7 +605,8 @@ df = pd.DataFrame({"x": frequencies,
                     "s": semis,
                     "l_mag": labels_mag,
                     "l_kin": labels_kin,
-                    "l_both": labels_both})
+                    "l_both": labels_both,
+                    "outliers": outliers})
 
 det_data = [[exo.name, exo.freq, exo.intensity_both] for exo in detectables_both]
 df_det = pd.DataFrame(det_data[1:], columns=["Name", "Freq", "Flux"])
@@ -687,7 +732,7 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
         tit = ""
 
     if zoom:
-        size = lab.apply(lambda x: 0 if x == "" else 60)
+        size = lab.apply(lambda x: 5 if x == "" else 60)
 
     else:
         size = df.d
@@ -705,6 +750,13 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
                      ecolor="black",
                      elinewidth=0.5,
                      capsize=0)
+    # errorbar = ax0.errorbar(df.x, df.y,
+    #                  yerr=y_err_clean,
+    #                  xerr=x_err_clean,
+    #                  fmt="None",
+    #                  ecolor="black",
+    #                  elinewidth=0.5,
+    #                  capsize=0)
     ax0.plot(Freq_1, L_EU_1, linestyle="-", color="red", linewidth=0.5)
     ax0.plot(Freq_2, L_EU_2, linestyle="-", color="purple", linewidth=0.5)
     for i in range(4):
@@ -745,10 +797,11 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
         yerr = [df1["y_errmin"], df1["y_errmax"]]
         xerr = [df1["x_errmin"], df1["x_errmax"]]
         ax0.errorbar(df1.x, df1.y, yerr=yerr, xerr=xerr, fmt="None", ecolor="black", elinewidth=1, capsize=2)
+        # ax0.errorbar(df1.x, df1.y, yerr=y_err_inclusive, xerr=x_err_inclusive, fmt="None", ecolor="black", elinewidth=1, capsize=2)
         ax0.set_xlim(left=min(det["Freq"]) * 0.5, right=max(det["Freq"]) * 2)
         ax0.set_ylim(bottom=min(det["Flux"]) * 0.5, top=max(det["Flux"]) * 2)
         texts = [plt.text(df.x[i], df.y[i], lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab)) if lab[i] != ""]
-        plt.legend(fontsize=13, loc="lower left")
+        plt.legend(fontsize=13)
         adjust_text(texts, arrowprops=dict(arrowstyle="-", color="k", lw=0.5),
                     force_points=(3, 3), force_text=(2, 2), force_objects=(1.5, 1.5),
                     expand_points=(1.15, 1.15), expand_objects=(1.5, 1.5), expand_align=(1.2, 1.2), precision=20)
@@ -773,28 +826,17 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
 
         # ax0.annotate("", xy=(10, max(df.y)*1.5), xytext=(xmax, max(df.y)*1.5), arrowprops=dict(arrowstyle='<-', color='black', linestyle="dotted"))
 
-        ax0.text(np.sqrt(xmax*10), min(df.y)/4, "Observable From Ground",
+        ax0.text(np.sqrt(xmax*10), min(df.y)/4, "Observable From Ground", color="green",
             ha='center', va="center",  # Horizontal alignment of the text
             fontsize=12,  # Size of the text
-            bbox=dict(facecolor='none', edgecolor='black', boxstyle='square')
-            )
+            bbox=dict(facecolor='none', edgecolor='green', boxstyle='square')
+                 )
 
-        ax0.text(np.sqrt(xmin*10), min(df.y)/4, "Cannot Penetrate the Ionosphere",
+        ax0.text(np.sqrt(xmin*10), min(df.y)/4, "Cannot Penetrate the Ionosphere", color="red",
             ha='center', va="center",  # Horizontal alignment of the text
             fontsize=12,  # Size of the text
-            bbox=dict(facecolor='none', edgecolor='black', boxstyle='sawtooth')
-            )
-
-        # ax0.annotate("Cannot Penetrate the Ionosphere", xy=(np.sqrt(xmin*10), max(df.y)*1.5),
-        #     xytext=(np.sqrt(xmin*10), max(df.y)*2), ha='center',  # Horizontal alignment of the text
-        #     fontsize=12,  # Size of the text
-        #              )
-        #
-        # ax0.annotate("", xy=(xmin, max(df.y)*1.5), xytext=(10, max(df.y)*1.5), arrowprops=dict(arrowstyle='->', color='black', linestyle="dotted"))
-    # if IsBurst:
-    #     ax0.set_title(f"Frequency and Intensity of Burst CMI Emissions of the Exoplanet Sample{tit}")
-    # else:
-    #     ax0.set_title(f"Frequency and Intensity of Quiescent CMI Emissions of the Exoplanet Sample{tit}")
+            bbox=dict(facecolor='none', edgecolor='red', boxstyle='sawtooth')
+                 )
 
     ax0.set_xlabel("Maximum Emission Frequency (MHz)")
     ax0.set_ylabel("Radio Flux Density (Jy)")
@@ -808,7 +850,7 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
             plt.savefig("scatter.pdf")
 
 
-scatter_plot(df, "both", y_err, x_err, df_det)
+scatter_plot(df, "both", y_err, x_err, df_det, zoom=True)
 outcome_dist_hists(intensities, "both", magnetic_fields)
 
 plt.show()

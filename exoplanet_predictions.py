@@ -543,27 +543,33 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
 
     labels = [labels_mag, labels_kin, labels_both]
 
-    selected = ["AU Mic c", "V1298 Tau d", "V1298 Tau b", "V1298 Tau e", "V1298 Tau c"]
+    selected = ["tau Boo b", "AU Mic c", "V1298 Tau d", "V1298 Tau b", "V1298 Tau e", "V1298 Tau c"]
     if EXO.name in selected:
-        plt.figure()
-        plt.subplot(1, 2, 1)
-        plt.hist(np.log10(intens_both), edgecolor="black")
-        plt.axvline(np.log10(I_both), linestyle="--", color="crimson", label="Median")
-        plt.title(f"Distribution of Emission Intensity for {EXO.name}")
-        plt.xlabel("log(Intensity (Jy))")
-        plt.ylabel("Bin Count")
-        plt.legend()
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(4, 6.4))
+        ax1.hist(np.log10(intens_both), edgecolor="black")
+        ax1.axvline(np.log10(I_both), linestyle="--", color="crimson", label="Median")
+        ax1.axvline(np.log10(np.percentile(intens_both, 16)), color="xkcd:deep green", linestyle="--", label="16th & 84th\npercentiles")
+        ax1.axvline(np.log10(np.percentile(intens_both, 84)), color="xkcd:deep green", linestyle="--")
+        # ax1.set_title(f"{EXO.name}")
+        ax1.set_xlabel("log(Flux Density (Jy))")
+        ax1.set_ylabel("Bin Count")
 
-        plt.subplot(1, 2, 2)
-        plt.hist(np.log10(freqs), histtype="step")
+        ax2.hist(np.log10(freqs), histtype="step")
         if n_p > min(freqs):
-            plt.axvline(np.log10(n_p), linestyle="dotted", label="Local Plasma\nFrequency")
-        plt.axvline(np.log10(nu), linestyle="--", color="firebrick", label="Median")
-        plt.axvline(1, linestyle="--", label="Ionosphere\ncutoff")
-        plt.title(f"Distribution of Emission Frequency for {EXO.name}")
-        plt.xlabel("log(Frequency (MHz))")
-        plt.ylabel("Bin Count")
-        plt.legend()
+            ax2.axvline(np.log10(n_p), linestyle="dotted", label="Local Plasma\nFrequency")
+        ax2.axvline(np.log10(nu), linestyle="--", color="firebrick")
+        if min(freqs) < 1:
+            ax2.axvline(1, linestyle="--", label="Ionosphere\ncutoff")
+        ax2.axvline(np.log10(np.percentile(freqs, 16)), color="xkcd:deep green", linestyle="--")
+        ax2.axvline(np.log10(np.percentile(freqs, 84)), color="xkcd:deep green", linestyle="--")
+        # ax2.set_title(f"{EXO.name}")
+        ax2.set_xlabel("log(Frequency (MHz))")
+        ax2.set_ylabel("Bin Count")
+
+        fig.suptitle(f"{EXO.name}")
+        lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
+        lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
+        fig.legend(lines, labels, loc="upper right", bbox_to_anchor=(1, 1), ncol=int(len(lines_labels)/2), frameon=True, shadow=True)
         plt.savefig(f"{EXO.name}.pdf")
         # plt.show()
         # plt.close()
@@ -815,7 +821,7 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
         # for i, txt in enumerate(labels):
         #     if txt:
         #         ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(2, 2), textcoords="offset pixels", fontsize=7)
-        plt.legend(fontsize=12)
+        plt.legend(fontsize=12, frameon=True, shadow=True)
 
         xmin, xmax = plt.xlim()
 
@@ -850,7 +856,7 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
             plt.savefig("scatter.pdf")
 
 
-scatter_plot(df, "both", y_err, x_err, df_det, zoom=True)
+scatter_plot(df, "both", y_err, x_err, df_det)
 outcome_dist_hists(intensities, "both", magnetic_fields)
 
 plt.show()

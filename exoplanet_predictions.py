@@ -243,6 +243,11 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     intens_mag = []
     intens_kin = []
     intens_both = []
+    n_ps = []
+
+    # high_var = ["AU Mic c", "V1298 Tau b"]
+    high_var = ["AU Mic c", "V1298 Tau d", "V1298 Tau b", "V1298 Tau e", "V1298 Tau c"]
+    # high_var = []
 
     for k in range(100):  # The loop for Monte Carlo iterations
         T = rng.normal(T_i, T_s)
@@ -312,16 +317,20 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         n = number_density(Mdot, veff, a)
         R_m = Rm(B, R, n, T_wind, v_wind, B_star)
 
+        n_p = 8.98 * np.sqrt(n) * 10**(-3)
+
         nu = max_freq(B)
         assert nu > 0, f"Maximum emission frequency must be positive, instead got {nu=}."
 
         nu /= 10 ** 6
+        n_p /= 10**6
 
         flag = True
 
-        if freq_condition(nu, n):
+        if freq_condition(nu, n) or name in high_var:
             flag = False
             freqs.append(nu)
+            n_ps.append(n_p)
             nu *= 10**6
 
             I = complete(B, a, M_s, Mdot, D)
@@ -348,6 +357,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         continue
 
     # print(f"{B_perp=}, {B_star=}, {n=}, {R_m=}. {Mdot=}, {P_in}, {P_rad}")
+    n_p = np.percentile(n_ps, 50)
     nu = np.percentile(freqs, 50)
     I_mag = np.percentile(intens_mag, 50)
     I_kin = np.percentile(intens_kin, 50)
@@ -476,6 +486,10 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
                     observable_both = True
                     break
 
+    # if str(EXO.name) in high_var and not observable_both:
+    #     obs_both = str(EXO.name)
+    #     detectables_both.append(EXO)
+
     if EXO.name == "tau Boo b":  # Special interest
         obs = EXO.name
 
@@ -485,23 +499,28 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
 
     labels = [labels_mag, labels_kin, labels_both]
 
-    selected = "tau Boo b"
-    if EXO.name == selected:
+    selected = ["AU Mic c", "V1298 Tau d", "V1298 Tau b", "V1298 Tau e", "V1298 Tau c"]
+    if EXO.name in selected:
+        plt.figure()
         plt.subplot(1, 2, 1)
-        plt.hist(intens_mag, edgecolor="black")
-        # plt.xscale("log")
-        # plt.yscale("log")
-        plt.title(f"Distribution of Emission Intensity for {selected}")
-        plt.xlabel("Intensity (Jy)")
+        plt.hist(np.log10(intens_both), edgecolor="black")
+        plt.axvline(np.log10(I_both), linestyle="--", color="crimson", label="Median")
+        plt.title(f"Distribution of Emission Intensity for {EXO.name}")
+        plt.xlabel("log(Intensity (Jy))")
         plt.ylabel("Bin Count")
+        plt.legend()
 
         plt.subplot(1, 2, 2)
-        plt.hist(freqs, edgecolor="black")
-        # plt.xscale("log")
-        # plt.yscale("log")
-        plt.title(f"Distribution of Emission Frequency for {selected}")
-        plt.xlabel("Frequency (MHz)")
+        plt.hist(np.log10(freqs), histtype="step")
+        if n_p > min(freqs):
+            plt.axvline(np.log10(n_p), linestyle="dotted", label="Local Plasma\nFrequency")
+        plt.axvline(np.log10(nu), linestyle="--", color="firebrick", label="Median")
+        plt.axvline(1, linestyle="--", label="Ionosphere\ncutoff")
+        plt.title(f"Distribution of Emission Frequency for {EXO.name}")
+        plt.xlabel("log(Frequency (MHz))")
         plt.ylabel("Bin Count")
+        plt.legend()
+        plt.savefig(f"{EXO.name}.pdf")
         # plt.show()
         # plt.close()
 
@@ -546,6 +565,57 @@ df = pd.DataFrame({"x": frequencies,
 
 det_data = [[exo.name, exo.freq, exo.intensity_both] for exo in detectables_both]
 df_det = pd.DataFrame(det_data[1:], columns=["Name", "Freq", "Flux"])
+
+
+def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
+    if which == "mag":
+        intensities = intensities[0]
+    elif which == "kin":
+        intensities = intensities[1]
+    else:
+        intensities = intensities[2]
+
+    bin1_lower = math.floor(math.log10(min(intensities)))
+    bin1_higher = math.floor(math.log10(max(intensities))) + 1
+    n = (bin1_higher - bin1_lower) + 1
+    TheBins1 = np.logspace(bin1_lower, bin1_higher, n)
+
+    plt.rcParams['figure.figsize'] = [6, 4]
+    # rc = {"font": font}
+    rc = {"font.size": 12}
+    plt.rcParams.update(rc)
+
+    fig1, axs = plt.subplots(1, 2, sharey="row", figsize=[10, 5])
+
+    ax1, ax2 = axs[0], axs[1]
+
+    ax1.hist(intensities, bins=TheBins1, edgecolor="black", color="xkcd:sea")
+    if IsBurst:
+        ax1.set_xlabel("Flux Density of Burst Emission (Jy)")
+        # ax1.set_title("Histogram of Burst Emission Intensities")
+    else:
+        ax1.set_xlabel("Flux Density of Quiescent Emission (Jy)")
+        # ax1.set_title("Histogram of Quiescent Emission Intensities")
+
+    ax1.set_xscale("log")
+    ax1.set_yscale("log")
+
+    bin2_lower = math.floor(math.log10(min(magnetic_fields)))
+    bin2_higher = math.floor(math.log10(max(magnetic_fields)))
+    n = (bin2_higher - bin2_lower) * 2 + 1
+    TheBins2 = np.logspace(bin2_lower, bin2_higher, n)
+
+    ax2.hist(magnetic_fields, bins=TheBins2, edgecolor="black", color="xkcd:sea")
+    ax2.set_xlabel("Magnetic Field Strength at the Surface (Gauss)")
+    # ax2.set_title("Histogram of the Magnetic Field Strengths")
+
+    ax2.set_xscale("log")
+    # hist_noir(ax1)
+    # hist_noir(ax2)
+    fig1.supylabel("Number of Exoplanets")
+
+    if save:
+        plt.savefig("hist.pdf")
 
 
 def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=False):
@@ -688,20 +758,47 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
         if fix_lim:
             ax0.set_ylim(bottom=1e-10, top=1)
         else:
-            ax0.set_ylim(bottom=min(df.y) * 0.1, top=max(df.y) * 10)
+            ax0.set_ylim(bottom=min(df.y) * 0.05, top=max(df.y) * 2)
         # for i, txt in enumerate(labels):
         #     if txt:
         #         ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(2, 2), textcoords="offset pixels", fontsize=7)
-        plt.legend(loc="lower right")
+        plt.legend(fontsize=12)
 
+        xmin, xmax = plt.xlim()
+
+        # ax0.annotate("Observable From Ground", xy=(np.sqrt(xmax*10), max(df.y)*1.5),
+        #     xytext=(np.sqrt(xmax*10), max(df.y)*2), ha='center',  # Horizontal alignment of the text
+        #     fontsize=12,  # Size of the text
+        #              )
+
+        # ax0.annotate("", xy=(10, max(df.y)*1.5), xytext=(xmax, max(df.y)*1.5), arrowprops=dict(arrowstyle='<-', color='black', linestyle="dotted"))
+
+        ax0.text(np.sqrt(xmax*10), min(df.y)/4, "Observable From Ground",
+            ha='center', va="center",  # Horizontal alignment of the text
+            fontsize=12,  # Size of the text
+            bbox=dict(facecolor='none', edgecolor='black', boxstyle='square')
+            )
+
+        ax0.text(np.sqrt(xmin*10), min(df.y)/4, "Cannot Penetrate the Ionosphere",
+            ha='center', va="center",  # Horizontal alignment of the text
+            fontsize=12,  # Size of the text
+            bbox=dict(facecolor='none', edgecolor='black', boxstyle='sawtooth')
+            )
+
+        # ax0.annotate("Cannot Penetrate the Ionosphere", xy=(np.sqrt(xmin*10), max(df.y)*1.5),
+        #     xytext=(np.sqrt(xmin*10), max(df.y)*2), ha='center',  # Horizontal alignment of the text
+        #     fontsize=12,  # Size of the text
+        #              )
+        #
+        # ax0.annotate("", xy=(xmin, max(df.y)*1.5), xytext=(10, max(df.y)*1.5), arrowprops=dict(arrowstyle='->', color='black', linestyle="dotted"))
     # if IsBurst:
     #     ax0.set_title(f"Frequency and Intensity of Burst CMI Emissions of the Exoplanet Sample{tit}")
     # else:
     #     ax0.set_title(f"Frequency and Intensity of Quiescent CMI Emissions of the Exoplanet Sample{tit}")
 
-    ax0.set_xlabel("Peak Emission Frequency (MHz)")
+    ax0.set_xlabel("Maximum Emission Frequency (MHz)")
     ax0.set_ylabel("Radio Flux Density (Jy)")
-    # retro_noir(ax0)
+    retro_noir(ax0)
     fig0.tight_layout()
 
     if save:
@@ -711,58 +808,7 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
             plt.savefig("scatter.pdf")
 
 
-def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
-    if which == "mag":
-        intensities = intensities[0]
-    elif which == "kin":
-        intensities = intensities[1]
-    else:
-        intensities = intensities[2]
-
-    bin1_lower = math.floor(math.log10(min(intensities)))
-    bin1_higher = math.floor(math.log10(max(intensities))) + 1
-    n = (bin1_higher - bin1_lower) + 1
-    TheBins1 = np.logspace(bin1_lower, bin1_higher, n)
-
-    plt.rcParams['figure.figsize'] = [6, 4]
-    # rc = {"font": font}
-    rc = {"font.size": 12}
-    plt.rcParams.update(rc)
-
-    fig1, axs = plt.subplots(1, 2, sharey="row", figsize=[10, 5])
-
-    ax1, ax2 = axs[0], axs[1]
-
-    ax1.hist(intensities, bins=TheBins1, edgecolor="black", color="xkcd:sea")
-    if IsBurst:
-        ax1.set_xlabel("Flux Density of Burst Emission (Jy)")
-        # ax1.set_title("Histogram of Burst Emission Intensities")
-    else:
-        ax1.set_xlabel("Flux Density of Quiescent Emission (Jy)")
-        # ax1.set_title("Histogram of Quiescent Emission Intensities")
-
-    ax1.set_xscale("log")
-    ax1.set_yscale("log")
-
-    bin2_lower = math.floor(math.log10(min(magnetic_fields)))
-    bin2_higher = math.floor(math.log10(max(magnetic_fields)))
-    n = (bin2_higher - bin2_lower) * 2 + 1
-    TheBins2 = np.logspace(bin2_lower, bin2_higher, n)
-
-    ax2.hist(magnetic_fields, bins=TheBins2, edgecolor="black", color="xkcd:sea")
-    ax2.set_xlabel("Magnetic Field Strength at the Surface (Gauss)")
-    # ax2.set_title("Histogram of the Magnetic Field Strengths")
-
-    ax2.set_xscale("log")
-    # hist_noir(ax1)
-    # hist_noir(ax2)
-    fig1.supylabel("Number of Exoplanets")
-
-    if save:
-        plt.savefig("hist.pdf")
-
-
-scatter_plot(df, "both", y_err, x_err, df_det, zoom=True)
+scatter_plot(df, "both", y_err, x_err, df_det)
 outcome_dist_hists(intensities, "both", magnetic_fields)
 
 plt.show()

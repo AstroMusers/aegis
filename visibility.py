@@ -114,8 +114,6 @@ for i in range(len(obs)):
 
     texts = [ax.text(df1.ra[k], df1.dec[k], df1.Name[k], ha='center', va='center', fontsize=9, color="white") for k in range(len(df1["Name"]))]
     texts1 = [ax1.text(df1.ra[k], df1.dec[k], df1.Name[k], ha='center', va='center', fontsize=9, color="white") for k in range(len(df1["Name"]))]
-    adjust_text(texts, ax=ax)
-    adjust_text(texts1, ax=ax1)
 
     res1 = time_above_elevation(ras, decs, obs[i], 20)
     cp = ax1.imshow(res1, cmap=cmap1, origin="lower",
@@ -129,6 +127,9 @@ for i in range(len(obs)):
 
     retro_noir(ax)
     retro_noir(ax1)
+
+    adjust_text(texts, ax=ax)
+    adjust_text(texts1, ax=ax1)
 
 
 # time_above_elevation(3.1, 17.2, 39.5, 0)

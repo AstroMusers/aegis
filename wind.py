@@ -133,42 +133,90 @@ for j in range(len(ages)):
     wind_speeds.append(v_values)
 
 
-def profile_plot(rs, ws, save=False):
-    plt.rcParams['figure.figsize'] = [5, 4]
-    plt.rcParams["font.size"] = 13
-    fig, ax = plt.subplots()
+data = {"rs": radial_ranges,
+        "ws": wind_speeds,
+        "specs": specs}
+df = pd.DataFrame(data)
+grouped = df.groupby("specs")
+dfs = {category: group.reset_index(drop=True) for category, group in grouped}
+
+
+def profile_plot(dfs, save=False):
+
+    fig, axs = plt.subplots(2, 2, figsize=(5, 5), sharex=True, sharey=True)
 
     plotted_spectral_types = set()
 
-    for i in range(len(rs)):
-        spectral_type = specs[i]
-        crit_index = np.argmin(abs(rs[i] - rs[i][0]*10))
-        ax.plot(rs[i][crit_index], ws[i][crit_index], "k*", markersize=3)
-        if i == 0:
-            ax.plot([], [], "k*", label="$r_c$", markersize=10)
-        color = spectral_color.get(spectral_type, "black")
-        ax.plot(rs[i], ws[i], color=color, alpha=0.5)
-        if spectral_type not in plotted_spectral_types:
-            plt.plot([], [], label=spectral_type, color=color)
-            plotted_spectral_types.add(spectral_type)
-        # ax.scatter(rs[i], ws[i], color="k", alpha=0.05)
+    for k, (type, df) in enumerate(dfs.items()):
+        ax = axs[k // 2, k % 2]
+        for i in range(len(df.rs)):
+            crit_index = np.argmin(abs(df.rs[i] - df.rs[i][0]*10))
+            ax.plot(df.rs[i][crit_index], df.ws[i][crit_index], "k*", markersize=3)
+            if i == 0 and k == 0:
+                ax.plot([], [], "k*", label="$r_c$", markersize=10)
+            color = spectral_color.get(type, "black")
+            ax.plot(df.rs[i], df.ws[i], color=color, alpha=0.5)
+            if type not in plotted_spectral_types:
+                plt.plot([], [], label=type, color=color)
+                plotted_spectral_types.add(type)
         ax.set(yscale="log", xscale="log")
+        ax.grid("on", alpha=0.5)
         ax.set_ylim(10, 5000)
         ax.set_xlim(3e-5, 50)
-        ax.set(xlabel="Distance from Host Star (AU)",
-               ylabel="Parker Wind Speed (km/h)")
-    # ax.minorticks_on()
-    # retro_noir(ax)
-    plt.legend()
-    plt.tight_layout()
+        retro_noir(ax)
+
+    fig.supylabel("Parker Wind Speed (km/h)")
+    fig.supxlabel("Distance From Host Star (AU)")
+    fig.suptitle("\n")
+    lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
+    lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
+    fig.legend(lines, labels, loc="upper center", bbox_to_anchor=(0.5, 1), ncol=3, frameon=True, shadow=True)
+    plt.subplots_adjust(top=0.85)  # Increase top margin to make space for the legend
+    plt.tight_layout()  # Adjust rect parameter to leave space for the legend
     plt.show()
+
     if save:
-        plt.savefig("wind_profiles.pdf")
+        plt.savefig("winds.pdf")
 
 
-profile_plot(radial_ranges, wind_speeds)
+profile_plot(dfs)
+# def profile_plot_single(rs, ws, save=False):
+#     plt.rcParams['figure.figsize'] = [5, 4]
+#     plt.rcParams["font.size"] = 13
+#     fig, ax = plt.subplots()
+#
+#     plotted_spectral_types = set()
+#
+#     for i in range(len(rs)):
+#         spectral_type = specs[i]
+#         crit_index = np.argmin(abs(rs[i] - rs[i][0]*10))
+#         ax.plot(rs[i][crit_index], ws[i][crit_index], "k*", markersize=3)
+#         if i == 0:
+#             ax.plot([], [], "k*", label="$r_c$", markersize=10)
+#         color = spectral_color.get(spectral_type, "black")
+#         ax.plot(rs[i], ws[i], color=color, alpha=0.5)
+#         if spectral_type not in plotted_spectral_types:
+#             plt.plot([], [], label=spectral_type, color=color)
+#             plotted_spectral_types.add(spectral_type)
+#         # ax.scatter(rs[i], ws[i], color="k", alpha=0.05)
+#         ax.set(yscale="log", xscale="log")
+#         ax.set_ylim(10, 5000)
+#         ax.set_xlim(3e-5, 50)
+#         ax.set(xlabel="Distance from Host Star (AU)",
+#                ylabel="Parker Wind Speed (km/h)")
+#     # ax.minorticks_on()
+#     # retro_noir(ax)
+#     plt.legend()
+#     plt.tight_layout()
+#     plt.show()
+#     if save:
+#         plt.savefig("wind_profiles.pdf")
 
-# plt.show()
+
+
+# profile_plot(radial_ranges, wind_speeds)
+
+
 problem = False
 for i in range(len(wind_speeds)):
     profile = wind_speeds[i]

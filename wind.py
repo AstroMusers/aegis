@@ -248,3 +248,6 @@ print(f"Results saved to {windfile}")
 
 # plt.show()
 # Code takes 19 seconds to run end to end when radial profile linspace has 100 elements
+
+index = int(np.where(names == "tau Boo b")[0])
+np.savez("taub_wind", ranges=radial_ranges[index], speeds=wind_speeds[index])

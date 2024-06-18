@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, FancyArrowPatch
+from matplotlib.lines import Line2D
 import smplotlib
 import pandas as pd
 from matplotlib.colors import Normalize
@@ -26,10 +27,19 @@ a = 0.049  # AU
 
 conversions_constant = 2 * np.pi * 1731  #
 
+ranges = ranges.tolist()
+speeds = speeds.tolist()
+
+ranges.append(R)
+speeds.append(np.nan)
+
+ranges = np.array(ranges)
+speeds = np.array(speeds)
+
 kepler = np.sqrt(G*M/ranges)
 v_eff = np.sqrt(speeds**2 + kepler**2),
 
-theta = np.linspace(0, 2 * np.pi, 100)
+theta = np.linspace(0, 2 * np.pi, 101)
 r, theta = np.meshgrid(ranges, theta)
 
 B_r = B0 * ((R/215) / r)**2
@@ -53,12 +63,13 @@ fig, ax = plt.subplots(subplot_kw={'projection': 'polar'}, constrained_layout=Tr
 
 r = np.log10(r)
 
+masked_values = np.ma.masked_where(r < np.log10(R/215), B_perp)
 
 # Plot the data
-c = ax.pcolormesh(theta, r, B_perp, shading='auto', cmap=colormap)
+c = ax.pcolormesh(theta, r, masked_values, shading='auto', cmap=colormap)
 plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
 
-ax.grid("on", color="white", alpha=0.25)
+ax.grid("on", color="w", alpha=0.25,)
 
 # Create a new axis for the colorbar
 # cbar_ax = fig.add_axes([0.1, 0, 0.8, 0.03])  # [left, bottom, width, height]
@@ -73,21 +84,30 @@ ax.set_xlabel('$\phi$', loc="right", labelpad=-180, color="white")
 
 ax.set_rlabel_position(-90)  # Move the radial labels away from the plotted data
 
+ax.set_rticks([-2, -1.5, -1, -0.5, 0])
+
 # Optional: Label the radial axis with context-specific information
 ax.text(- 100 * np.pi / 180, (np.min(r)+np.max(r))/2 - 0.1, 'log($r$ [AU])', ha='center', va='center', fontsize=13, rotation=90)
 # ax.text(np.pi, (np.min(r)+np.max(r))/2 - 0.8, 'log($r$ [AU])', ha='center', va='center', fontsize=13)
 
 circle_radius = -r[0][0] + np.log10(a)
-circle = Circle((0, 0), circle_radius, transform=ax.transData._b, color='w', fill=False, linestyle='-.', label="Orbit")
+circle = Circle((0, 0), circle_radius, transform=ax.transData._b, color='w', fill=False, linestyle='-.', linewidth=2)
 ax.add_patch(circle)
+
+circle2_radius = -r[0][0] + np.log10(R/215)
+circle2 = Circle((0, 0), circle2_radius, transform=ax.transData._b, color='red', fill=False, linestyle='-', linewidth=2)
+ax.add_patch(circle2)
 
 dot_radius = np.log10(a)
 dot_angle = 120 * np.pi / 180  # Example angle for the dot position
 dot_x = dot_radius * np.cos(dot_angle)
 dot_y = dot_radius * np.sin(dot_angle)
 ax.scatter(dot_angle, dot_radius, color="red", edgecolor="k")  # 'ro' specifies a red dot
-ax.plot(0, np.min(r), "*", color="orange", markersize=15)
+# ax.plot(0, np.min(r), "*", color="orange", markersize=15)
 ax.text(dot_angle, dot_radius+0.2, "$\\tau$ Boo b", ha="center", va="center", color="yellow", rotation=dot_angle * 180 / np.pi - 90)
+
+line1 = Line2D([], [], color="w", linestyle='-.', linewidth=2)
+line2 = Line2D([], [], color="red", linestyle='-', linewidth=2)
 
 
 def add_curved_arrow(ax, radius, start_angle, end_angle):
@@ -105,7 +125,7 @@ from scipy.interpolate import griddata
 
 # Flatten the meshgrid data
 points = np.array([r.flatten(), theta.flatten()]).T
-values_flat = B_perp.flatten()
+values_flat = masked_values.flatten()
 
 # Point where we want to find the color
 point_of_interest = np.array([[dot_radius, dot_angle]])
@@ -114,13 +134,15 @@ point_of_interest = np.array([[dot_radius, dot_angle]])
 interpolated_value = griddata(points, values_flat, point_of_interest, method='linear')
 
 # Get the color corresponding to this interpolated value
-norm = Normalize(vmin=B_perp.min(), vmax=B_perp.max())
+norm = Normalize(vmin=masked_values.min(), vmax=masked_values.max())
 cmap = plt.get_cmap(colormap)
 mappable = ScalarMappable(norm=norm, cmap=cmap)
 dot_color = mappable.to_rgba(interpolated_value[0])
 
 
-fig.legend(frameon=True, shadow=True, facecolor=dot_color, labelcolor="white")
+# fig.legend((line1, line2), ("Orbit", "Stellar Surface"), frameon=True, shadow=True, facecolor=dot_color, labelcolor="white", ncol=2)
+fig.legend((line1,), ("Orbit",), frameon=True, shadow=True, facecolor=dot_color, labelcolor="w", ncol=1)
+fig.legend((line2,), ("Stellar Surface",), frameon=True, shadow=True, labelcolor="k", ncol=1, loc=2)
 
 # fig.tight_layout()
 

@@ -603,7 +603,8 @@ y_both_err = [y_both_minerr, y_both_maxerr]
 y_err = [y_mag_err, y_kin_err, y_both_err]
 x_err = [x_minerr, x_maxerr]
 
-df = pd.DataFrame({"x": frequencies,
+df1 = pd.DataFrame({"Names": names,
+                    "x": frequencies,
                     "y_mag": intensities_mag,
                     "y_kin": intensities_kin,
                     "y_both": intensities_both,
@@ -612,7 +613,11 @@ df = pd.DataFrame({"x": frequencies,
                     "l_mag": labels_mag,
                     "l_kin": labels_kin,
                     "l_both": labels_both,
-                    "outliers": outliers})
+                    "outliers": outliers,
+                    "y_err_min": y_both_minerr,
+                    "y_err_max": y_both_maxerr,
+                    "x_err_min": x_minerr,
+                    "x_err_max": x_maxerr})
 
 det_data = [[exo.name, exo.freq, exo.intensity_both] for exo in detectables_both]
 df_det = pd.DataFrame(det_data[1:], columns=["Name", "Freq", "Flux"])
@@ -669,11 +674,13 @@ def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
         plt.savefig("hist.pdf")
 
 
-def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=False):
+def scatter_plot(df1, which, y_err, x_err, det, zoom=False, save=False, fix_lim=False):
 
     # rc = {"font.family": "sans-serif", "font.weight": "light", "font.variant": "small-caps", "font.size": 10}
     # rc = {"font": font}
     # plt.rcParams.update(rc)
+
+    df = df1.copy()
 
     plt.rcParams['figure.figsize'] = [10, 5]
     plt.rcParams['font.size'] = 12
@@ -856,7 +863,7 @@ def scatter_plot(df, which, y_err, x_err, det, zoom=False, save=False, fix_lim=F
             plt.savefig("scatter.pdf")
 
 
-scatter_plot(df, "both", y_err, x_err, df_det)
+scatter_plot(df1, "both", y_err, x_err, df_det)
 outcome_dist_hists(intensities, "both", magnetic_fields)
 
 plt.show()
@@ -903,20 +910,34 @@ for i in range(len(intensities)):
     table = list(zip(*l2))
 
     table = sorted(table, key=lambda x: x[0].lower())
-    file_name = file_names[0]
+    file_name = f"old_result_tables/{file_names[0]}"
     with open(file_name, 'w') as f:
         f.write(tabulate(table))
         f.close()
 
     table = sorted(table, key=lambda x: x[1])
-    file_name = file_names[1]
+    file_name = f"old_result_tables/{file_names[1]}"
     with open(file_name, 'w') as f:
         f.write(tabulate(table))
         f.close()
 
     table = sorted(table, key=lambda x: x[2], reverse=True)
-    file_name = file_names[2]
+    file_name = f"old_result_tables/{file_names[2]}"
     with open(file_name, 'w') as f:
         f.write(tabulate(table))
         f.close()
+
+final_df = df1[["Names", "x", "y_both", "x_err_min", "x_err_max", "y_err_min", "y_err_max"]]
+final_df.columns = ["Name", "Max. Freq (MHz)", "Flux Density (Jy)", "x_err_min", "x_err_max", "y_err_min", "y_err_max"]
+final_df = final_df.sort_values(by="Flux Density (Jy)", ascending=False)
+
+final_df.to_csv("result_tables/all.csv", index=False)
+end0 = final_df[(final_df["Max. Freq (MHz)"] > 1e-1) & (final_df["Max. Freq (MHz)"] < 1)]
+end1 = final_df[(final_df["Max. Freq (MHz)"] > 1) & (final_df["Max. Freq (MHz)"] < 1e1)]
+end2 = final_df[(final_df["Max. Freq (MHz)"] > 1e1) & (final_df["Max. Freq (MHz)"] < 1e2)]
+end3 = final_df[(final_df["Max. Freq (MHz)"] > 1e2) & (final_df["Max. Freq (MHz)"] < 1e3)]
+end0.to_csv("result_tables/0.1-1 MHz.csv", index=False)
+end1.to_csv("result_tables/1-10 MHz.csv", index=False)
+end2.to_csv("result_tables/10-100 MHz.csv", index=False)
+end3.to_csv("result_tables/100-1000 MHz.csv", index=False)
 

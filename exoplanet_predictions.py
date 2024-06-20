@@ -928,14 +928,14 @@ for i in range(len(intensities)):
         f.close()
 
 final_df = df1[["Names", "x", "y_both", "x_err_min", "x_err_max", "y_err_min", "y_err_max"]]
-final_df.columns = ["Name", "Max. Freq (MHz)", "Flux Density (Jy)", "x_err_min", "x_err_max", "y_err_min", "y_err_max"]
+final_df.columns = ["Name", "Max. Freq. [MHz]", "Max. Flux Density [Jy]", "Max. Freq. Lower Uncertainty [MHz]", "Max. Freq. Upper Uncertainty [MHz]", "Max. Flux Density Lower Uncertainty [Jy]", "Max. Flux Density Upper Uncertainty [Jy]"]
 final_df = final_df.sort_values(by="Flux Density (Jy)", ascending=False)
 
 final_df.to_csv("result_tables/all.csv", index=False)
-end0 = final_df[(final_df["Max. Freq (MHz)"] > 1e-1) & (final_df["Max. Freq (MHz)"] < 1)]
-end1 = final_df[(final_df["Max. Freq (MHz)"] > 1) & (final_df["Max. Freq (MHz)"] < 1e1)]
-end2 = final_df[(final_df["Max. Freq (MHz)"] > 1e1) & (final_df["Max. Freq (MHz)"] < 1e2)]
-end3 = final_df[(final_df["Max. Freq (MHz)"] > 1e2) & (final_df["Max. Freq (MHz)"] < 1e3)]
+end0 = final_df[(final_df["Max. Freq. [MHz]"] > 1e-1) & (final_df["Max. Freq. [MHz]"] < 1)]
+end1 = final_df[(final_df["Max. Freq. [MHz]"] > 1) & (final_df["Max. Freq. [MHz]"] < 1e1)]
+end2 = final_df[(final_df["Max. Freq. [MHz]"] > 1e1) & (final_df["Max. Freq. [MHz]"] < 1e2)]
+end3 = final_df[(final_df["Max. Freq. [MHz]"] > 1e2) & (final_df["Max. Freq. [MHz]"] < 1e3)]
 end0.to_csv("result_tables/0.1-1 MHz.csv", index=False)
 end1.to_csv("result_tables/1-10 MHz.csv", index=False)
 end2.to_csv("result_tables/10-100 MHz.csv", index=False)

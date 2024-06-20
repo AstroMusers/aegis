@@ -20,6 +20,14 @@ norm = mcolors.PowerNorm(gamma=0.3)  # Adjust gamma to control brightness
 cmap = plt.cm.jet
 cmap1 = plt.cm.turbo
 
+which_data = np.load("observables.npz")
+lofar = which_data["lofar"]
+nenufar = which_data["nenufar"]
+mwa = which_data["mwa"]
+ugmrt = which_data["ugmrt"]
+
+which = [lofar, nenufar, mwa, ugmrt]
+
 
 def retro_noir(ax):
     ax.grid(alpha=0.1)
@@ -42,10 +50,10 @@ def formatter(s):
         return -val
 
 
-df1 = df[["Name", "RA (J2000)", "DEC (J2000)"]].copy()
+all_df = df[["Name", "RA (J2000)", "DEC (J2000)"]].copy()
 
-df1["ra"] = df1["RA (J2000)"].apply(formatter)
-df1["dec"] = df1["DEC (J2000)"].apply(formatter)
+all_df["ra"] = all_df["RA (J2000)"].apply(formatter)
+all_df["dec"] = all_df["DEC (J2000)"].apply(formatter)
 
 
 def max_elev(ra, dec, obs_lat):
@@ -65,11 +73,12 @@ def time_above_elevation(ra, dec, lat, min):
 
 
 LOFAR_lat = 54.9
+NenuFAR_lat = 47.38
 MWA_lat = -26.7
 uGMRT_lat = 19.1
 
-obs = [LOFAR_lat, MWA_lat, uGMRT_lat]
-obs_names = ["LOFAR", "MWA", "uGMRT"]
+obs = [LOFAR_lat, NenuFAR_lat, MWA_lat, uGMRT_lat]
+obs_names = ["LOFAR", "NenuFAR", "MWA", "uGMRT"]
 
 ras = np.linspace(0, 24, 200)
 decs = np.linspace(-90, 90, 200)
@@ -99,6 +108,7 @@ for i in range(len(obs)):
     ax.set_xlabel(r'R.A. (h)')
     ax.set_ylabel(r'DEC ($\degree$)')
 
+    df1 = all_df[all_df["Name"].isin(which[i])].reset_index(drop=True)
     for index, row in df1.iterrows():
         # Extract the values from the current row
         name = row['Name']

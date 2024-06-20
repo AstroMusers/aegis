@@ -20,10 +20,17 @@ class Exoplanet:
         self.intensity_kin = intensity_kin
         self.intensity_both = intensity_both
 
-
     def __repr__(self):
         return f"Exoplanet {self.name} with: a={self.semi_major_axis}, Bs={self.magnetic_field}, M={self.star_mass}," \
                f" Mdot={self.star_mass_loss}, D={self.distance} \n"
+
+    def __eq__(self, other):
+        if isinstance(other, Exoplanet):
+            return self.name == other.name
+        return False
+
+    def __hash__(self):
+        return hash(self.name)
 
 
 def max_freq(B):
@@ -58,7 +65,7 @@ def rotation(T, a, L, M, R):
     if a <= 0.1:
         return 1 / (T / 0.414)
     else:
-        return 5 * L / (2 * M * R**2)
+        return 5 * L / (2 * M * R ** 2)
 
 
 def convective_radius(M, p, r):
@@ -84,7 +91,7 @@ def convective_radius(M, p, r):
 
 def mass_loss(age, flux_exponent, loss_exponent):
     coeff = 1 / (4.603 ** (flux_exponent * loss_exponent))
-    return coeff * age**(flux_exponent * loss_exponent)
+    return coeff * age ** (flux_exponent * loss_exponent)
 
 
 def magnetic_moment(p_c, w_p, r_c, sigma):
@@ -115,8 +122,8 @@ def magnetic_field(mu, R):
 
 
 def freq_condition(nu, n):
-    n /= 10**6
-    nu_p = 8.98 * np.sqrt(n) * 10**(-3)
+    n /= 10 ** 6
+    nu_p = 8.98 * np.sqrt(n) * 10 ** (-3)
     return nu > nu_p
 
 
@@ -138,7 +145,7 @@ def v_eff(v_wind, v_kepler):
     :param v_kepler: Keplerian speed of the planet
     :return: effective speed of the planet in stellar wind, in units of the provided speeds.
     """
-    return np.sqrt(v_wind**2 + v_kepler**2)
+    return np.sqrt(v_wind ** 2 + v_kepler ** 2)
 
 
 def star_surface_b(age, exponent):
@@ -148,8 +155,8 @@ def star_surface_b(age, exponent):
     :return: Surface magentic field of the star in Gauss
     """
     # 5.14
-    coeff = 1.89 / (4.6**(-0.655))
-    return coeff * age**exponent
+    coeff = 1.89 / (4.6 ** (-0.655))
+    return coeff * age ** exponent
 
 
 def star_period(age):
@@ -158,8 +165,8 @@ def star_period(age):
     :param age: Age of the STar in Gyr
     :return: Rotational period of the star in days.
     """
-    tau = 2.56 * 10**(-2)
-    return 0.67 * (1 + age / tau)**0.7
+    tau = 2.56 * 10 ** (-2)
+    return 0.67 * (1 + age / tau) ** 0.7
 
 
 def B_r(B0, R0, r):
@@ -171,7 +178,7 @@ def B_r(B0, R0, r):
     :return: Radial component of the interplanetary magnetic field of the star.
     """
     R0 /= 215  # Conversion from solar radii to AU
-    return B0 * (R0 / r)**2
+    return B0 * (R0 / r) ** 2
 
 
 def B_phi(B_r, P, r, v_eff):
@@ -183,14 +190,14 @@ def B_phi(B_r, P, r, v_eff):
     :param v_eff: Effective speed of the planet in stellar wind.
     :return: Phi component of the IMF.
     """
-    P *= 8.64 * 10**4  # Converted from days to seconds
-    r *= 1.496 * 10**8  # Converted from AU to km
+    P *= 8.64 * 10 ** 4  # Converted from days to seconds
+    r *= 1.496 * 10 ** 8  # Converted from AU to km
     Omega = 2 * np.pi / P
     return B_r * Omega * r / v_eff
 
 
 def imf(B_r, B_phi):
-    return np.sqrt(B_r**2 + B_phi**2)
+    return np.sqrt(B_r ** 2 + B_phi ** 2)
 
 
 def imf_complete(M, r, v_wind, age, R, b0_exponent):
@@ -212,7 +219,7 @@ def imf_perp(B_r, B_phi, v_k, v):
     :param v: Stellar wind velocity at planet distance
     :return:
     """
-    return np.sqrt(B_r**2 + B_phi**2) * abs(np.sin(np.arctan(B_phi/B_r) - np.arctan(v_k/v)))
+    return np.sqrt(B_r ** 2 + B_phi ** 2) * abs(np.sin(np.arctan(B_phi / B_r) - np.arctan(v_k / v)))
 
 
 def imf_perp_complete(M, r, R, age, v_wind, b0_exponent):
@@ -243,11 +250,12 @@ def number_density(Mdot, v_eff, r):
     :param r: distance in AU
     :return: number density in m^-3
     """
-    Mdot *= 2 * 10**16 / (3.15 * 10**7)  # Conversion to kg/s
-    v_eff *= 10**3
-    r *= 1.49 * 10**11
-    m_p = 1.76 * 10**(-27)  # Mass of proton
-    return Mdot / (4 * np.pi * m_p * v_eff * r**2)
+    Mdot *= 2 * 10 ** 16 / (3.15 * 10 ** 7)  # Conversion to kg/s
+    v_eff *= 10 ** 3
+    r *= 1.49 * 10 ** 11
+    m_p = 1.76 * 10 ** (-27)  # Mass of proton
+    return Mdot / (4 * np.pi * m_p * v_eff * r ** 2)
+
 
 # def number_density(age):
 #     n0 = 1.04 * 10**11
@@ -266,9 +274,11 @@ def Rm(B, R, n, T, v_eff, B_star):
     :param B_star: Magnetic field flux density of the star in G
     :return: Magnetopause distance of the planet.
     """
-    k_b = 1.38 * 10**(-23)  # Boltzmann constant in J/K
-    m_p = 1.67 * 10**(-27)  # Mass of proton
-    R_magnet = 2.44**(1/3) * ((B**2 / (80 * np.pi * (2 * n * k_b * T + m_p * n * 10**6 * v_eff**2 + B_star**2/(80 * np.pi)))) ** (1/6)) * R
+    k_b = 1.38 * 10 ** (-23)  # Boltzmann constant in J/K
+    m_p = 1.67 * 10 ** (-27)  # Mass of proton
+    R_magnet = 2.44 ** (1 / 3) * ((B ** 2 / (
+                80 * np.pi * (2 * n * k_b * T + m_p * n * 10 ** 6 * v_eff ** 2 + B_star ** 2 / (80 * np.pi)))) ** (
+                                              1 / 6)) * R
     if R_magnet > R:
         return R_magnet
     else:
@@ -284,10 +294,10 @@ def P_input_mag(imf_perp, v_eff, R_m, n):
     :param n: Number density of the wind in m^-3
     :return: Input Radio Power in Watts
     """
-    m_p = 1.67 * 10**(-27)  # Mass of proton
-    mu_0 = 4 * np.pi * 10**(-7)
+    m_p = 1.67 * 10 ** (-27)  # Mass of proton
+    mu_0 = 4 * np.pi * 10 ** (-7)
     # return imf_perp**2 / (2*mu_0) * v_eff * R_m**2
-    return imf_perp**2 / (80*np.pi) * v_eff * R_m**2
+    return imf_perp ** 2 / (80 * np.pi) * v_eff * R_m ** 2
 
 
 def P_input_kin(imf_perp, v_eff, R_m, n):
@@ -299,10 +309,10 @@ def P_input_kin(imf_perp, v_eff, R_m, n):
     :param n: Number density of the wind in m^-3
     :return: Input Radio Power in Watts
     """
-    m_p = 1.67 * 10**(-27)  # Mass of proton
-    mu_0 = 4 * np.pi * 10**(-7)
+    m_p = 1.67 * 10 ** (-27)  # Mass of proton
+    mu_0 = 4 * np.pi * 10 ** (-7)
     # return imf_perp**2 / (2*mu_0) * v_eff * R_m**2
-    return m_p * n * v_eff**3 * np.pi * R_m**2
+    return m_p * n * v_eff ** 3 * np.pi * R_m ** 2
 
 
 def radio_power(P_input_mag, P_input_kin, nu, d, both=False):
@@ -314,11 +324,11 @@ def radio_power(P_input_mag, P_input_kin, nu, d, both=False):
     :return: Expected observed radio flux density in Jy.
     """
     a = 1 + int(both)
-    epsilon_mag = 6.37 * 10**(-5)  # for magnetic power R_mpJ = 65 Rj
+    epsilon_mag = 6.37 * 10 ** (-5)  # for magnetic power R_mpJ = 65 Rj
     # epsilon_mag = 1.37 * 10**(-4)  # R_mpJ = 43 RJ
-    epsilon_kin = 1.48 * 10**(-6)  # Only if you combine incident kinetic and magnetic power R_mpJ = 65 Rj
+    epsilon_kin = 1.48 * 10 ** (-6)  # Only if you combine incident kinetic and magnetic power R_mpJ = 65 Rj
     # epsilon_kin = 3.26 * 10**(-6)  # R_mpJ = 43 Rj
-    return (epsilon_mag * P_input_mag + epsilon_kin * P_input_kin) / (a * 1.6 * nu * d**2) * 10**26
+    return (epsilon_mag * P_input_mag + epsilon_kin * P_input_kin) / (a * 1.6 * nu * d ** 2) * 10 ** 26
 
 
 def magnetopause(B, a):
@@ -383,12 +393,15 @@ def complete(B, a, M, Mdot, D):
     I = radio_brightness(L, nu, D)
     return I
 
+
 # Plotting
 
 
 mpl.use('Qt5Agg')
 
 mpl.rcParams["figure.autolayout"] = True
+
+
 # plt.rcParams['figure.figsize'] = [10, 5]
 
 # rc = {"font.family": "sans-serif", "font.weight": "light", "font.variant": "small-caps", "font.size": 10}
@@ -415,4 +428,3 @@ def hist_noir(ax):
     ax.spines['bottom'].set_linewidth(1.5)
     ax.spines['left'].set_linewidth(1.5)
     ax.spines['right'].set_linewidth(1.5)
-

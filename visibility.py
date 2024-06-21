@@ -88,7 +88,7 @@ ras, decs = np.meshgrid(ras, decs)
 elev = np.vectorize(max_elev)
 time_above_elevation = np.vectorize(time_above_elevation)
 
-plt.rcParams['figure.figsize'] = [10, 15]
+plt.rcParams['figure.figsize'] = [9, 12]
 
 fig, axs = plt.subplots(len(obs), 2)
 ax_0, ax_1 = axs[:, 0], axs[:, 1]

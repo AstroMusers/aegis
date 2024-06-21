@@ -264,7 +264,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     high_var = ["AU Mic c", "V1298 Tau d", "V1298 Tau b", "V1298 Tau e", "V1298 Tau c"]
     # high_var = []
 
-    for k in range(100):  # The loop for Monte Carlo iterations
+    for k in range(10000):  # The loop for Monte Carlo iterations
         T = rng.normal(T_i, T_s)
         while T < 0:
             T = rng.normal(T_i, T_s)
@@ -487,27 +487,34 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     x = freqs[(NenuFreq[0] <= freqs) & (freqs <= NenuFreq[1])]
     frac = len(x) / len(freqs)
 
-    if frac > 0.1 and I_mag > (NenuNoise[0] + NenuNoise[1])/2:
-        obs_mag = str(EXO.name)
-        print(obs_mag)
-        observable_mag = True
+    # if frac > 0.1:
 
-    if frac > 0.1 and I_kin > (NenuNoise[0] + NenuNoise[1]) / 2:
-        obs_kin = str(EXO.name)
-        print(obs_kin)
-        observable_kin = True
+    if NenuFreq[0] <= nu <= NenuFreq[1]:
+        if I_mag >= NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0]):
+            obs_mag = str(EXO.name)
+            print(obs_mag)
+            observable_mag = True
 
-    if frac > 0.1 and I_both > (NenuNoise[0] + NenuNoise[1]) / 2:
+        if I_kin >= NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0]):
+            obs_kin = str(EXO.name)
+            print(obs_kin)
+            observable_kin = True
+
+        if I_both >= NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0]):
+            obs_both = str(EXO.name)
+            print(obs_both)
+            observable_both = True
+            nenufar_obs.append(obs_both)
+            insiders.add(obs_both)
+
+    elif frac > 0.1 and I_both > (NenuNoise[0] + NenuNoise[1]) / 2:
         obs_both = str(EXO.name)
         print(obs_both)
         observable_both = True
         nenufar_obs.append(obs_both)
-        if not NenuFreq[0] <= nu <= NenuFreq[1]:
-            out = str(EXO.name)
-            print(f"{out} Outlier for NenuFAR")
-            outliers.add(obs_both)
-        else:
-            insiders.add(obs_both)
+        out = str(EXO.name)
+        print(f"{out} Outlier for NenuFAR")
+        outliers.add(obs_both)
     # observable_flag = observable_both or observable_mag or observable_kin
 
 
@@ -596,7 +603,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         ax1.axvline(np.log10(np.percentile(intens_both, 16)), color="xkcd:deep green", linestyle="--", label="16th & 84th\npercentiles")
         ax1.axvline(np.log10(np.percentile(intens_both, 84)), color="xkcd:deep green", linestyle="--")
         # ax1.set_title(f"{EXO.name}")
-        ax1.set_xlabel("log(Flux Density (Jy))")
+        ax1.set_xlabel("log$_{10}$(Flux Density [Jy])")
         ax1.set_ylabel("Bin Count")
 
         ax2.hist(np.log10(freqs), histtype="step")
@@ -608,7 +615,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         ax2.axvline(np.log10(np.percentile(freqs, 16)), color="xkcd:deep green", linestyle="--")
         ax2.axvline(np.log10(np.percentile(freqs, 84)), color="xkcd:deep green", linestyle="--")
         # ax2.set_title(f"{EXO.name}")
-        ax2.set_xlabel("log(Frequency (MHz))")
+        ax2.set_xlabel("log$_{10}$(Frequency [MHz])")
         ax2.set_ylabel("Bin Count")
 
         fig.suptitle(f"{EXO.name}")
@@ -726,6 +733,10 @@ def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
         plt.savefig("hist.pdf")
 
 
+def is_within_limits(x, y, xlim, ylim):
+    return xlim[0] <= x <= xlim[1] and ylim[0] <= y <= ylim[1]
+
+
 def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False, fix_lim=False, strict=False, others=0):
 
     # rc = {"font.family": "sans-serif", "font.weight": "light", "font.variant": "small-caps", "font.size": 10}
@@ -837,9 +848,34 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
     #                  ecolor="black",
     #                  elinewidth=0.5,
     #                  capsize=0)
-    ax0.plot(Freq_1, L_EU_1, linestyle="-", color="red", linewidth=0.5)
-    ax0.plot(Freq_2, L_EU_2, linestyle="-", color="purple", linewidth=0.5)
-    ax0.plot(NenuFreq, NenuNoise, "g-", linewidth=0.5)
+
+    x_lba = []
+    y_lba = []
+    for i in range(len(Freq_1) - 1):
+        x = np.linspace(Freq_1[i], Freq_1[i + 1], 50).tolist()
+        y = np.linspace(L_EU_1[i], L_EU_1[i + 1], 50).tolist()
+        x_lba.extend(x)
+        y_lba.extend(y)
+
+    ax0.plot(x_lba, y_lba, linestyle="-", color="red", linewidth=0.5)
+    ax0.fill_between(x_lba, y_lba, 10 ** 6, color="red", alpha=0.1, label="LOFAR LBA")
+
+    x_hba = []
+    y_hba = []
+    for i in range(len(Freq_1), (len(Freq_1) + len(Freq_2) - 1)):
+        x = np.linspace(Freq_2[i], Freq_2[i + 1], 50).tolist()
+        y = np.linspace(L_EU_2[i], L_EU_2[i + 1], 50).tolist()
+        x_hba.extend(x)
+        y_hba.extend(y)
+    ax0.plot(x_hba, y_hba, linestyle="-", color="purple", linewidth=0.5)
+    ax0.fill_between(x_hba, y_hba, 10 ** 6, color="purple", alpha=0.1, label="LOFAR HBA")
+
+
+    x_nenu = np.linspace(NenuFreq[0], NenuFreq[1], 100)
+    y_nenu = np.linspace(NenuNoise[0], NenuNoise[1], 100)
+    ax0.plot(x_nenu, y_nenu, "g-", linewidth=0.5)
+    ax0.fill_between(x_nenu, y_nenu, 10 ** 6, color="green", alpha=0.1, label="NenuFAR")
+
     for i in range(4):
         x = uGMRT["Frequencies"][i]
         y = uGMRT["RMS Noise"][i]
@@ -858,9 +894,8 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
         else:
             ax0.fill_between(x, y, 10 ** 6, color="grey", alpha=0.1)
 
-    ax0.fill_between(Freq_1, L_EU_1, 10**6, color="red", alpha=0.1, label="LOFAR LBA")
-    ax0.fill_between(Freq_2, L_EU_2, 10**6, color="purple", alpha=0.1, label="LOFAR HBA")
-    ax0.fill_between(NenuFreq, NenuNoise, 10**6, color="green", alpha=0.1, label="NenuFAR")
+    # ax0.fill_between(Freq_1, L_EU_1, 10**6, color="red", alpha=0.1, label="LOFAR LBA")
+    # ax0.fill_between(Freq_2, L_EU_2, 10**6, color="purple", alpha=0.1, label="LOFAR HBA")
 
     cbar = plt.colorbar(im, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)", aspect=25, extend="both")
     # cbar.ax.tick_params(labelsize=10)
@@ -889,8 +924,12 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
             det = det[~det["Name"].isin(real_outliers)]
         ax0.set_xlim(left=min(det["Freq"]) / 1.25, right=max(det["Freq"]) * 1.25)
         ax0.set_ylim(bottom=min(det["Flux"]) / 1.75, top=max(det["Flux"]) * 1.75)
+        xlim = ax0.get_xlim()
+        ylim = ax0.get_ylim()
         if strict:
-            texts = [plt.text(df.x[i], df.y[i], lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab_strict)) if lab_strict[i] != ""]
+            texts = [plt.text(df.x[i], df.y[i], lab_strict[i], ha='center', va='center', fontsize=8) for i in range(len(lab_strict)) if lab_strict[i] != ""]
+        elif fix_lim:
+            texts = [plt.text(df.x[i], df.y[i], lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab)) if lab[i] != "" and is_within_limits(df.x[i], df.y[i], xlim, ylim)]
         else:
             texts = [plt.text(df.x[i], df.y[i], lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab))
                      if lab[i] != ""]
@@ -909,7 +948,7 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
         #     if txt:
         #         ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(2, 2), textcoords="offset pixels", fontsize=7)
         center_x = 200
-        center_y = 4
+        center_y = 3
         arrowprops = dict(arrowstyle='<->,  head_length=0.1', color='k', lw=2)
         ax0.annotate("", xy=(center_x, center_y*avg_err[2]), xytext=(center_x, center_y*avg_err[3]), arrowprops=arrowprops)
         ax0.annotate("", xy=(center_x*avg_err[0], center_y), xytext=(center_x*avg_err[1], center_y), arrowprops=arrowprops)
@@ -943,10 +982,14 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
     fig0.tight_layout()
 
     if save:
-        if zoom:
-            plt.savefig("zoom.pdf")
-        else:
+        if not zoom:
             plt.savefig("scatter.pdf")
+        elif not strict:
+            plt.savefig("zoom.pdf")
+        elif strict:
+            plt.savefig("zoom_inside.pdf")
+        elif fix_lim and not strict:
+            plt.savefig("zoom_fixed.pdf")
 
 
 scatter_plot(df1, "both", y_err, x_err, df_det, average_errors, zoom=True)
@@ -1017,14 +1060,14 @@ final_df = df1[["Names", "x", "y_both", "x_err_min", "x_err_max", "y_err_min", "
 final_df.columns = ["Name", "Max. Frequency [MHz]", "Max. Flux Density [Jy]", "Max. Frequency Lower Uncertainty [MHz]", "Max. Frequency Upper Uncertainty [MHz]", "Max. Flux Density Lower Uncertainty [Jy]", "Max. Flux Density Upper Uncertainty [Jy]"]
 final_df = final_df.sort_values(by="Max. Flux Density [Jy]", ascending=False)
 
-final_df.to_csv("result_tables/all.csv", index=False)
+final_df.to_csv("Output Tables/all.csv", index=False)
 end0 = final_df[(final_df["Max. Frequency [MHz]"] > 1e-1) & (final_df["Max. Frequency [MHz]"] < 1)]
 end1 = final_df[(final_df["Max. Frequency [MHz]"] > 1) & (final_df["Max. Frequency [MHz]"] < 1e1)]
 end2 = final_df[(final_df["Max. Frequency [MHz]"] > 1e1) & (final_df["Max. Frequency [MHz]"] < 1e2)]
 end3 = final_df[(final_df["Max. Frequency [MHz]"] > 1e2) & (final_df["Max. Frequency [MHz]"] < 1e3)]
-end0.to_csv("result_tables/0.1-1 MHz.csv", index=False)
-end1.to_csv("result_tables/1-10 MHz.csv", index=False)
-end2.to_csv("result_tables/10-100 MHz.csv", index=False)
-end3.to_csv("result_tables/100-1000 MHz.csv", index=False)
+end0.to_csv("Output Tables/0.1-1 MHz.csv", index=False)
+end1.to_csv("Output Tables/1-10 MHz.csv", index=False)
+end2.to_csv("Output Tables/10-100 MHz.csv", index=False)
+end3.to_csv("Output Tables/100-1000 MHz.csv", index=False)
 
 np.savez("observables", lofar=lofar_obs, nenufar=nenufar_obs, mwa=mwa_obs, ugmrt=ugmrt_obs)

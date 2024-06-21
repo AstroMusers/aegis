@@ -87,7 +87,7 @@ ax.set_rlabel_position(-90)  # Move the radial labels away from the plotted data
 ax.set_rticks([-2, -1.5, -1, -0.5, 0])
 
 # Optional: Label the radial axis with context-specific information
-ax.text(- 100 * np.pi / 180, (np.min(r)+np.max(r))/2 - 0.1, 'log($r$ [AU])', ha='center', va='center', fontsize=13, rotation=90)
+ax.text(- 100 * np.pi / 180, (np.min(r)+np.max(r))/2 - 0.1, 'log$_{10}$($r$ [AU])', ha='center', va='center', fontsize=13, rotation=90)
 # ax.text(np.pi, (np.min(r)+np.max(r))/2 - 0.8, 'log($r$ [AU])', ha='center', va='center', fontsize=13)
 
 circle_radius = -r[0][0] + np.log10(a)

@@ -14,6 +14,7 @@ enough_data = detect_data[["pl_name", "pl_bmassj", "pl_radj", "pl_orbsmax", "sy_
 enough_data.rename(columns={"pl_name": "Name"}, inplace=True)
 
 merged = pd.merge(enough_data, df2, on="Name")
+# merged["System Name"] = merged["Name"]
 
 
 def two_format(x):
@@ -40,7 +41,7 @@ def format_ra(ra_string):
     return f"{hours}:{minutes}:{seconds:02d}"
 
 
-merged['RA'], merged['DEC'] = zip(*merged["Name"].apply(query_simbad))
+merged['RA'], merged['DEC'] = zip(*(merged["Name"].str[:-1]).apply(query_simbad))
 merged["vmax"] = merged["Freq(MHz)"]
 merged.columns = ["Name", "Mass (MJ)", "Radius (RJ)", "a (AU)", "d (pc)", "t (Gyr)", "nupeak (MHz)", "Phi (mJy)", "RA (J2000)", "DEC (J2000)", "vmax"]
 final = merged[["Name", "RA (J2000)", "DEC (J2000)", "Mass (MJ)", "Radius (RJ)", "a (AU)", "d (pc)", "t (Gyr)", "vmax", "Phi (mJy)"]]

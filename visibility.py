@@ -88,60 +88,76 @@ ras, decs = np.meshgrid(ras, decs)
 elev = np.vectorize(max_elev)
 time_above_elevation = np.vectorize(time_above_elevation)
 
-plt.rcParams['figure.figsize'] = [9, 12]
+# plt.rcParams['figure.figsize'] = [9, 12]
+#
+# fig, axs = plt.subplots(len(obs), 2)
+# ax_0, ax_1 = axs[:, 0], axs[:, 1]
 
-fig, axs = plt.subplots(len(obs), 2)
-ax_0, ax_1 = axs[:, 0], axs[:, 1]
-
+results = []
 for i in range(len(obs)):
+    result = elev(ras, decs, obs[i])
+    results.append(result)
 
-    results = elev(ras, decs, obs[i])
 
-    ax = ax_0[i]
-    ax1 = ax_1[i]
+def visibility_plot(results):
 
-    # cp = ax.contourf(X, Y, L_r)
-    cp = ax.imshow(results, cmap=cmap, origin="lower",
-                    extent=[ras.min(), ras.max(), decs.min(), decs.max()], aspect="auto")
-    fig.colorbar(cp, label=r"Max. Elevation Angle ($\degree$)", ax=ax, extend="both")  # Add a colorbar to a plot
-    ax.set_title(obs_names[i])
-    ax.set_xlabel(r'R.A. (h)')
-    ax.set_ylabel(r'DEC ($\degree$)')
+    plt.rcParams['font.size'] = 7
+    fig, axs = plt.subplots(len(obs), 2, figsize=(7, 9))
 
-    df1 = all_df[all_df["Name"].isin(which[i])].reset_index(drop=True)
-    for index, row in df1.iterrows():
-        # Extract the values from the current row
-        name = row['Name']
-        ra = row['ra']
-        dec = row['dec']
+    for i in range(len(results)):
 
-        # Add a circular point at coordinates (ra, dec) with white face color and black edge color
-        ax.plot(ra, dec, 'o', color='white', markersize=7, markeredgewidth=1, markeredgecolor='black')
-        ax1.plot(ra, dec, 'o', color='white', markersize=7, markeredgewidth=1, markeredgecolor='black')
+        result = results[i]
 
-        # Annotate the point with the name above the circular point in white color
-        # ax.annotate(name, (ra, dec), xytext=(0, 5), textcoords='offset points', ha='center', color='white')
+        ax_0, ax_1 = axs[:, 0], axs[:, 1]
 
-    texts = [ax.text(df1.ra[k], df1.dec[k], df1.Name[k], ha='center', va='center', fontsize=9, color="white") for k in range(len(df1["Name"]))]
-    texts1 = [ax1.text(df1.ra[k], df1.dec[k], df1.Name[k], ha='center', va='center', fontsize=9, color="white") for k in range(len(df1["Name"]))]
+        ax = ax_0[i]
+        ax1 = ax_1[i]
 
-    res1 = time_above_elevation(ras, decs, obs[i], 20)
-    cp = ax1.imshow(res1, cmap=cmap1, origin="lower",
-                   extent=[ras.min(), ras.max(), decs.min(), decs.max()], aspect="auto")
-    fig.colorbar(cp, label=r"Time above $20\degree$ (Hours/day)", ax=ax1, extend="both")  # Add a colorbar to a plot
-    ax1.set_title(obs_names[i])
-    ax1.set_xlabel(r'R.A. (h)')
-    ax1.set_ylabel(r'DEC ($\degree$)')
+        # cp = ax.contourf(X, Y, L_r)
+        cp = ax.imshow(result, cmap=cmap, origin="lower",
+                        extent=[ras.min(), ras.max(), decs.min(), decs.max()], aspect="auto")
+        fig.colorbar(cp, label=r"Max. Elevation Angle ($\degree$)", ax=ax, extend="both")  # Add a colorbar to a plot
+        ax.set_title(obs_names[i])
+        ax.set_xlabel(r'R.A. (h)')
+        ax.set_ylabel(r'DEC ($\degree$)')
+
+        df1 = all_df[all_df["Name"].isin(which[i])].reset_index(drop=True)
+        for index, row in df1.iterrows():
+            # Extract the values from the current row
+            name = row['Name']
+            ra = row['ra']
+            dec = row['dec']
+
+            # Add a circular point at coordinates (ra, dec) with white face color and black edge color
+            ax.plot(ra, dec, 'o', color='white', markersize=7, markeredgewidth=1, markeredgecolor='black')
+            ax1.plot(ra, dec, 'o', color='white', markersize=7, markeredgewidth=1, markeredgecolor='black')
+
+            # Annotate the point with the name above the circular point in white color
+            # ax.annotate(name, (ra, dec), xytext=(0, 5), textcoords='offset points', ha='center', color='white')
+
+        texts = [ax.text(df1.ra[k], df1.dec[k], df1.Name[k], ha='center', va='center', color="white") for k in range(len(df1["Name"]))]
+        texts1 = [ax1.text(df1.ra[k], df1.dec[k], df1.Name[k], ha='center', va='center', color="white") for k in range(len(df1["Name"]))]
+
+        res1 = time_above_elevation(ras, decs, obs[i], 20)
+        cp = ax1.imshow(res1, cmap=cmap1, origin="lower",
+                       extent=[ras.min(), ras.max(), decs.min(), decs.max()], aspect="auto")
+        fig.colorbar(cp, label=r"Time above $20\degree$ (Hours/day)", ax=ax1, extend="both")  # Add a colorbar to a plot
+        ax1.set_title(obs_names[i])
+        ax1.set_xlabel(r'R.A. (h)')
+        ax1.set_ylabel(r'DEC ($\degree$)')
+
+        retro_noir(ax)
+        retro_noir(ax1)
 
     plt.subplots_adjust(hspace=0.6)
 
-    retro_noir(ax)
-    retro_noir(ax1)
 
     adjust_text(texts, ax=ax)
     adjust_text(texts1, ax=ax1)
 
+    plt.show()
 
 # time_above_elevation(3.1, 17.2, 39.5, 0)
 
-plt.show()
+
+visibility_plot(results)

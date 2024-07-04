@@ -26,7 +26,7 @@ nenufar = which_data["nenufar"]
 mwa = which_data["mwa"]
 ugmrt = which_data["ugmrt"]
 
-which = [lofar, nenufar, mwa, ugmrt]
+which = [lofar, mwa, ugmrt]
 
 
 def retro_noir(ax):
@@ -77,8 +77,11 @@ NenuFAR_lat = 47.38
 MWA_lat = -26.7
 uGMRT_lat = 19.1
 
-obs = [LOFAR_lat, NenuFAR_lat, MWA_lat, uGMRT_lat]
-obs_names = ["LOFAR", "NenuFAR", "MWA", "uGMRT"]
+# obs = [LOFAR_lat, NenuFAR_lat, MWA_lat, uGMRT_lat]
+# obs_names = ["LOFAR", "NenuFAR", "MWA", "uGMRT"]
+
+obs = [LOFAR_lat, MWA_lat, uGMRT_lat]
+obs_names = ["LOFAR", "MWA", "uGMRT"]
 
 ras = np.linspace(0, 24, 200)
 decs = np.linspace(-90, 90, 200)
@@ -99,10 +102,10 @@ for i in range(len(obs)):
     results.append(result)
 
 
-def visibility_plot(results):
+def visibility_plot(results, save=False):
 
-    plt.rcParams['font.size'] = 7
-    fig, axs = plt.subplots(len(obs), 2, figsize=(7, 9))
+    # plt.rcParams['font.size'] = 7  # 7 with NenuFAR
+    fig, axs = plt.subplots(len(obs), 2, figsize=(9, 10))  # (7, 9) with NenuFAR
 
     for i in range(len(results)):
 
@@ -156,6 +159,9 @@ def visibility_plot(results):
     adjust_text(texts1, ax=ax1)
 
     plt.show()
+
+    if save:
+        plt.savefig("visibility.pdf")
 
 # time_above_elevation(3.1, 17.2, 39.5, 0)
 

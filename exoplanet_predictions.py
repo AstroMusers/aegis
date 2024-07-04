@@ -264,7 +264,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     high_var = ["AU Mic c", "V1298 Tau d", "V1298 Tau b", "V1298 Tau e", "V1298 Tau c"]
     # high_var = []
 
-    for k in range(10000):  # The loop for Monte Carlo iterations
+    for k in range(1000):  # The loop for Monte Carlo iterations
         T = rng.normal(T_i, T_s)
         while T < 0:
             T = rng.normal(T_i, T_s)
@@ -395,6 +395,9 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     y_low.append((np.percentile(intens_both, 16))/I_both)
     y_up.append((np.percentile(intens_both, 84))/I_both)
 
+    x_err_avg = (-np.log10((np.percentile(freqs, 16))/nu) + np.log10((np.percentile(freqs, 84))/nu)) / 2
+    y_err_avg = (-np.log10((np.percentile(intens_both, 16))/I_both) + np.log10((np.percentile(intens_both, 84))/I_both)) / 2
+
     obs_mag = ""
     obs_kin = ""
     obs_both = ""
@@ -420,159 +423,162 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     observable_flag = False
     # if 30 <= nu <= 75:
     # bw = 4.66  # LOFAR bandwidth of 4.66 MHz
-    for m in range(3):
-        x = freqs[(Freq_1[m] <= freqs) & (freqs <= Freq_1[m + 1])]
+
+    if x_err_avg < 1:
+
+        for m in range(3):
+            x = freqs[(Freq_1[m] <= freqs) & (freqs <= Freq_1[m + 1])]
+            frac = len(x) / len(freqs)
+
+            if frac > 0.1:
+                # if I_mag >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
+                if I_mag >= L_EU_1[m]:
+                    obs_mag = str(EXO.name)
+                    print(obs_mag, m, I_mag)
+                    observable_mag = True
+                # if I_kin >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
+                if I_kin >= L_EU_1[m]:
+                    obs_kin = str(EXO.name)
+                    print(obs_kin, m, I_kin)
+                    observable_kin = True
+                # if I_both >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
+                if I_both >= L_EU_1[m]:
+                    obs_both = str(EXO.name)
+                    print(obs_both, m, I_both)
+                    observable_both = True
+                    lofar_obs.append(obs_both)
+                    if not Freq_1[0] <= nu <= Freq_1[3]:
+                        out = str(EXO.name)
+                        print(f"{out} Outlier for LOFAR LBA {m=}")
+                        outliers.add(obs_both)
+                    else:
+                        insiders.add(obs_both)
+                observable_flag = observable_both or observable_mag or observable_kin
+
+        # if 120 <= nu <= 180:
+        # bw = 4.66  # LOFAR bandwidth of 4.66 MHz
+
+        for m in range(4, 6):
+            x = freqs[(Freq_2[m] <= freqs) & (freqs <= Freq_2[m + 1])]
+            frac = len(x) / len(freqs)
+
+            if frac > 0.1:
+                # if I_mag >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
+                if I_mag >= L_EU_2[m]:
+                    obs_mag = str(EXO.name)
+                    print(obs_mag)
+                    observable_mag = True
+
+                # if I_kin >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
+                if I_kin >= L_EU_2[m]:
+                    obs_kin = str(EXO.name)
+                    print(obs_kin)
+                    observable_kin = True
+                # if I_both >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
+
+                if I_both >= L_EU_2[m]:
+                    obs_both = str(EXO.name)
+                    print(obs_both)
+                    observable_both = True
+                    lofar_obs.append(obs_both)
+                    if not Freq_2[4] <= nu <= Freq_2[6]:
+                        out = str(EXO.name)
+                        print(f"{out} Outlier for LOFAR HBA {m=} ")
+                        outliers.add(obs_both)
+                    else:
+                        insiders.add(obs_both)
+                observable_flag = observable_both or observable_mag or observable_kin
+
+        # NenuFAR
+        x = freqs[(NenuFreq[0] <= freqs) & (freqs <= NenuFreq[1])]
         frac = len(x) / len(freqs)
 
-        if frac > 0.1:
-            # if I_mag >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
-            if I_mag >= L_EU_1[m]:
-                obs_mag = str(EXO.name)
-                print(obs_mag, m, I_mag)
-                observable_mag = True
-            # if I_kin >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
-            if I_kin >= L_EU_1[m]:
-                obs_kin = str(EXO.name)
-                print(obs_kin, m, I_kin)
-                observable_kin = True
-            # if I_both >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
-            if I_both >= L_EU_1[m]:
-                obs_both = str(EXO.name)
-                print(obs_both, m, I_both)
-                observable_both = True
-                lofar_obs.append(obs_both)
-                if not Freq_1[0] <= nu <= Freq_1[3]:
-                    out = str(EXO.name)
-                    print(f"{out} Outlier for LOFAR LBA {m=}")
-                    outliers.add(obs_both)
-                else:
-                    insiders.add(obs_both)
-            observable_flag = observable_both or observable_mag or observable_kin
+        # if frac > 0.1:
 
-    # if 120 <= nu <= 180:
-    # bw = 4.66  # LOFAR bandwidth of 4.66 MHz
-
-    for m in range(4, 6):
-        x = freqs[(Freq_2[m] <= freqs) & (freqs <= Freq_2[m + 1])]
-        frac = len(x) / len(freqs)
-
-        if frac > 0.1:
-            # if I_mag >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
-            if I_mag >= L_EU_2[m]:
+        if NenuFreq[0] <= nu <= NenuFreq[1]:
+            if I_mag >= NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0]):
                 obs_mag = str(EXO.name)
                 print(obs_mag)
                 observable_mag = True
 
-            # if I_kin >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
-            if I_kin >= L_EU_2[m]:
+            if I_kin >= NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0]):
                 obs_kin = str(EXO.name)
                 print(obs_kin)
                 observable_kin = True
-            # if I_both >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
 
-            if I_both >= L_EU_2[m]:
+            if I_both >= NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0]):
                 obs_both = str(EXO.name)
                 print(obs_both)
                 observable_both = True
-                lofar_obs.append(obs_both)
-                if not Freq_2[4] <= nu <= Freq_2[6]:
-                    out = str(EXO.name)
-                    print(f"{out} Outlier for LOFAR HBA {m=} ")
-                    outliers.add(obs_both)
-                else:
-                    insiders.add(obs_both)
-            observable_flag = observable_both or observable_mag or observable_kin
+                nenufar_obs.append(obs_both)
+                insiders.add(obs_both)
 
-    # NenuFAR
-    x = freqs[(NenuFreq[0] <= freqs) & (freqs <= NenuFreq[1])]
-    frac = len(x) / len(freqs)
-
-    # if frac > 0.1:
-
-    if NenuFreq[0] <= nu <= NenuFreq[1]:
-        if I_mag >= NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0]):
-            obs_mag = str(EXO.name)
-            print(obs_mag)
-            observable_mag = True
-
-        if I_kin >= NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0]):
-            obs_kin = str(EXO.name)
-            print(obs_kin)
-            observable_kin = True
-
-        if I_both >= NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0]):
+        elif frac > 0.1 and I_both > (NenuNoise[0] + NenuNoise[1]) / 2:
             obs_both = str(EXO.name)
             print(obs_both)
             observable_both = True
             nenufar_obs.append(obs_both)
-            insiders.add(obs_both)
-
-    elif frac > 0.1 and I_both > (NenuNoise[0] + NenuNoise[1]) / 2:
-        obs_both = str(EXO.name)
-        print(obs_both)
-        observable_both = True
-        nenufar_obs.append(obs_both)
-        out = str(EXO.name)
-        print(f"{out} Outlier for NenuFAR")
-        outliers.add(obs_both)
-    # observable_flag = observable_both or observable_mag or observable_kin
+            out = str(EXO.name)
+            print(f"{out} Outlier for NenuFAR")
+            outliers.add(obs_both)
+        # observable_flag = observable_both or observable_mag or observable_kin
 
 
-    # if 72.30 <= nu <= 231.04:
-    for m in range(5):
-        x = freqs[(MWA["Frequencies"][m][0] <= freqs) & (freqs <= MWA["Frequencies"][m][1])]
-        frac = len(x) / len(freqs)
+        # if 72.30 <= nu <= 231.04:
+        for m in range(5):
+            x = freqs[(MWA["Frequencies"][m][0] <= freqs) & (freqs <= MWA["Frequencies"][m][1])]
+            frac = len(x) / len(freqs)
 
-        if frac > 0.1 and I_mag > MWA["RMS Noise"][m][0]:
-            obs_mag = str(EXO.name)
-            print(obs_mag)
-            observable_mag = True
+            if frac > 0.1 and I_mag > MWA["RMS Noise"][m][0]:
+                obs_mag = str(EXO.name)
+                print(obs_mag)
+                observable_mag = True
 
-        if frac > 0.1 and I_kin > MWA["RMS Noise"][m][0]:
-            obs_kin = str(EXO.name)
-            print(obs_kin)
-            observable_kin = True
+            if frac > 0.1 and I_kin > MWA["RMS Noise"][m][0]:
+                obs_kin = str(EXO.name)
+                print(obs_kin)
+                observable_kin = True
 
-        if frac > 0.1 and I_both > MWA["RMS Noise"][m][0]:
-            obs_both = str(EXO.name)
-            print(obs_both)
-            observable_both = True
-            mwa_obs.append(obs_both)
-            if not MWA["Frequencies"][0][0] <= nu <= MWA["Frequencies"][4][1]:
-                out = str(EXO.name)
-                print(f"{out} Outlier for MWA {m=} ")
-                outliers.add(obs_both)
-            else:
-                insiders.add(obs_both)
-            break
+            if frac > 0.1 and I_both > MWA["RMS Noise"][m][0]:
+                obs_both = str(EXO.name)
+                print(obs_both)
+                observable_both = True
+                mwa_obs.append(obs_both)
+                if not MWA["Frequencies"][0][0] <= nu <= MWA["Frequencies"][4][1]:
+                    out = str(EXO.name)
+                    print(f"{out} Outlier for MWA {m=} ")
+                    outliers.add(obs_both)
+                else:
+                    insiders.add(obs_both)
+                break
 
-    for m in range(4):
+        for m in range(4):
 
-        x = freqs[(uGMRT["Frequencies"][m][0] <= freqs) & (freqs <= uGMRT["Frequencies"][m][1])]
-        frac = len(x) / len(freqs)
+            x = freqs[(uGMRT["Frequencies"][m][0] <= freqs) & (freqs <= uGMRT["Frequencies"][m][1])]
+            frac = len(x) / len(freqs)
 
-        if frac > 0.1 and I_mag > uGMRT["RMS Noise"][m][0]:
-            obs_mag = str(EXO.name)
-            print(obs_mag)
-            observable_mag = True
+            if frac > 0.1 and I_mag > uGMRT["RMS Noise"][m][0]:
+                obs_mag = str(EXO.name)
+                print(obs_mag)
+                observable_mag = True
 
-        if frac > 0.1 and I_kin > uGMRT["RMS Noise"][m][0]:
-            obs_kin = str(EXO.name)
-            print(obs_kin)
-            observable_kin = True
+            if frac > 0.1 and I_kin > uGMRT["RMS Noise"][m][0]:
+                obs_kin = str(EXO.name)
+                print(obs_kin)
+                observable_kin = True
 
-        if frac > 0.1 and I_both > uGMRT["RMS Noise"][m][0]:
-            obs_both = str(EXO.name)
-            print(obs_both)
-            observable_both = True
-            ugmrt_obs.append(obs_both)
-            if not uGMRT["Frequencies"][0][0] <= nu <= uGMRT["Frequencies"][3][1]:
-                out = str(EXO.name)
-                print(f"{out} Outlier for uGMRT {m=}")
-                outliers.add(obs_both)
-            else:
-                insiders.add(obs_both)
-            break
+            if frac > 0.1 and I_both > uGMRT["RMS Noise"][m][0]:
+                obs_both = str(EXO.name)
+                print(obs_both)
+                observable_both = True
+                ugmrt_obs.append(obs_both)
+                if not uGMRT["Frequencies"][0][0] <= nu <= uGMRT["Frequencies"][3][1]:
+                    out = str(EXO.name)
+                    print(f"{out} Outlier for uGMRT {m=}")
+                    outliers.add(obs_both)
+                else:
+                    insiders.add(obs_both)
+                break
 
     # if str(EXO.name) in high_var and not observable_both:
     #     obs_both = str(EXO.name)
@@ -992,7 +998,7 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
             plt.savefig("zoom_fixed.pdf")
 
 
-scatter_plot(df1, "both", y_err, x_err, df_det, average_errors, zoom=True)
+scatter_plot(df1, "both", y_err, x_err, df_det, average_errors)
 outcome_dist_hists(intensities, "both", magnetic_fields)
 
 plt.show()

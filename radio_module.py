@@ -328,7 +328,7 @@ def radio_power(P_input_mag, P_input_kin, nu, d, both=False):
     # epsilon_mag = 1.37 * 10**(-4)  # R_mpJ = 43 RJ
     epsilon_kin = 1.48 * 10 ** (-6)  # Only if you combine incident kinetic and magnetic power R_mpJ = 65 Rj
     # epsilon_kin = 3.26 * 10**(-6)  # R_mpJ = 43 Rj
-    return (epsilon_mag * P_input_mag + epsilon_kin * P_input_kin) / (a * 1.6 * nu * d ** 2) * 10 ** 26
+    return (epsilon_mag * P_input_mag + epsilon_kin * P_input_kin) / (a * 1.6 * 1e6* d ** 2) * 10 ** 26
 
 
 def magnetopause(B, a):
@@ -374,7 +374,7 @@ def radio_brightness(L, nu, D):
     :return: Spectral Radio Flux density or Radio Brightness of the exoplanet in Janskies(Jy).
     """
     delta = 10.5
-    return delta * L / (4 * np.pi * nu * D ** 2) * 10 ** 26
+    return delta * L / (4 * np.pi * D ** 2) * 10 ** 26
 
 
 def complete(B, a, M, Mdot, D):

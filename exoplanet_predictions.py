@@ -264,7 +264,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     high_var = ["AU Mic c", "V1298 Tau d", "V1298 Tau b", "V1298 Tau e", "V1298 Tau c"]
     # high_var = []
 
-    for k in range(1000):  # The loop for Monte Carlo iterations
+    for k in range(100):  # The loop for Monte Carlo iterations
         T = rng.normal(T_i, T_s)
         while T < 0:
             T = rng.normal(T_i, T_s)
@@ -422,7 +422,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     observable_both = False
     observable_flag = False
     # if 30 <= nu <= 75:
-    # bw = 4.66  # LOFAR bandwidth of 4.66 MHz
+    bw = 4.66  # LOFAR bandwidth of 4.66 MHz
 
     if x_err_avg < 1:
 
@@ -430,19 +430,19 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
             x = freqs[(Freq_1[m] <= freqs) & (freqs <= Freq_1[m + 1])]
             frac = len(x) / len(freqs)
 
-            if frac > 0.1:
+            if frac > 0.3 or Freq_1[m] < nu < Freq_1[m+1]:
                 # if I_mag >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
-                if I_mag >= L_EU_1[m]:
+                if I_mag >= L_EU_1[m] * bw:
                     obs_mag = str(EXO.name)
                     print(obs_mag, m, I_mag)
                     observable_mag = True
                 # if I_kin >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
-                if I_kin >= L_EU_1[m]:
+                if I_kin >= L_EU_1[m] * bw:
                     obs_kin = str(EXO.name)
                     print(obs_kin, m, I_kin)
                     observable_kin = True
                 # if I_both >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
-                if I_both >= L_EU_1[m]:
+                if I_both >= L_EU_1[m] * bw:
                     obs_both = str(EXO.name)
                     print(obs_both, m, I_both)
                     observable_both = True
@@ -462,21 +462,21 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
             x = freqs[(Freq_2[m] <= freqs) & (freqs <= Freq_2[m + 1])]
             frac = len(x) / len(freqs)
 
-            if frac > 0.1:
+            if frac > 0.3 or Freq_2[m] < nu < Freq_2[m+1]:
                 # if I_mag >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
-                if I_mag >= L_EU_2[m]:
+                if I_mag >= L_EU_2[m] * bw:
                     obs_mag = str(EXO.name)
                     print(obs_mag)
                     observable_mag = True
 
                 # if I_kin >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
-                if I_kin >= L_EU_2[m]:
+                if I_kin >= L_EU_2[m] * bw:
                     obs_kin = str(EXO.name)
                     print(obs_kin)
                     observable_kin = True
                 # if I_both >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
 
-                if I_both >= L_EU_2[m]:
+                if I_both >= L_EU_2[m] * bw:
                     obs_both = str(EXO.name)
                     print(obs_both)
                     observable_both = True
@@ -492,28 +492,29 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         # NenuFAR
         x = freqs[(NenuFreq[0] <= freqs) & (freqs <= NenuFreq[1])]
         frac = len(x) / len(freqs)
+        bw = 1e1  # NenuFAR bandwidth of 10 MHz
 
         # if frac > 0.1:
 
         if NenuFreq[0] <= nu <= NenuFreq[1]:
-            if I_mag >= NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0]):
+            if I_mag >= (NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0])) * bw:
                 obs_mag = str(EXO.name)
                 print(obs_mag)
                 observable_mag = True
 
-            if I_kin >= NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0]):
+            if I_kin >= (NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0])) * bw:
                 obs_kin = str(EXO.name)
                 print(obs_kin)
                 observable_kin = True
 
-            if I_both >= NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0]):
+            if I_both >= (NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0])) * bw:
                 obs_both = str(EXO.name)
                 print(obs_both)
                 observable_both = True
                 nenufar_obs.append(obs_both)
                 insiders.add(obs_both)
 
-        elif frac > 0.1 and I_both > (NenuNoise[0] + NenuNoise[1]) / 2:
+        elif frac > 0.3 and I_both > ((NenuNoise[0] + NenuNoise[1]) / 2) * bw:
             obs_both = str(EXO.name)
             print(obs_both)
             observable_both = True
@@ -528,18 +529,19 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         for m in range(5):
             x = freqs[(MWA["Frequencies"][m][0] <= freqs) & (freqs <= MWA["Frequencies"][m][1])]
             frac = len(x) / len(freqs)
+            bw = 30.72  # MWA bandwidth of 30.72 MHZ
 
-            if frac > 0.1 and I_mag > MWA["RMS Noise"][m][0]:
+            if frac > 0.3 and I_mag > MWA["RMS Noise"][m][0] * bw:
                 obs_mag = str(EXO.name)
                 print(obs_mag)
                 observable_mag = True
 
-            if frac > 0.1 and I_kin > MWA["RMS Noise"][m][0]:
+            if frac > 0.3 and I_kin > MWA["RMS Noise"][m][0] * bw:
                 obs_kin = str(EXO.name)
                 print(obs_kin)
                 observable_kin = True
 
-            if frac > 0.1 and I_both > MWA["RMS Noise"][m][0]:
+            if frac > 0.3 and I_both > MWA["RMS Noise"][m][0] * bw:
                 obs_both = str(EXO.name)
                 print(obs_both)
                 observable_both = True
@@ -556,18 +558,19 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
 
             x = freqs[(uGMRT["Frequencies"][m][0] <= freqs) & (freqs <= uGMRT["Frequencies"][m][1])]
             frac = len(x) / len(freqs)
+            bw = 1e2  # 100 MHz bandwidth of uGMRT
 
-            if frac > 0.1 and I_mag > uGMRT["RMS Noise"][m][0]:
+            if frac > 0.3 and I_mag > uGMRT["RMS Noise"][m][0] * bw:
                 obs_mag = str(EXO.name)
                 print(obs_mag)
                 observable_mag = True
 
-            if frac > 0.1 and I_kin > uGMRT["RMS Noise"][m][0]:
+            if frac > 0.3 and I_kin > uGMRT["RMS Noise"][m][0] * bw:
                 obs_kin = str(EXO.name)
                 print(obs_kin)
                 observable_kin = True
 
-            if frac > 0.1 and I_both > uGMRT["RMS Noise"][m][0]:
+            if frac > 0.3 and I_both > uGMRT["RMS Noise"][m][0] * bw:
                 obs_both = str(EXO.name)
                 print(obs_both)
                 observable_both = True
@@ -609,7 +612,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
         ax1.axvline(np.log10(np.percentile(intens_both, 16)), color="xkcd:deep green", linestyle="--", label="16th & 84th\npercentiles")
         ax1.axvline(np.log10(np.percentile(intens_both, 84)), color="xkcd:deep green", linestyle="--")
         # ax1.set_title(f"{EXO.name}")
-        ax1.set_xlabel("log$_{10}$(Flux Density [Jy])")
+        ax1.set_xlabel("log$_{10}$($\Phi_\mathrm{peak} \\times \Delta \\nu$ [Jy MHz])")
         ax1.set_ylabel("Bin Count")
 
         ax2.hist(np.log10(freqs), histtype="step")
@@ -712,7 +715,7 @@ def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
 
     ax1.hist(intensities, bins=TheBins1, edgecolor="black", color="xkcd:sea")
     if IsBurst:
-        ax1.set_xlabel("Flux Density of Burst Emission (Jy)")
+        ax1.set_xlabel("$\Phi_\mathrm{peak} \\times \Delta \\nu$ [Jy MHz]")
         # ax1.set_title("Histogram of Burst Emission Intensities")
     else:
         ax1.set_xlabel("Flux Density of Quiescent Emission (Jy)")
@@ -859,46 +862,45 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
     y_lba = []
     for i in range(len(Freq_1) - 1):
         x = np.linspace(Freq_1[i], Freq_1[i + 1], 50).tolist()
-        y = np.linspace(L_EU_1[i], L_EU_1[i + 1], 50).tolist()
+        y = np.linspace(L_EU_1[i]*4.66, L_EU_1[i + 1]*4.66, 50).tolist()
         x_lba.extend(x)
         y_lba.extend(y)
 
     ax0.plot(x_lba, y_lba, linestyle="-", color="red", linewidth=0.5)
-    ax0.fill_between(x_lba, y_lba, 10 ** 6, color="red", alpha=0.1, label="LOFAR LBA")
+    ax0.fill_between(x_lba, y_lba, 10 ** 12, color="red", alpha=0.1, label="LOFAR LBA")
 
     x_hba = []
     y_hba = []
     for i in range(len(Freq_1), (len(Freq_1) + len(Freq_2) - 1)):
         x = np.linspace(Freq_2[i], Freq_2[i + 1], 50).tolist()
-        y = np.linspace(L_EU_2[i], L_EU_2[i + 1], 50).tolist()
+        y = np.linspace(L_EU_2[i]*4.66, L_EU_2[i + 1]*4.66, 50).tolist()
         x_hba.extend(x)
         y_hba.extend(y)
     ax0.plot(x_hba, y_hba, linestyle="-", color="purple", linewidth=0.5)
-    ax0.fill_between(x_hba, y_hba, 10 ** 6, color="purple", alpha=0.1, label="LOFAR HBA")
-
+    ax0.fill_between(x_hba, y_hba, 10 ** 12, color="purple", alpha=0.1, label="LOFAR HBA")
 
     x_nenu = np.linspace(NenuFreq[0], NenuFreq[1], 100)
-    y_nenu = np.linspace(NenuNoise[0], NenuNoise[1], 100)
+    y_nenu = np.linspace(NenuNoise[0]*1e1, NenuNoise[1]*1e1, 100)
     ax0.plot(x_nenu, y_nenu, "g-", linewidth=0.5)
-    ax0.fill_between(x_nenu, y_nenu, 10 ** 6, color="green", alpha=0.1, label="NenuFAR")
+    ax0.fill_between(x_nenu, y_nenu, 10 ** 12, color="green", alpha=0.1, label="NenuFAR")
 
     for i in range(4):
         x = uGMRT["Frequencies"][i]
-        y = uGMRT["RMS Noise"][i]
+        y = uGMRT["RMS Noise"][i] * 1e2
         plt.plot(x, y, "b-", linewidth=0.5)
         if i == 0:
-            ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1, label="uGMRT")
+            ax0.fill_between(x, y, 10 ** 12, color="blue", alpha=0.1, label="uGMRT")
         else:
-            ax0.fill_between(x, y, 10 ** 6, color="blue", alpha=0.1)
+            ax0.fill_between(x, y, 10 ** 12, color="blue", alpha=0.1)
 
     for i in range(5):
         x = MWA["Frequencies"][i]
-        y = MWA["RMS Noise"][i]
+        y = MWA["RMS Noise"][i] * 30.72
         plt.plot(x, y, "k-", linewidth=0.5)
         if i == 0:
-            ax0.fill_between(x, y, 10 ** 6, color="grey", alpha=0.1, label="MWA")
+            ax0.fill_between(x, y, 10 ** 12, color="grey", alpha=0.1, label="MWA")
         else:
-            ax0.fill_between(x, y, 10 ** 6, color="grey", alpha=0.1)
+            ax0.fill_between(x, y, 10 ** 12, color="grey", alpha=0.1)
 
     # ax0.fill_between(Freq_1, L_EU_1, 10**6, color="red", alpha=0.1, label="LOFAR LBA")
     # ax0.fill_between(Freq_2, L_EU_2, 10**6, color="purple", alpha=0.1, label="LOFAR HBA")
@@ -949,17 +951,17 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
         if fix_lim:
             ax0.set_ylim(bottom=1e-10, top=1)
         else:
-            ax0.set_ylim(bottom=min(df.y) * 0.05, top=max(df.y) * 2)
+            ax0.set_ylim(bottom=min(df.y) * 0.05, top=max(df.y) * 10)
         # for i, txt in enumerate(labels):
         #     if txt:
         #         ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(2, 2), textcoords="offset pixels", fontsize=7)
-        center_x = 200
-        center_y = 3
+        center_x = 300
+        center_y = 1e-7
         arrowprops = dict(arrowstyle='<->,  head_length=0.1', color='k', lw=2)
         ax0.annotate("", xy=(center_x, center_y*avg_err[2]), xytext=(center_x, center_y*avg_err[3]), arrowprops=arrowprops)
         ax0.annotate("", xy=(center_x*avg_err[0], center_y), xytext=(center_x*avg_err[1], center_y), arrowprops=arrowprops)
 
-        ax0.legend(loc="center right", bbox_to_anchor=(1, 0.3), fontsize=11, frameon=True, shadow=True, ncol=1)
+        ax0.legend(loc="upper right", bbox_to_anchor=(1, 0.65), fontsize=11, frameon=True, shadow=True, ncol=1)
 
         xmin, xmax = plt.xlim()
 
@@ -983,7 +985,7 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
                  )
 
     ax0.set_xlabel("Maximum Emission Frequency (MHz)")
-    ax0.set_ylabel("Radio Flux Density (Jy)")
+    ax0.set_ylabel("$\Phi_\mathrm{peak} \\times \Delta \\nu$ [Jy MHz]")
     retro_noir(ax0)
     fig0.tight_layout()
 

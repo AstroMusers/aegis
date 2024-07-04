@@ -109,7 +109,7 @@ for j in range(len(ages)):
         fast_bois_1512 = [792]
         fast_bois_1912 = [1940, 3643]
         fast_bois_3112 = [1164]
-        fast_bois_2903 = [13, 243, 440, 1350, 1356]
+        fast_bois_2903 = [13, 139, 243, 440, 1350, 1356]
         if r < r_c:
             guess = 0
         else:
@@ -133,17 +133,21 @@ for j in range(len(ages)):
     wind_speeds.append(v_values)
 
 
-data = {"rs": radial_ranges,
-        "ws": wind_speeds,
-        "specs": specs}
-df = pd.DataFrame(data)
+data1 = {"names": names,
+         "rs": radial_ranges,
+         "ws": wind_speeds,
+         "specs": specs}
+df = pd.DataFrame(data1)
+df["star_names"] = df["names"].str[:-1]
+df = df.drop_duplicates(subset=["star_names"])
+
 grouped = df.groupby("specs")
 dfs = {category: group.reset_index(drop=True) for category, group in grouped}
 
 
 def profile_plot(dfs, save=False):
 
-    fig, axs = plt.subplots(2, 2, figsize=(5, 5), sharex=True, sharey=True)
+    fig, axs = plt.subplots(2, 2, figsize=(6, 6), sharex=True, sharey=True)
 
     plotted_spectral_types = set()
 
@@ -151,11 +155,11 @@ def profile_plot(dfs, save=False):
         ax = axs[k // 2, k % 2]
         for i in range(len(df.rs)):
             crit_index = np.argmin(abs(df.rs[i] - df.rs[i][0]*10))
-            ax.plot(df.rs[i][crit_index], df.ws[i][crit_index], "k*", markersize=3)
+            ax.plot(df.rs[i][crit_index], df.ws[i][crit_index], "k*", markersize=3, alpha=0.5)
             if i == 0 and k == 0:
                 ax.plot([], [], "k*", label="$r_c$", markersize=10)
             color = spectral_color.get(type, "black")
-            ax.plot(df.rs[i], df.ws[i], color=color, alpha=0.5)
+            ax.plot(df.rs[i], df.ws[i], color=color, alpha=0.1)
             if type not in plotted_spectral_types:
                 plt.plot([], [], label=type, color=color)
                 plotted_spectral_types.add(type)
@@ -170,7 +174,7 @@ def profile_plot(dfs, save=False):
     fig.suptitle("\n")
     lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
     lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
-    fig.legend(lines, labels, loc="upper center", bbox_to_anchor=(0.5, 1), ncol=3, frameon=True, shadow=True)
+    fig.legend(lines, labels, loc="upper center", bbox_to_anchor=(0.5, 1), ncol=5, frameon=True, shadow=True)
     plt.subplots_adjust(top=0.85)  # Increase top margin to make space for the legend
     plt.tight_layout()  # Adjust rect parameter to leave space for the legend
     plt.show()

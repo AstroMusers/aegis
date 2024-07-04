@@ -30,9 +30,6 @@ conversions_constant = 2 * np.pi * 1731  #
 ranges = ranges.tolist()
 speeds = speeds.tolist()
 
-ranges.append(R)
-speeds.append(np.nan)
-
 ranges = np.array(ranges)
 speeds = np.array(speeds)
 
@@ -60,13 +57,14 @@ x = r * np.cos(theta)
 y = r * np.sin(theta)
 
 fig, ax = plt.subplots(subplot_kw={'projection': 'polar'}, constrained_layout=True)
+ax.grid(False, which='minor')
 
 r = np.log10(r)
 
 masked_values = np.ma.masked_where(r < np.log10(R/215), B_perp)
 
 # Plot the data
-c = ax.pcolormesh(theta, r, masked_values, shading='auto', cmap=colormap)
+c = ax.pcolormesh(theta, r, masked_values, shading='gouraud', cmap=colormap)
 plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
 
 ax.grid("on", color="w", alpha=0.25,)
@@ -84,10 +82,11 @@ ax.set_xlabel('$\phi$', loc="right", labelpad=-180, color="white")
 
 ax.set_rlabel_position(-90)  # Move the radial labels away from the plotted data
 
-ax.set_rticks([-2, -1.5, -1, -0.5, 0])
+ax.tick_params(axis='y', colors='pink')  # Radial ticks
+ax.set_rticks([-1, -0.5, 0])
 
 # Optional: Label the radial axis with context-specific information
-ax.text(- 100 * np.pi / 180, (np.min(r)+np.max(r))/2 - 0.1, 'log$_{10}$($r$ [AU])', ha='center', va='center', fontsize=13, rotation=90)
+ax.text(- 95 * np.pi / 180, (np.min(r)+np.max(r))/2 + 0.8, 'log$_{10}$($r$ [AU])', ha='center', va='center', fontsize=13, rotation=90, color="pink")
 # ax.text(np.pi, (np.min(r)+np.max(r))/2 - 0.8, 'log($r$ [AU])', ha='center', va='center', fontsize=13)
 
 circle_radius = -r[0][0] + np.log10(a)
@@ -145,6 +144,7 @@ fig.legend((line1,), ("Orbit",), frameon=True, shadow=True, facecolor=dot_color,
 fig.legend((line2,), ("Stellar Surface",), frameon=True, shadow=True, labelcolor="k", ncol=1, loc=2)
 
 # fig.tight_layout()
+fig.savefig("parker_spiral.pdf", dpi=300)
 
 plt.show()
 

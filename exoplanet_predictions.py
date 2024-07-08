@@ -7,6 +7,10 @@ from radio_module import *
 from rotation_script import *
 from copy import deepcopy
 import smplotlib
+from matplotlib.colors import Normalize
+from matplotlib.cm import ScalarMappable
+from matplotlib.lines import Line2D
+
 
 
 def attempt_hershley():
@@ -424,7 +428,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     # if 30 <= nu <= 75:
     # bw = 4.66  # LOFAR bandwidth of 4.66 MHz
 
-    if x_err_avg < 1:
+    if x_err_avg < 0.85:
 
         for m in range(3):
             x = freqs[(Freq_1[m] <= freqs) & (freqs <= Freq_1[m + 1])]
@@ -432,17 +436,17 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
 
             if frac > 0.1:
                 # if I_mag >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
-                if I_mag >= L_EU_1[m]:
+                if I_mag >= (L_EU_1[m] + L_EU_1[m+1]) / 2:
                     obs_mag = str(EXO.name)
                     print(obs_mag, m, I_mag)
                     observable_mag = True
                 # if I_kin >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
-                if I_kin >= L_EU_1[m]:
+                if I_kin >= (L_EU_1[m] + L_EU_1[m+1]) / 2:
                     obs_kin = str(EXO.name)
                     print(obs_kin, m, I_kin)
                     observable_kin = True
                 # if I_both >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
-                if I_both >= L_EU_1[m]:
+                if I_both >= (L_EU_1[m] + L_EU_1[m+1]) / 2:
                     obs_both = str(EXO.name)
                     print(obs_both, m, I_both)
                     observable_both = True
@@ -464,19 +468,19 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
 
             if frac > 0.1:
                 # if I_mag >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
-                if I_mag >= L_EU_2[m]:
+                if I_mag >= (L_EU_2[m] + L_EU_2[m+1]) / 2:
                     obs_mag = str(EXO.name)
                     print(obs_mag)
                     observable_mag = True
 
                 # if I_kin >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
-                if I_kin >= L_EU_2[m]:
+                if I_kin >= (L_EU_2[m] + L_EU_2[m+1]) / 2:
                     obs_kin = str(EXO.name)
                     print(obs_kin)
                     observable_kin = True
                 # if I_both >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
 
-                if I_both >= L_EU_2[m]:
+                if I_both >= (L_EU_2[m] + L_EU_2[m+1]) / 2:
                     obs_both = str(EXO.name)
                     print(obs_both)
                     observable_both = True
@@ -684,6 +688,8 @@ df1 = pd.DataFrame({"Names": names,
                     "x_err_min": x_minerr,
                     "x_err_max": x_maxerr})
 
+df1['Color'] = df1['Names'].apply(lambda x: 'gray' if x in real_outliers else 'black').astype(str)
+
 det_data = [[exo.name, exo.freq, exo.intensity_both] for exo in detectables_both]
 df_det = pd.DataFrame(det_data[0:], columns=["Name", "Freq", "Flux"])
 
@@ -743,11 +749,8 @@ def is_within_limits(x, y, xlim, ylim):
     return xlim[0] <= x <= xlim[1] and ylim[0] <= y <= ylim[1]
 
 
+# The following function is a truly badly-written one. I have stopped caring for its readability at this point. Sorry about this. At least it gets the job done.
 def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False, fix_lim=False, strict=False, others=0):
-
-    # rc = {"font.family": "sans-serif", "font.weight": "light", "font.variant": "small-caps", "font.size": 10}
-    # rc = {"font": font}
-    # plt.rcParams.update(rc)
 
     df = df1.copy()
 
@@ -787,7 +790,6 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
     x_both_err[1][cond_both] = 0
     x_strict_err[0][cond_strict] = 0
     x_strict_err[1][cond_strict] = 0
-
 
     # x_err[0][cond] = 0
     # x_err[1][cond] = 0
@@ -839,7 +841,29 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
     else:
         smplotlib.set_style(edgecolor='k')
 
-    im = ax0.scatter(df.xerr_nonzero, df.yerr_nonzero, c=df.s, s=size, cmap="magma_r")
+    outliers = df[df['Names'].isin(real_outliers)]
+    non_outliers = df[~df['Names'].isin(real_outliers)]
+    min_color = df['s'].min()
+    max_color = df['s'].max()
+
+    if not zoom:
+
+        scatter_non_outliers = ax0.scatter(non_outliers.xerr_nonzero, non_outliers.yerr_nonzero, s=non_outliers.d,
+                                          c=non_outliers.s, cmap='magma_r', marker='o', norm=Normalize(vmin=min_color, vmax=max_color))
+
+        # Plot outliers with upside-down triangles, using size and color mappings
+        scatter_outliers = ax0.scatter(outliers.xerr_nonzero, outliers.yerr_nonzero, s=outliers.d,
+                                      c=outliers.s, cmap='magma_r', marker='v', norm=Normalize(vmin=min_color, vmax=max_color))
+
+    else:
+        scatter_non_outliers = ax0.scatter(non_outliers.xerr_nonzero, non_outliers.yerr_nonzero, s=size[~df['Names'].isin(real_outliers)],
+                                           c=non_outliers.s, cmap='magma_r', marker='o', norm=Normalize(vmin=min_color, vmax=max_color))
+
+        # Plot outliers with upside-down triangles, using size and color mappings
+        scatter_outliers = ax0.scatter(outliers.xerr_nonzero, outliers.yerr_nonzero, s=size[df['Names'].isin(real_outliers)],
+                                       c=outliers.s, cmap='magma_r', marker='v', norm=Normalize(vmin=min_color, vmax=max_color))
+
+    # im = ax0.scatter(df.xerr_nonzero, df.yerr_nonzero, c=df.s, s=size, cmap="magma_r")
     errorbar = ax0.errorbar(df.x, df.y,
                      yerr=y_err,
                      xerr=x_err_new,
@@ -903,7 +927,13 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
     # ax0.fill_between(Freq_1, L_EU_1, 10**6, color="red", alpha=0.1, label="LOFAR LBA")
     # ax0.fill_between(Freq_2, L_EU_2, 10**6, color="purple", alpha=0.1, label="LOFAR HBA")
 
-    cbar = plt.colorbar(im, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)", aspect=25, extend="both")
+    norm = Normalize(vmin=df["s"].min(), vmax=df['s'].max())
+    sm = ScalarMappable(cmap='magma_r', norm=norm)
+    sm.set_array([])  # You can set an array here if needed for specific values
+
+    # cbar = plt.colorbar(im, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)", aspect=25, extend="both")
+    fig.colorbar(sm, ax=ax0, label="Distance to Host Star ($\log_{10}{\mathrm{(AU)}}$)", aspect=25, extend="both")
+
     # cbar.ax.tick_params(labelsize=10)
     # cbar.set_label('my label', size='xx-small')
     ax0.axvline(x=10, color="black", linestyle="dashed")
@@ -937,9 +967,13 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
         elif fix_lim:
             texts = [plt.text(df.x[i], df.y[i], lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab)) if lab[i] != "" and is_within_limits(df.x[i], df.y[i], xlim, ylim)]
         else:
-            texts = [plt.text(df.x[i], df.y[i], lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab))
+            texts = [ax0.text(df.x[i], df.y[i], lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab))
                      if lab[i] != ""]
-        plt.legend(fontsize=13)
+        fig0.legend(fontsize=13, bbox_to_anchor=(0.1, 0.15), loc="lower left", frameon=True)
+        line1 = Line2D([0], [0], marker="v", linestyle="None", markerfacecolor="orange", markeredgecolor="black")
+        line2 = Line2D([0], [0], marker="o", linestyle="None", markerfacecolor="orange", markeredgecolor="black")
+        fig0.legend((line1, line2), ("Outliers", "Insiders"), frameon=True, shadow=True, bbox_to_anchor=(0.8, 0.95), fontsize=12)
+
         adjust_text(texts, arrowprops=dict(arrowstyle="-", color="k", lw=0.5),
                     force_points=(3, 3), force_text=(2, 2), force_objects=(1.5, 1.5),
                     expand_points=(1.15, 1.15), expand_objects=(1.5, 1.5), expand_align=(1.2, 1.2), precision=20)
@@ -961,7 +995,7 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
 
         ax0.legend(loc="center right", bbox_to_anchor=(1, 0.3), fontsize=11, frameon=True, shadow=True, ncol=1)
 
-        xmin, xmax = plt.xlim()
+        xmin, xmax = ax0.get_xlim()
 
         # ax0.annotate("Observable From Ground", xy=(np.sqrt(xmax*10), max(df.y)*1.5),
         #     xytext=(np.sqrt(xmax*10), max(df.y)*2), ha='center',  # Horizontal alignment of the text
@@ -998,7 +1032,7 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
             plt.savefig("zoom_fixed.pdf")
 
 
-scatter_plot(df1, "both", y_err, x_err, df_det, average_errors)
+scatter_plot(df1, "both", y_err, x_err, df_det, average_errors, zoom=True)
 outcome_dist_hists(intensities, "both", magnetic_fields)
 
 plt.show()

@@ -45,7 +45,7 @@ merged['RA'], merged['DEC'] = zip(*(merged["Name"].str[:-1]).apply(query_simbad)
 merged["vmax"] = merged["Freq(MHz)"]
 merged.columns = ["Name", "Mass (MJ)", "Radius (RJ)", "a (AU)", "d (pc)", "t (Gyr)", "nupeak (MHz)", "Phi (mJy)", "RA (J2000)", "DEC (J2000)", "vmax"]
 final = merged[["Name", "RA (J2000)", "DEC (J2000)", "Mass (MJ)", "Radius (RJ)", "a (AU)", "d (pc)", "t (Gyr)", "vmax", "Phi (mJy)"]]
-final = final.sort_values(by="Phi (mJy)")
+final = final.sort_values(by="Phi (mJy)", ascending=False)
 
 final["RA (J2000)"] = final["RA (J2000)"].apply(format_ra)
 final["DEC (J2000)"] = final["DEC (J2000)"].apply(format_ra)

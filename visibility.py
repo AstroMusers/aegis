@@ -27,6 +27,14 @@ mwa = which_data["mwa"]
 ugmrt = which_data["ugmrt"]
 
 which = [lofar, mwa, ugmrt]
+tel_names = ["LOFAR", "MWA", "uGMRT"]
+
+LOFAR_lat = 54.9
+NenuFAR_lat = 47.38
+MWA_lat = -26.7
+uGMRT_lat = 19.1
+
+lats = [LOFAR_lat, MWA_lat, uGMRT_lat]
 
 
 def retro_noir(ax):
@@ -50,6 +58,29 @@ def formatter(s):
         return -val
 
 
+def format_ra(ra_string):
+    hours, minutes, seconds = ra_string.split()
+    seconds = round(float(seconds))
+    return f"{hours}:{minutes}:{seconds:02d}"
+
+
+def two_format(x):
+    return '{:.2f}'.format(x)
+
+
+def three_format(x):
+    return '{:.3f}'.format(x)
+
+
+def one_format(x):
+    return '{:.1f}'.format(x)
+
+
+def zero_format(x):
+    return '{:.0f}'.format(x)
+
+
+
 all_df = df[["Name", "RA (J2000)", "DEC (J2000)"]].copy()
 
 all_df["ra"] = all_df["RA (J2000)"].apply(formatter)
@@ -71,11 +102,40 @@ def time_above_elevation(ra, dec, lat, min):
     return frac*24
 
 
+def possible_time_for_target(name, min=20):
+    for ind, obs in enumerate(which):
+        if name in obs:
+            lat = lats[ind]
+            tel = tel_names[ind]
+            break
+    ra, dec = all_df["ra"][df["Name"] == name], all_df["dec"][df["Name"] == name]
+    h = time_above_elevation(ra, dec, lat, min)[0] // 1
+    minutes = (time_above_elevation(ra, dec, lat, min)[0] - time_above_elevation(ra, dec, lat, min)[0] // 1)*60
+    return tel, f"{h:.0f}h {minutes:.0f}m"
 
-LOFAR_lat = 54.9
-NenuFAR_lat = 47.38
-MWA_lat = -26.7
-uGMRT_lat = 19.1
+
+max_elev = np.vectorize(max_elev)
+time_above_elevation = np.vectorize(time_above_elevation)
+possible_time_for_target = np.vectorize(possible_time_for_target)
+final = pd.read_csv("obs_table.csv")
+final[["Telescope", "t20"]] = final["Name"].apply(lambda x: pd.Series(possible_time_for_target(x)))
+final["a (AU)"] *= 1e2
+final.rename(columns={"a (AU)": "a (10^-2 AU)"}, inplace=True)
+
+# final["RA (J2000)"] = final["RA (J2000)"].apply(format_ra)
+# final["DEC (J2000)"] = final["DEC (J2000)"].apply(format_ra)
+
+final["Mass (MJ)"] = final["Mass (MJ)"].apply(three_format)
+final["a (10^-2 AU)"] = final["a (10^-2 AU)"].apply(one_format)
+
+final["Radius (RJ)"] = final["Radius (RJ)"].apply(two_format)
+final["d (pc)"] = final["d (pc)"].apply(zero_format)
+final["t (Gyr)"] = final["t (Gyr)"].apply(two_format)
+final["vmax"] = final["vmax"].apply(zero_format)
+final["Phi (mJy)"] = final["Phi (mJy)"].apply(two_format)
+
+
+final.to_csv("final-table.csv", index=False)
 
 # obs = [LOFAR_lat, NenuFAR_lat, MWA_lat, uGMRT_lat]
 # obs_names = ["LOFAR", "NenuFAR", "MWA", "uGMRT"]
@@ -88,8 +148,6 @@ decs = np.linspace(-90, 90, 200)
 
 ras, decs = np.meshgrid(ras, decs)
 
-elev = np.vectorize(max_elev)
-time_above_elevation = np.vectorize(time_above_elevation)
 
 # plt.rcParams['figure.figsize'] = [9, 12]
 #
@@ -98,7 +156,7 @@ time_above_elevation = np.vectorize(time_above_elevation)
 
 results = []
 for i in range(len(obs)):
-    result = elev(ras, decs, obs[i])
+    result = max_elev(ras, decs, obs[i])
     results.append(result)
 
 

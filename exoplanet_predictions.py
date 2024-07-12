@@ -12,7 +12,6 @@ from matplotlib.cm import ScalarMappable
 from matplotlib.lines import Line2D
 
 
-
 def attempt_hershley():
     from fontTools.ttLib import TTFont
     from matplotlib.font_manager import FontProperties
@@ -268,7 +267,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     high_var = ["AU Mic c", "V1298 Tau d", "V1298 Tau b", "V1298 Tau e", "V1298 Tau c"]
     # high_var = []
 
-    for k in range(1000):  # The loop for Monte Carlo iterations
+    for k in range(100):  # The loop for Monte Carlo iterations
         T = rng.normal(T_i, T_s)
         while T < 0:
             T = rng.normal(T_i, T_s)

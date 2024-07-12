@@ -74,7 +74,7 @@ ax.grid("on", color="w", alpha=0.25,)
 
 # Add the colorbar to the new axis
 # fig.colorbar(c, cax=cbar_ax, orientation="horizontal", extend="both")
-fig.colorbar(c, orientation="vertical", pad=0.09, extend="both", fraction=0.03, aspect=30, label="log($B_\perp$ [nT])")
+fig.colorbar(c, orientation="vertical", pad=0.09, extend="both", fraction=0.03, aspect=30, label="log$_{10}$($B_\perp$ [nT])")
 
 # Set labels
 ax.set_xlabel('$\phi$', loc="right", labelpad=-180, color="white")

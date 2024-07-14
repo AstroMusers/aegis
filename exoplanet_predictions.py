@@ -99,7 +99,7 @@ integration_time = 8 * 60  # minutes
 MWA["RMS Noise"] *= np.sqrt((2 / integration_time)) * 10**(-3) * 5
 
 # Retrieve Data
-filename = "NASA2903.csv"
+filename = "NASA1407.csv"
 df = pd.read_csv(filename, comment="#")
 windfile = "wind_info" + filename[4:-4] + ".txt"
 
@@ -267,7 +267,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     high_var = ["AU Mic c", "V1298 Tau d", "V1298 Tau b", "V1298 Tau e", "V1298 Tau c"]
     # high_var = []
 
-    for k in range(100):  # The loop for Monte Carlo iterations
+    for k in range(1000):  # The loop for Monte Carlo iterations
         T = rng.normal(T_i, T_s)
         while T < 0:
             T = rng.normal(T_i, T_s)
@@ -971,7 +971,8 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
         fig0.legend(fontsize=13, bbox_to_anchor=(0.1, 0.15), loc="lower left", frameon=True)
         line1 = Line2D([0], [0], marker="v", linestyle="None", markerfacecolor="orange", markeredgecolor="black")
         line2 = Line2D([0], [0], marker="o", linestyle="None", markerfacecolor="orange", markeredgecolor="black")
-        fig0.legend((line1, line2), ("Outliers", "Insiders"), frameon=True, shadow=True, bbox_to_anchor=(0.8, 0.95), fontsize=12)
+        # fig0.legend((line1, line2), ("Outliers", "Insiders"), frameon=True, shadow=True, bbox_to_anchor=(0.8, 0.95), fontsize=12)
+        fig0.legend((line1,), ("Outliers",), frameon=True, shadow=True, bbox_to_anchor=(0.8, 0.95), fontsize=12)
 
         adjust_text(texts, arrowprops=dict(arrowstyle="-", color="k", lw=0.5),
                     force_points=(3, 3), force_text=(2, 2), force_objects=(1.5, 1.5),

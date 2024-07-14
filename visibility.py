@@ -210,11 +210,10 @@ def visibility_plot(results, save=False):
         retro_noir(ax)
         retro_noir(ax1)
 
+        adjust_text(texts, ax=ax)
+        adjust_text(texts1, ax=ax1)
+
     plt.subplots_adjust(hspace=0.6)
-
-
-    adjust_text(texts, ax=ax)
-    adjust_text(texts1, ax=ax1)
 
     plt.show()
 

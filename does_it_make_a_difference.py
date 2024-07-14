@@ -55,7 +55,7 @@ default_calculate("tau Boo b")
 calculator = np.vectorize(default_calculate)
 
 MCdf = pd.read_csv("Output Tables/all.csv")
-meta_sub = df[df["pl_orbsmax"] < 0.1][["pl_name", "pl_orbsmax"]]
+meta_sub = df[df["pl_orbsmax"] < 0.075][["pl_name", "pl_orbsmax", "pl_orbsmaxerr1"]]
 meta_sub.rename(columns={"pl_name": "Name"}, inplace=True)
 merged = pd.merge(MCdf, meta_sub, on="Name")
 # merged[["Freq, Flux"]] = merged["Name"].apply(lambda x: pd.Series(calculator(x)))

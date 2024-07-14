@@ -8,7 +8,7 @@ import smplotlib
 
 
 # Read CSV using pandas
-filename = "NASA2903.csv"
+filename = "NASA1407.csv"
 data = pd.read_csv(filename, comment="#")
 
 # Extract columns into separate arrays
@@ -110,11 +110,12 @@ for j in range(len(ages)):
         fast_bois_1912 = [1940, 3643]
         fast_bois_3112 = [1164]
         fast_bois_2903 = [13, 139, 243, 440, 1350, 1356]
+        fast_bois_1407 = [249, 250]
         if r < r_c:
             guess = 0
         else:
             guess = 3
-            if j in fast_bois_2903:
+            if j in fast_bois_1407:
                 guess = 3.5
 
         guess = np.array([guess])

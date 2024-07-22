@@ -27,14 +27,14 @@ mwa = which_data["mwa"]
 ugmrt = which_data["ugmrt"]
 
 which = [lofar, mwa, ugmrt]
-tel_names = ["LOFAR", "MWA", "uGMRT"]
+tel_names = np.array(["LOFAR", "MWA", "uGMRT"])
 
 LOFAR_lat = 54.9
 NenuFAR_lat = 47.38
 MWA_lat = -26.7
 uGMRT_lat = 19.1
 
-lats = [LOFAR_lat, MWA_lat, uGMRT_lat]
+lats = np.array([LOFAR_lat, MWA_lat, uGMRT_lat])
 
 
 def retro_noir(ax):
@@ -102,12 +102,16 @@ def time_above_elevation(ra, dec, lat, min):
     return frac*24
 
 
-def possible_time_for_target(name, min=20):
-    for ind, obs in enumerate(which):
-        if name in obs:
-            lat = lats[ind]
-            tel = tel_names[ind]
-            break
+def possible_time_for_target(name, min=20, default=True, obs="LOFAR"):
+    if default:
+        for ind, obs in enumerate(which):
+            if name in obs:
+                lat = lats[ind]
+                tel = tel_names[ind]
+                break
+    else:
+        tel = obs
+        lat = lats[tel_names == tel]
     ra, dec = all_df["ra"][df["Name"] == name], all_df["dec"][df["Name"] == name]
     h = time_above_elevation(ra, dec, lat, min)[0] // 1
     minutes = (time_above_elevation(ra, dec, lat, min)[0] - time_above_elevation(ra, dec, lat, min)[0] // 1)*60

@@ -26,15 +26,15 @@ nenufar = which_data["nenufar"]
 mwa = which_data["mwa"]
 ugmrt = which_data["ugmrt"]
 
-which = [lofar, mwa, ugmrt]
-tel_names = np.array(["LOFAR", "MWA", "uGMRT"])
+which = [lofar, nenufar, ugmrt, mwa]
+tel_names = np.array(["LOFAR", "NenuFAR", "uGMRT", "MWA"])
 
 LOFAR_lat = 54.9
 NenuFAR_lat = 47.38
 MWA_lat = -26.7
 uGMRT_lat = 19.1
 
-lats = np.array([LOFAR_lat, MWA_lat, uGMRT_lat])
+lats = np.array([LOFAR_lat, NenuFAR_lat, uGMRT_lat, MWA_lat])
 
 
 def retro_noir(ax):
@@ -104,18 +104,37 @@ def time_above_elevation(ra, dec, lat, min):
 
 def possible_time_for_target(name, min=20, default=True, obs="LOFAR"):
     if default:
+        tel = []
+        latits = []
+        times = []
         for ind, obs in enumerate(which):
             if name in obs:
                 lat = lats[ind]
-                tel = tel_names[ind]
-                break
+                latits.append(lat)
+                tel.append(ind+1)
+                ra, dec = all_df["ra"][df["Name"] == name], all_df["dec"][df["Name"] == name]
+                t = time_above_elevation(ra, dec, lat, min)[0]
+                times.append(t)
     else:
         tel = obs
         lat = lats[tel_names == tel]
+    df_times = pd.DataFrame({"tel": tel,
+                             "times": times})
+    df_times = df_times.sort_values(by="times")
+    tel_list = [x for x in df_times["tel"]]
+    tel_list_str = ""
+    for tel in tel_list:
+        if tel_list_str != "" and tel_list.index(tel) != len(tel_list):
+            tel_list_str += ", " + str(tel)
+        else:
+            tel_list_str += str(tel)
+
+    latits = np.array(latits)
+    lat = latits[np.where(np.array(times) == np.max(times))]
     ra, dec = all_df["ra"][df["Name"] == name], all_df["dec"][df["Name"] == name]
     h = time_above_elevation(ra, dec, lat, min)[0] // 1
     minutes = (time_above_elevation(ra, dec, lat, min)[0] - time_above_elevation(ra, dec, lat, min)[0] // 1)*60
-    return tel, f"{h:.0f}h {minutes:.0f}m"
+    return tel_list_str, f"{h:.0f}h {minutes:.0f}m"
 
 
 max_elev = np.vectorize(max_elev)
@@ -144,8 +163,11 @@ final.to_csv("final-table.csv", index=False)
 # obs = [LOFAR_lat, NenuFAR_lat, MWA_lat, uGMRT_lat]
 # obs_names = ["LOFAR", "NenuFAR", "MWA", "uGMRT"]
 
-obs = [LOFAR_lat, MWA_lat, uGMRT_lat]
-obs_names = ["LOFAR", "MWA", "uGMRT"]
+# obs = [NenuFAR_lat, LOFAR_lat, MWA_lat, uGMRT_lat]
+# obs_names = ["NenuFAR", "LOFAR", "MWA", "uGMRT"]
+
+obs = [LOFAR_lat, NenuFAR_lat, uGMRT_lat, MWA_lat]
+obs_names = ["LOFAR", "NenuFAR", "uGMRT", "MWA"]
 
 ras = np.linspace(0, 24, 200)
 decs = np.linspace(-90, 90, 200)
@@ -166,8 +188,8 @@ for i in range(len(obs)):
 
 def visibility_plot(results, save=False):
 
-    # plt.rcParams['font.size'] = 7  # 7 with NenuFAR
-    fig, axs = plt.subplots(len(obs), 2, figsize=(9, 10))  # (7, 9) with NenuFAR
+    plt.rcParams['font.size'] = 7  # 7 with NenuFAR
+    fig, axs = plt.subplots(len(obs), 2, figsize=(7, 9))  # (7, 9) with NenuFAR, (9, 10) otherwise
 
     for i in range(len(results)):
 

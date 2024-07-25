@@ -73,6 +73,9 @@ Freq_2 = Freq[4:]
 NenuNoise = np.array([130.0, 9.0])  # MJy (10 MHz, 1h, website)
 NenuFreq = np.array([15.0, 85.0])  # MHz (website)
 NenuNoise *= np.sqrt(1 / 8) * 10**(-3) * 5  # 5 sigma sensitivity in Jy
+nenu_data = np.load("nenufar.npz")
+NenuFreq = nenu_data["nenu_freqs"]
+NenuNoise = nenu_data["nenu_noise"] * 5
 
 # ----------------------------
 
@@ -427,13 +430,14 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
     # if 30 <= nu <= 75:
     # bw = 4.66  # LOFAR bandwidth of 4.66 MHz
 
-    if x_err_avg < 0.85:
+    if x_err_avg < 0.7 and nu > 10:
+        frac_lim = 0.3
 
         for m in range(3):
             x = freqs[(Freq_1[m] <= freqs) & (freqs <= Freq_1[m + 1])]
             frac = len(x) / len(freqs)
 
-            if frac > 0.1:
+            if frac > frac_lim:
                 # if I_mag >= (L_EU_1[m + 1] - L_EU_1[m]) / (Freq_1[m + 1] - Freq_1[m]) * (nu - Freq_1[m]) + L_EU_1[m]:
                 if I_mag >= (L_EU_1[m] + L_EU_1[m+1]) / 2:
                     obs_mag = str(EXO.name)
@@ -465,7 +469,7 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
             x = freqs[(Freq_2[m] <= freqs) & (freqs <= Freq_2[m + 1])]
             frac = len(x) / len(freqs)
 
-            if frac > 0.1:
+            if frac > frac_lim:
                 # if I_mag >= (L_EU_2[m + 1] - L_EU_2[m]) / (Freq_2[m + 1] - Freq_2[m]) * (nu - Freq_2[m]) + L_EU_2[m]:
                 if I_mag >= (L_EU_2[m] + L_EU_2[m+1]) / 2:
                     obs_mag = str(EXO.name)
@@ -493,38 +497,37 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
                 observable_flag = observable_both or observable_mag or observable_kin
 
         # NenuFAR
-        x = freqs[(NenuFreq[0] <= freqs) & (freqs <= NenuFreq[1])]
+        x = freqs[(NenuFreq[0] <= freqs) & (freqs <= NenuFreq[-1])]
         frac = len(x) / len(freqs)
+        for i in range(len(NenuFreq) - 1):
 
-        # if frac > 0.1:
+            if NenuFreq[i] <= nu <= NenuFreq[i+1]:
+                if I_mag >= NenuNoise[i] + (NenuNoise[i+1] - NenuNoise[i]) / (NenuFreq[i+1] - NenuFreq[i]) * (nu - NenuFreq[i]):
+                    obs_mag = str(EXO.name)
+                    print(obs_mag)
+                    observable_mag = True
 
-        if NenuFreq[0] <= nu <= NenuFreq[1]:
-            if I_mag >= NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0]):
-                obs_mag = str(EXO.name)
-                print(obs_mag)
-                observable_mag = True
+                if I_kin >= NenuNoise[i] + (NenuNoise[i+1] - NenuNoise[i]) / (NenuFreq[i+1] - NenuFreq[i]) * (nu - NenuFreq[i]):
+                    obs_kin = str(EXO.name)
+                    print(obs_kin)
+                    observable_kin = True
 
-            if I_kin >= NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0]):
-                obs_kin = str(EXO.name)
-                print(obs_kin)
-                observable_kin = True
+                if I_both >= NenuNoise[i] + (NenuNoise[i+1] - NenuNoise[i]) / (NenuFreq[i+1] - NenuFreq[i]) * (nu - NenuFreq[i]):
+                    obs_both = str(EXO.name)
+                    print(obs_both)
+                    observable_both = True
+                    nenufar_obs.append(obs_both)
+                    insiders.add(obs_both)
 
-            if I_both >= NenuNoise[0] + (NenuNoise[1] - NenuNoise[0]) / (NenuFreq[1] - NenuFreq[0]) * (nu - NenuFreq[0]):
+            elif frac > frac_lim and I_both > NenuNoise[0] * 2/3:
                 obs_both = str(EXO.name)
                 print(obs_both)
                 observable_both = True
                 nenufar_obs.append(obs_both)
-                insiders.add(obs_both)
-
-        elif frac > 0.1 and I_both > (NenuNoise[0] + NenuNoise[1]) / 2:
-            obs_both = str(EXO.name)
-            print(obs_both)
-            observable_both = True
-            nenufar_obs.append(obs_both)
-            out = str(EXO.name)
-            print(f"{out} Outlier for NenuFAR")
-            outliers.add(obs_both)
-        # observable_flag = observable_both or observable_mag or observable_kin
+                out = str(EXO.name)
+                print(f"{out} Outlier for NenuFAR")
+                outliers.add(obs_both)
+            # observable_flag = observable_both or observable_mag or observable_kin
 
 
         # if 72.30 <= nu <= 231.04:
@@ -532,17 +535,17 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
             x = freqs[(MWA["Frequencies"][m][0] <= freqs) & (freqs <= MWA["Frequencies"][m][1])]
             frac = len(x) / len(freqs)
 
-            if frac > 0.1 and I_mag > MWA["RMS Noise"][m][0]:
+            if frac > frac_lim and I_mag > MWA["RMS Noise"][m][0]:
                 obs_mag = str(EXO.name)
                 print(obs_mag)
                 observable_mag = True
 
-            if frac > 0.1 and I_kin > MWA["RMS Noise"][m][0]:
+            if frac > frac_lim and I_kin > MWA["RMS Noise"][m][0]:
                 obs_kin = str(EXO.name)
                 print(obs_kin)
                 observable_kin = True
 
-            if frac > 0.1 and I_both > MWA["RMS Noise"][m][0]:
+            if frac > frac_lim and I_both > MWA["RMS Noise"][m][0]:
                 obs_both = str(EXO.name)
                 print(obs_both)
                 observable_both = True
@@ -560,17 +563,17 @@ for i, j in df.iterrows():  # The loop that reads exoplanets from NASA file
             x = freqs[(uGMRT["Frequencies"][m][0] <= freqs) & (freqs <= uGMRT["Frequencies"][m][1])]
             frac = len(x) / len(freqs)
 
-            if frac > 0.1 and I_mag > uGMRT["RMS Noise"][m][0]:
+            if frac > frac_lim and I_mag > uGMRT["RMS Noise"][m][0]:
                 obs_mag = str(EXO.name)
                 print(obs_mag)
                 observable_mag = True
 
-            if frac > 0.1 and I_kin > uGMRT["RMS Noise"][m][0]:
+            if frac > frac_lim and I_kin > uGMRT["RMS Noise"][m][0]:
                 obs_kin = str(EXO.name)
                 print(obs_kin)
                 observable_kin = True
 
-            if frac > 0.1 and I_both > uGMRT["RMS Noise"][m][0]:
+            if frac > frac_lim and I_both > uGMRT["RMS Noise"][m][0]:
                 obs_both = str(EXO.name)
                 print(obs_both)
                 observable_both = True
@@ -900,8 +903,10 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
     ax0.fill_between(x_hba, y_hba, 10 ** 6, color="purple", alpha=0.1, label="LOFAR HBA")
 
 
-    x_nenu = np.linspace(NenuFreq[0], NenuFreq[1], 100)
-    y_nenu = np.linspace(NenuNoise[0], NenuNoise[1], 100)
+    # x_nenu = np.linspace(NenuFreq[0], NenuFreq[1], 100)
+    # y_nenu = np.linspace(NenuNoise[0], NenuNoise[1], 100)
+    x_nenu = NenuFreq
+    y_nenu = NenuNoise
     ax0.plot(x_nenu, y_nenu, "g-", linewidth=0.5)
     ax0.fill_between(x_nenu, y_nenu, 10 ** 6, color="green", alpha=0.1, label="NenuFAR")
 
@@ -1032,7 +1037,7 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
             plt.savefig("zoom_fixed.pdf")
 
 
-scatter_plot(df1, "both", y_err, x_err, df_det, average_errors, zoom=True)
+scatter_plot(df1, "both", y_err, x_err, df_det, average_errors)
 outcome_dist_hists(intensities, "both", magnetic_fields)
 
 plt.show()

@@ -60,5 +60,9 @@ final["vmax"] = final["vmax"].apply(two_format)
 
 final.to_csv("obs_table.csv", index=False)
 
+final["L"] = final["Phi (mJy)"] * final["d (pc)"].apply(float) **2
+zort = final.sort_values(by="L")
+zort = final.sort_values(by="L", ascending=False)
+
 # enough_data["freq"], detect_data["flux"] = freq, flux
 # sorted = enough_data.sort_values(by="pl_name")

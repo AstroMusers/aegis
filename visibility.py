@@ -120,7 +120,7 @@ def possible_time_for_target(name, min=20, default=True, obs="LOFAR"):
         lat = lats[tel_names == tel]
     df_times = pd.DataFrame({"tel": tel,
                              "times": times})
-    df_times = df_times.sort_values(by="times")
+    df_times = df_times.sort_values(by="times", ascending=False)
     tel_list = [x for x in df_times["tel"]]
     tel_list_str = ""
     for tel in tel_list:

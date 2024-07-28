@@ -61,9 +61,9 @@ final["vmax"] = final["vmax"].apply(two_format)
 final.to_csv("obs_table.csv", index=False)
 
 final["L"] = final["Phi (mJy)"] * final["d (pc)"].apply(float) **2
-zort = final.sort_values(by="L")
-zort = final.sort_values(by="L", ascending=False)
-zort["R_earth"] = zort["Radius (RJ)"].apply(float) * 11.209
+more_info = final.sort_values(by="L")
+more_info = final.sort_values(by="L", ascending=False)
+more_info["R_earth"] = more_info["Radius (RJ)"].apply(float) * 11.209
 
 # enough_data["freq"], detect_data["flux"] = freq, flux
 # sorted = enough_data.sort_values(by="pl_name")

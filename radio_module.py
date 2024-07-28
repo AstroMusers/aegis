@@ -397,7 +397,7 @@ def complete(B, a, M, Mdot, D):
 # Plotting
 
 
-mpl.use('Qt5Agg')
+# mpl.use('Qt5Agg')
 
 mpl.rcParams["figure.autolayout"] = True
 

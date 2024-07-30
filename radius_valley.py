@@ -1,10 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from radio_module import *
 import smplotlib
 
-filename = "NASA2903.csv"
+filename = "NASA1407.csv"
 df = pd.read_csv(filename, comment="#")
 df2 = pd.read_csv("Output Tables/all.csv")
 reachers = df[df["pl_name"].isin(df2["Name"])]
@@ -38,7 +37,7 @@ colors = np.where(pers > np.median(pers), color1, color2)
 
 
 # Create the figure and the subplots
-plt.rcParams['font.size'] = 19
+plt.rcParams['font.size'] = 21
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7, 5), gridspec_kw={'width_ratios': [1, 1]}, sharey=True)
 
 # Scatter plot on the left
@@ -55,7 +54,7 @@ ax1.grid("on", alpha=0.2)
 
 
 # Histogram on the right
-bins = np.linspace(0, np.max(radii) // 1 + 1, 20)
+bins = np.linspace(0, np.max(radii) // 1 + 1, 25)
 # bins = np.linspace(0, 7.5, 35)
 ax2.hist(radii[colors == color1], bins=bins, orientation='horizontal', color=color1, alpha=0.8, edgecolor=color1, linewidth=1, histtype="step", hatch="//////", label=r"Longer $T_\mathrm{orb}$")
 ax2.hist(radii[colors == color2], bins=bins, orientation='horizontal', color=color2, alpha=0.8, edgecolor=color2, linewidth=1, histtype="step", hatch="\\\\\\\\\\\\", label=r"Shorter $T_\mathrm{orb}$")
@@ -70,5 +69,5 @@ ax2.set_xlabel('N(R)')
 ax2.yaxis.tick_right()
 
 plt.tight_layout()
-plt.legend(fontsize=12)
+plt.legend(fontsize=17)
 plt.show()

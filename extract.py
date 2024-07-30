@@ -3,7 +3,7 @@ import pandas as pd
 from radio_module import *
 from astroquery.simbad import Simbad
 
-filename = "NASA2903.csv"
+filename = "NASA1407.csv"
 df = pd.read_csv(filename, comment="#")
 
 # det, freq, flux = np.genfromtxt("detectables_both.txt", dtype=str, delimiter="  ", skip_header=1, skip_footer=1, usecols=(0,1,2), unpack=True)

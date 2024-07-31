@@ -83,7 +83,7 @@ ax.add_patch(arc)
 ax.annotate(r"$\lambda_\mathrm{CMI}$", xy=(0, 0), xytext=(-0.7, 0.1), color="yellow")
 
 beam_angle = np.pi/5
-rays = np.linspace(1, 25, 1000)
+rays = np.linspace(1, 6, 1000)
 angles = np.linspace(lam-beam_angle, lam+beam_angle, 1000)
 combinations = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
 for angle in angles:

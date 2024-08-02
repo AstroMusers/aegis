@@ -11,7 +11,7 @@ enough_data = reachers[["pl_name", "pl_bmassj", "pl_radj", "pl_orbsmax", "sy_dis
 enough_data.rename(columns={"pl_name": "Name"}, inplace=True)
 merged = pd.merge(enough_data, df2, on="Name")
 
-merged_close = merged[(merged["pl_orbsmax"] < 100) & (merged["pl_radj"] * 11.2089 < 7)]
+merged_close = merged[(merged["pl_orbsmax"] < 0.1) & (merged["pl_radj"] * 11.2089 < 7)]
 # merged_close = merged[(merged["pl_orbsmax"] < 0.1) & (merged["pl_orbper"] < 100)]
 
 radii = np.array(merged_close["pl_radj"]) * 11.2089
@@ -19,28 +19,18 @@ bFields = np.array(merged_close["Max. Frequency [MHz]"] * 14 / 40)
 masses = np.array(merged_close["pl_bmassj"])
 semis = np.array(merged_close["pl_orbsmax"])
 pers = np.array(merged_close["pl_orbper"])
+ages = np.array(merged_close["st_age"])
 
 irradiance = np.array(7.02e-2 * (merged_close["st_age"]/4.6) ** (-1.74) / merged_close["pl_orbsmax"]**2)
 
 x = bFields
 y = radii
-# masker = pers
-
-# Determine the median of the flux values
 
 group_masker = irradiance
 masks = [np.where(group_masker < 10), np.where((group_masker > 10) & (group_masker < 100)), np.where(group_masker > 100)]
 
 color1 = "xkcd:deep red"
 color2 = "xkcd:indigo"
-
-# Assign colors based on whether the flux is above or below the median
-# colors = np.where(pers > np.median(pers), color1, color2)
-
-# colors = np.where(semis < 0.1, color1, color2)
-# median_constrained = np.median(x)
-# colors = np.where(x > 80, color1, color2)
-
 
 # Create the figure and the subplots
 # plt.rcParams['font.size'] = 21

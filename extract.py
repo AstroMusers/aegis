@@ -64,6 +64,7 @@ final["L"] = final["Phi (mJy)"] * final["d (pc)"].apply(float) **2
 more_info = final.sort_values(by="L")
 more_info = final.sort_values(by="L", ascending=False)
 more_info["R_earth"] = more_info["Radius (RJ)"].apply(float) * 11.209
+more_info["M_earth"] = more_info["Mass (MJ)"].apply(float) * 318
 
 # enough_data["freq"], detect_data["flux"] = freq, flux
 # sorted = enough_data.sort_values(by="pl_name")

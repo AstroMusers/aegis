@@ -84,3 +84,4 @@ for i, mask in enumerate(masks):
     if i == 1:
         ax2.legend(loc=1, fontsize=12)
 plt.show()
+

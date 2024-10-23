@@ -244,9 +244,9 @@ def visibility_plot(results, save=False):
     plt.show()
 
     if save:
-        plt.savefig("visibility.pdf")
+        fig.savefig("visibility.pdf")
 
 # time_above_elevation(3.1, 17.2, 39.5, 0)
 
 
-visibility_plot(results)
+visibility_plot(results, save=True)

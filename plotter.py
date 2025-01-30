@@ -9,6 +9,7 @@ import smplotlib
 from matplotlib.colors import Normalize
 from matplotlib.cm import ScalarMappable
 from matplotlib.lines import Line2D
+import matplotlib.ticker as ticker
 import json
 
 # LOFAR:
@@ -88,6 +89,11 @@ real_outliers = set(all["real_outliers"])
 
 det_data = [[exo.name, exo.freq, exo.intensity_both] for exo in detectables_both]
 df_det = pd.DataFrame(det_data[0:], columns=["Name", "Freq", "Flux"])
+
+def minor_tick_format(x, pos):
+    if x in [i * 10**j for j in range(-1, 3) for i in range(2, 10, 2)]:  # Customize range as needed
+        return f"{x:g}"  # Format in plain numbers
+    return ""
 
 def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
     if which == "mag":
@@ -370,17 +376,19 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
             texts = [plt.text(df.x[i], df.y[i], lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab))
                      if lab[i] != "" and is_within_limits(df.x[i], df.y[i], xlim, ylim)]
         else:
-            texts = [ax0.text(df.x[i], df.y[i], lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab))
+            texts = [ax0.text(df.x[i]*1.13, df.y[i]*1.10, lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab))
                      if lab[i] != ""]
+            ax0.xaxis.set_minor_formatter(ticker.FuncFormatter(minor_tick_format))
+            ax0.xaxis.set_major_formatter(ticker.LogFormatter())
         fig0.legend(fontsize=13, bbox_to_anchor=(0.1, 0.15), loc="lower left", frameon=True)
         line1 = Line2D([0], [0], marker="v", linestyle="None", markerfacecolor="orange", markeredgecolor="black")
         line2 = Line2D([0], [0], marker="o", linestyle="None", markerfacecolor="orange", markeredgecolor="black")
         # fig0.legend((line1, line2), ("Outliers", "Insiders"), frameon=True, shadow=True, bbox_to_anchor=(0.8, 0.95), fontsize=12)
         fig0.legend((line1,), ("Outliers",), frameon=True, shadow=True, bbox_to_anchor=(0.8, 0.95), fontsize=12)
 
-        adjust_text(texts, arrowprops=dict(arrowstyle="-", color="k", lw=0.5),
-                    force_points=(3, 3), force_text=(2, 2), force_objects=(1.5, 1.5),
-                    expand_points=(1.15, 1.15), expand_objects=(1.5, 1.5), expand_align=(1.2, 1.2), precision=20)
+        # adjust_text(texts, arrowprops=dict(arrowstyle="-", color="k", lw=0.5),
+        #             force_points=(3, 3), force_text=(2, 2), force_objects=(1.5, 1.5),
+        #             expand_points=(1.15, 1.15), expand_objects=(1.5, 1.5), expand_align=(1.2, 1.2), precision=20)
 
     else:
         ax0.set_xlim(left=0.05)

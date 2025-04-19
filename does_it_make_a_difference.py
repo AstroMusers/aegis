@@ -3,14 +3,14 @@ from rotation_script import *
 import pandas as pd
 import numpy as np
 
-filename = "NASA2903.csv"
+filename = "NASA1904.csv"
 df = pd.read_csv(filename, comment="#")
-windfile = "wind_info" + filename[4:-4] + ".txt"
+windfile = "new_wind_info" + filename[4:-4] + ".txt"
 
 wind_temperatures, wind_speeds = np.genfromtxt(windfile, usecols=(1, 2), skip_header=1, delimiter="\t", unpack=True)
 
 
-def default_calculate(name, burst=10, filename="NASA2903.csv"):
+def default_calculate(name, burst=10, filename=filename):
     df = pd.read_csv(filename, comment="#")
     ind = df.index[df["pl_name"] == name].tolist()[0]
     # print(ind)
@@ -67,6 +67,3 @@ flux_sorted = merged.sort_values(by="flux_ratio", ascending=False)
 # MCdf_sub = MCdf[MCdf[""]]
 print(len(merged["freq_ratio"][(merged["freq_ratio"] < 0.667) | (merged["freq_ratio"] > 1.5)]))
 print(len(merged["flux_ratio"][(merged["flux_ratio"] < 0.667) | (merged["flux_ratio"] > 1.5)]))
-
-
-

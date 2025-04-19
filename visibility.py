@@ -7,6 +7,7 @@ from astropy.coordinates import SkyCoord, EarthLocation, AltAz, get_sun, get_moo
 from astropy.time import Time
 import astropy.units as u
 import matplotlib.colors as mcolors
+import matplotlib.patheffects as path_effects
 from datetime import datetime
 # import smplotlib
 
@@ -160,12 +161,6 @@ final["Phi (mJy)"] = final["Phi (mJy)"].apply(two_format)
 
 final.to_csv("final-table.csv", index=False)
 
-# obs = [LOFAR_lat, NenuFAR_lat, MWA_lat, uGMRT_lat]
-# obs_names = ["LOFAR", "NenuFAR", "MWA", "uGMRT"]
-
-# obs = [NenuFAR_lat, LOFAR_lat, MWA_lat, uGMRT_lat]
-# obs_names = ["NenuFAR", "LOFAR", "MWA", "uGMRT"]
-
 obs = [LOFAR_lat, NenuFAR_lat, uGMRT_lat, MWA_lat]
 obs_names = ["LOFAR", "NenuFAR", "uGMRT", "MWA"]
 
@@ -173,12 +168,6 @@ ras = np.linspace(0, 24, 200)
 decs = np.linspace(-90, 90, 200)
 
 ras, decs = np.meshgrid(ras, decs)
-
-
-# plt.rcParams['figure.figsize'] = [9, 12]
-#
-# fig, axs = plt.subplots(len(obs), 2)
-# ax_0, ax_1 = axs[:, 0], axs[:, 1]
 
 results = []
 for i in range(len(obs)):
@@ -219,11 +208,28 @@ def visibility_plot(results, save=False):
             ax.plot(ra, dec, 'o', color='white', markersize=7, markeredgewidth=1, markeredgecolor='black')
             ax1.plot(ra, dec, 'o', color='white', markersize=7, markeredgewidth=1, markeredgecolor='black')
 
-            # Annotate the point with the name above the circular point in white color
-            # ax.annotate(name, (ra, dec), xytext=(0, 5), textcoords='offset points', ha='center', color='white')
-
-        texts = [ax.text(df1.ra[k], df1.dec[k], df1.Name[k], ha='center', va='center', color="white") for k in range(len(df1["Name"]))]
-        texts1 = [ax1.text(df1.ra[k], df1.dec[k], df1.Name[k], ha='center', va='center', color="white") for k in range(len(df1["Name"]))]
+        texts = [
+            ax.text(
+                df1.ra[k], df1.dec[k], df1.Name[k],
+                ha='center', va='center',
+                color='white',
+                path_effects=[
+                    path_effects.Stroke(linewidth=0.5, foreground='black'),
+                    path_effects.Normal()
+                ]
+            )
+            for k in range(len(df1["Name"]))
+        ]
+        texts1 = [
+            ax1.text(
+                df1.ra[k], df1.dec[k], df1.Name[k],
+                ha='center', va='center',
+                color="white",
+                path_effects=[
+                    path_effects.Stroke(linewidth=0.5, foreground='black'),
+                    path_effects.Normal()
+                ]
+            ) for k in range(len(df1["Name"]))]
 
         res1 = time_above_elevation(ras, decs, obs[i], 20)
         cp = ax1.imshow(res1, cmap=cmap1, origin="lower",
@@ -245,8 +251,6 @@ def visibility_plot(results, save=False):
 
     if save:
         fig.savefig("visibility.pdf")
-
-# time_above_elevation(3.1, 17.2, 39.5, 0)
 
 
 visibility_plot(results, save=True)

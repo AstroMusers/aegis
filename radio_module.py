@@ -428,3 +428,42 @@ def hist_noir(ax):
     ax.spines['bottom'].set_linewidth(1.5)
     ax.spines['left'].set_linewidth(1.5)
     ax.spines['right'].set_linewidth(1.5)
+
+
+k_b = 1.380649 * 10 ** (-29)  # Boltzmann Constant in kg km2 / s2 K
+m_p = 1.67262192 * 10 ** (-27)  # Proton mass in kg
+G = 8.87129 * 10**2  # Gravitational constant in AU (M_sun)-1 (km/s)2
+
+def non_decreasing(x):
+    dx = np.diff(x)
+    return np.all(dx >= 0)
+
+
+def v_at_1_au(t):
+    """
+    Taken from Lynch2018, citing Newkirk1980
+    :param t: Age of the star in yr
+    :return: 1 AU speed of the stellar wind in km/s
+    """
+    v0 = 3.971 * 10**3
+    tau = (2.56 * 10 ** (-2))
+    return v0 * (1 + t / tau) ** (-0.43)
+
+
+def sound_speed(T):
+    """
+    Parker Model
+    :param T: Coronal Temperature in K
+    :return: sound speed in km/s
+    """
+    return np.sqrt(k_b * T / m_p)
+
+
+def critical_radius(M, T):
+    """
+    Parker Model
+    :param M: Stellar mss in M_sun
+    :param T: Coronal Temperature in K
+    :return: critical radius in AU
+    """
+    return m_p * G * M / (4 * k_b * T)

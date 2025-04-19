@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import math
@@ -10,40 +11,8 @@ from matplotlib.colors import Normalize
 from matplotlib.cm import ScalarMappable
 from matplotlib.lines import Line2D
 from tqdm import tqdm
-
-
-def attempt_hershley():
-    from fontTools.ttLib import TTFont
-    from matplotlib.font_manager import FontProperties
-    from matplotlib import font_manager
-    from matplotlib import mathtext
-
-    font_path = '/Users/asafkaya/Documents/My Stuff/Programming/PythonFiles/Hershey_font_TTF-main/ttf/AVHersheyComplexHeavy.ttf'
-    font_manager.fontManager.addfont(font_path)
-    font_prop = font_manager.FontProperties(fname=font_path)
-    custom_font_name = font_prop.get_name()
-    plt.rcParams['font.family'] = custom_font_name
-    plt.rcParams['font.weight'] = "heavy"
-
-    def replace_minus_with_hyphen(s):
-        return s.replace('\u2212', '\u002D')
-
-    # Override the default text rendering to replace minus signs globally
-
-    class CustomScalarFormatter(mpl.ticker.ScalarFormatter):
-        def format_data(self, value):
-            formatted_value = super().format_data(value)
-            return replace_minus_with_hyphen(formatted_value)
-
-    # Apply the custom formatter to tick labels
-    def apply_custom_formatter(ax):
-        ax.xaxis.set_major_formatter(CustomScalarFormatter())
-        ax.yaxis.set_major_formatter(CustomScalarFormatter())
-
-    # Custom math text rendering
-    mpl.rcParams['text.usetex'] = True
-    mpl.rcParams['text.latex.preamble'] = r'\usepackage{textcomp}'
-
+from astropy.coordinates import SkyCoord
+import astropy.units as u
 
 plt.rcParams['figure.figsize'] = [10, 5]
 
@@ -79,8 +48,6 @@ NenuFreq = nenu_data["nenu_freqs"]
 NenuNoise = nenu_data["nenu_noise"] * 5
 
 # ----------------------------
-
-
 # uGMRT:
 d = {"Bands": ["Band 1", "Band 2", "Band 3", "Band 4"],
      "Frequencies": [[120, 250], [250, 500], [550, 850], [1050, 1450]],  # MHz
@@ -106,9 +73,9 @@ integration_time = 8 * 60  # minutes
 MWA["RMS Noise"] *= np.sqrt((2 / integration_time)) * 10 ** (-3) * 5
 
 # Retrieve Data
-filename = "NASA1407.csv"
+filename = "NASA1904.csv"
 df = pd.read_csv(filename, comment="#")
-windfile = "wind_info" + filename[4:-4] + ".txt"
+windfile = "new_wind_info" + filename[4:-4] + ".txt"
 
 headers_to_find = ["pl_name", "pl_orbper", "pl_orbsmax", "pl_radj", "pl_bmassj", "pl_bmassprov", "pl_dens", "st_rad",
                    "st_mass", "st_age", "sy_dist"]
@@ -153,7 +120,7 @@ x_maxerr = []
 x_minerr = []
 
 fig, axs = plt.subplots(2, 3, figsize=(10, 5))
-plt.rcParams['font.size'] = 10
+plt.rcParams['font.size'] = 12
 
 ax1 = axs[0, 0]
 ax2 = axs[0, 1]
@@ -174,13 +141,6 @@ ax4.hist(Ms, bins=bins[3], edgecolor="black", color="xkcd:ocean")
 ax5.hist(ts, bins=bins[4], edgecolor="black", color="xkcd:ocean")
 ax6.hist(ds, bins=bins[5], edgecolor="black", color="xkcd:ocean")
 
-# hist_noir(ax1)
-# hist_noir(ax2)
-# hist_noir(ax3)
-# hist_noir(ax4)
-# hist_noir(ax5)
-# hist_noir(ax6)
-
 xlabels = ["Orbital Period (Days)", "Semi-major Axis (AU)", f"Planet Mass ($M_j$)", "Star Mass ($M_\odot$)",
            "Star Age (Gyr)", "Distance (pc)"]
 for i in range(len(axes)):
@@ -188,18 +148,17 @@ for i in range(len(axes)):
     axes[i].set_xscale("log")
     axes[i].set_yscale("log")
 
-fig.text(0.04, 0.30, 'Bin Count', va='center', rotation='vertical', fontsize=12)
-fig.text(0.04, 0.75, 'Bin Count', va='center', rotation='vertical', fontsize=12)
+fig.text(0, 0.30, 'Bin Count', va='center', rotation='vertical', fontsize=12)
+fig.text(0, 0.75, 'Bin Count', va='center', rotation='vertical', fontsize=12)
 
 fig.tight_layout()
 
 fig.supylabel(' \n', va='center', rotation='vertical', fontsize=11)
-# fig.suptitle('Distribution of Initial Parameters for the Exoplanet Sample', fontsize=13)
-
-
+fig.savefig("dist.pdf")
 plt.show()
+plt.close(fig)
 
-# plt.rcParams['font.size'] = 9
+plt.rcParams['font.size'] = 10
 
 detectables_mag = []
 detectables_kin = []
@@ -319,7 +278,6 @@ for i, j in tqdm(df.iterrows(), total=len(df)):  # The loop that reads exoplanet
         Mdot = mass_loss(t, flux_exponent, loss_exponent)
 
         sigma = 1  # Jupiter conductivity
-        # d *= 3.26156
 
         p_c = density(p)
         w_p = rotation(T, a, L, M, R)
@@ -332,8 +290,6 @@ for i, j in tqdm(df.iterrows(), total=len(df)):  # The loop that reads exoplanet
             continue
 
         D = d * 9.46 * 10 ** 15  # conversion to meters
-
-        # br = B_
 
         B_perp = imf_perp_complete(M_s, a, Rs, t, v_wind, b0_exponent)
         v_k = keplerian(M_s, a)
@@ -381,7 +337,6 @@ for i, j in tqdm(df.iterrows(), total=len(df)):  # The loop that reads exoplanet
     if flag:
         continue
 
-    # print(f"{B_perp=}, {B_star=}, {n=}, {R_m=}. {Mdot=}, {P_in}, {P_rad}")
     freqs = np.array(freqs)
     n_p = np.percentile(n_ps, 50)
     nu = np.percentile(freqs, 50)
@@ -433,8 +388,6 @@ for i, j in tqdm(df.iterrows(), total=len(df)):  # The loop that reads exoplanet
     observable_kin = False
     observable_both = False
     observable_flag = False
-    # if 30 <= nu <= 75:
-    # bw = 4.66  # LOFAR bandwidth of 4.66 MHz
 
     if x_err_avg < 0.7 and nu > 10:
         frac_lim = 0.3
@@ -467,9 +420,6 @@ for i, j in tqdm(df.iterrows(), total=len(df)):  # The loop that reads exoplanet
                     else:
                         insiders.add(obs_both)
                 observable_flag = observable_both or observable_mag or observable_kin
-
-        # if 120 <= nu <= 180:
-        # bw = 4.66  # LOFAR bandwidth of 4.66 MHz
 
         for m in range(4, 6):
             x = freqs[(Freq_2[m] <= freqs) & (freqs <= Freq_2[m + 1])]
@@ -538,7 +488,6 @@ for i, j in tqdm(df.iterrows(), total=len(df)):  # The loop that reads exoplanet
                 outliers.add(obs_both)
             # observable_flag = observable_both or observable_mag or observable_kin
 
-        # if 72.30 <= nu <= 231.04:
         for m in range(5):
             x = freqs[(MWA["Frequencies"][m][0] <= freqs) & (freqs <= MWA["Frequencies"][m][1])]
             frac = len(x) / len(freqs)
@@ -644,9 +593,7 @@ for i, j in tqdm(df.iterrows(), total=len(df)):  # The loop that reads exoplanet
         lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
         fig.legend(lines, labels, loc="upper right", bbox_to_anchor=(1, 1), ncol=int(len(lines_labels) / 2),
                    frameon=True, shadow=True)
-        plt.savefig(f"DistributionPlots/{EXO.name}.pdf")
-        # plt.show()
-        # plt.close()
+        plt.savefig(f"Distribution Plots/{EXO.name}.pdf")
 
 real_outliers = set(outliers) - set(insiders)
 lofar_obs, nenufar_obs, mwa_obs, ugmrt_obs = np.array(lofar_obs), np.array(nenufar_obs), np.array(mwa_obs), np.array(
@@ -761,27 +708,52 @@ for i in range(len(intensities)):
     table = list(zip(*l2))
 
     table = sorted(table, key=lambda x: x[0].lower())
-    file_name = f"old_result_tables/{file_names[0]}"
+    file_name = f"Old Result Tables/{file_names[0]}"
     with open(file_name, 'w') as f:
         f.write(tabulate(table))
         f.close()
 
     table = sorted(table, key=lambda x: x[1])
-    file_name = f"old_result_tables/{file_names[1]}"
+    file_name = f"Old Result Tables/{file_names[1]}"
     with open(file_name, 'w') as f:
         f.write(tabulate(table))
         f.close()
 
     table = sorted(table, key=lambda x: x[2], reverse=True)
-    file_name = f"old_result_tables/{file_names[2]}"
+    file_name = f"Old Result Tables/{file_names[2]}"
     with open(file_name, 'w') as f:
         f.write(tabulate(table))
         f.close()
 
 final_df = df1[["Names", "x", "y_both", "x_err_min", "x_err_max", "y_err_min", "y_err_max"]]
+# Step 1: Merge the two dataframes on the name column
+merged = final_df.merge(df, left_on='Names', right_on='pl_name', how='left')
+
+# Step 2: Define the formatting function
+def format_coords(row):
+    coord = SkyCoord(ra=row['ra']*u.deg, dec=row['dec']*u.deg)
+    ra_str = coord.ra.to_string(unit=u.hour, sep=':', precision=0, pad=True)
+    dec_str = coord.dec.to_string(unit=u.deg, sep=':', precision=0, alwayssign=True, pad=True)
+    return pd.Series({'RA_formatted': ra_str, 'DEC_formatted': dec_str})
+
+# Step 3: Apply formatting to merged dataframe
+formatted_coords = merged.apply(format_coords, axis=1)
+
+# Step 4: Add formatted columns to final_df
+final_df[['RA', 'DEC']] = formatted_coords
 final_df.columns = ["Name", "Max. Frequency [MHz]", "Max. Flux Density [Jy]", "Max. Frequency Lower Uncertainty [MHz]",
                     "Max. Frequency Upper Uncertainty [MHz]", "Max. Flux Density Lower Uncertainty [Jy]",
-                    "Max. Flux Density Upper Uncertainty [Jy]"]
+                    "Max. Flux Density Upper Uncertainty [Jy]", "RA (J2000)", "DEC (J2000)"]
+# List of columns, moving "RA (J2000)" and "DEC (J2000)" right after "Name"
+cols = final_df.columns.tolist()
+cols.remove("RA (J2000)")
+cols.remove("DEC (J2000)")
+
+# Insert coordinate columns after "Name"
+name_index = cols.index("Name")
+cols[name_index+1:name_index+1] = ["RA (J2000)", "DEC (J2000)"]
+final_df = final_df[cols]
+
 final_df = final_df.sort_values(by="Max. Flux Density [Jy]", ascending=False)
 
 final_df.to_csv("Output Tables/all.csv", index=False)

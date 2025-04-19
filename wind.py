@@ -8,7 +8,7 @@ import smplotlib
 
 
 # Read CSV using pandas
-filename = "NASA1407.csv"
+filename = "NASA1904.csv"
 data = pd.read_csv(filename, comment="#")
 
 # Extract columns into separate arrays
@@ -31,42 +31,6 @@ k_b = 1.380649 * 10 ** (-29)  # Boltzmann Constant in kg km2 / s2 K
 m_p = 1.67262192 * 10 ** (-27)  # Proton mass in kg
 G = 8.87129 * 10**2  # Gravitational constant in AU (M_sun)-1 (km/s)2
 
-
-def non_decreasing(x):
-    dx = np.diff(x)
-    return np.all(dx >= 0)
-
-
-def v_at_1_au(t):
-    """
-    Taken from Lynch2018, citing Newkirk1980
-    :param t: Age of the star in yr
-    :return: 1 AU speed of the stellar wind in km/s
-    """
-    v0 = 3.971 * 10**3
-    tau = (2.56 * 10 ** (-2))
-    return v0 * (1 + t / tau) ** (-0.43)
-
-
-def sound_speed(T):
-    """
-    Parker Model
-    :param T: Coronal Temperature in K
-    :return: sound speed in km/s
-    """
-    return np.sqrt(k_b * T / m_p)
-
-
-def critical_radius(M, T):
-    """
-    Parker Model
-    :param M: Stellar mss in M_sun
-    :param T: Coronal Temperature in K
-    :return: critical radius in AU
-    """
-    return m_p * G * M / (4 * k_b * T)
-
-
 targets = np.vectorize(v_at_1_au)(ages)
 
 temperatures = []
@@ -88,6 +52,7 @@ for i in range(len(ages)):
 
 radial_ranges = []
 wind_speeds = []
+speed_functions = []
 
 for j in range(len(ages)):
     M = masses[j]
@@ -97,34 +62,38 @@ for j in range(len(ages)):
 
     r_c = critical_radius(M, T)
 
-    def fn(v, r):
+    def fn(v, r, T, M):
         v = 10**v
         # r = a
         return (v**2 * m_p / (k_b * T)) - np.log((v**2 * m_p / (k_b * T))) - 4 * np.log((4 * k_b * T * r) / (m_p * G * M)) - 4 * (m_p * G * M) / (4 * k_b * T * r) + 3
 
     cond = True
 
-    def v_for_r(r):
+    def v_for_r(r, T=T, M=M):
 
         fast_bois_1512 = [792]
         fast_bois_1912 = [1940, 3643]
         fast_bois_3112 = [1164]
         fast_bois_2903 = [13, 139, 243, 440, 1350, 1356]
         fast_bois_1407 = [249, 250]
+        fast_bois_1904 = [264, 250]
+
         if r < r_c:
             guess = 0
         else:
             guess = 3
-            if j in fast_bois_1407:
+            if j in fast_bois_1904:
                 guess = 3.5
 
         guess = np.array([guess])
 
         def func(v):
-            return fn(v, r=r)
+            return fn(v, r=r, T=T, M=M)
 
         soln = fsolve(func, guess)
         return 10**soln[0]
+
+    speed_functions.append(v_for_r)
 
     # r_values = np.linspace(0.1*r_c, 200*r_c, 100)
     r_values = np.logspace(np.log10(0.1*r_c), np.log10(200*r_c), 100)
@@ -178,13 +147,15 @@ def profile_plot(dfs, save=False):
     fig.legend(lines, labels, loc="upper center", bbox_to_anchor=(0.5, 1), ncol=5, frameon=True, shadow=True)
     plt.subplots_adjust(top=0.85)  # Increase top margin to make space for the legend
     plt.tight_layout()  # Adjust rect parameter to leave space for the legend
-    plt.show()
 
     if save:
         plt.savefig("winds.pdf")
 
+    plt.show()
 
-profile_plot(dfs)
+
+
+# profile_plot(dfs)
 # def profile_plot_single(rs, ws, save=False):
 #     plt.rcParams['figure.figsize'] = [5, 4]
 #     plt.rcParams["font.size"] = 13
@@ -219,7 +190,9 @@ profile_plot(dfs)
 
 
 
-# profile_plot(radial_ranges, wind_speeds)
+# profile_plot(radial_ranges, wind_speeds, save=True)
+profile_plot(dfs, save=True)
+
 
 
 problem = False
@@ -234,7 +207,8 @@ if not problem:
     speeds_at_distance = []
     for i in range(len(wind_speeds)):
         a = semis[i]
-        v = v_for_r(a)
+        speed_function = speed_functions[i]
+        v = speed_function(a)
         speeds_at_distance.append(v)
 
 temperatures = np.round(np.array(temperatures))
@@ -243,7 +217,7 @@ results = np.vstack((names, temperatures, speeds_at_distance))
 results = results.T
 
 column_headers = ["Name", "Corona Temp. (K)", "Wind Speed (km/s)"]
-windfile = "wind_info" + filename[4:-4] + ".txt"
+windfile = "new_wind_info" + filename[4:-4] + ".txt"
 with open(windfile, mode="w") as file:
     writer = csv.writer(file, delimiter="\t")
     writer.writerow(column_headers)

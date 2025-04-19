@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import smplotlib
 
-filename = "NASA1407.csv"
+filename = "NASA1904.csv"
 df = pd.read_csv(filename, comment="#")
 df2 = pd.read_csv("Output Tables/all.csv")
 reachers = df[df["pl_name"].isin(df2["Name"])]
@@ -45,7 +45,6 @@ for i, mask in enumerate(masks):
     ax1, ax2 = axs[i][0], axs[i][1]
     x_masked = x[mask]
     y_masked = y[mask]
-    # colors_masked = colors[mask]
 
     # Scatter plot on the left
     for color in [color1, color2]:
@@ -54,15 +53,15 @@ for i, mask in enumerate(masks):
 
     ax1.set_xscale('log')
     ax1.set_ylabel(groups[i])
-    # ax1.set_ylabel(r'Radius $[R_\oplus]$')
     ax1.tick_params(which="major", length=12)
     ax1.tick_params(which="minor", length=6)
     ax1.grid("on", alpha=0.2)
-    # fig.supylabel(r"Radius $[R_\oplus]$")
 
     # Histogram on the right
     bins = np.linspace(0, np.max(y_masked) // 1 + 1, 25)
-    # bins = np.linspace(0, 7.5, 35)
+    # bins = np.linspace(0, np.max(y_masked) // 1 + 1, 26)
+    bins = np.linspace(0, 7, 25)
+    # bins = np.arange(0, 7.25, 0.25)
     label_long = r"Longer $T_\mathrm{orb}$"
     label_short = r"Shorter $T_\mathrm{orb}$"
     ax2.hist(y_masked[colors_masked == color1], bins=bins, orientation='horizontal', color=color1, alpha=0.8, edgecolor=color1, linewidth=1, histtype="step", hatch="//////", label=label_long)
@@ -74,14 +73,47 @@ for i, mask in enumerate(masks):
     if i == len(masks)-1:
         ax1.set_xlabel(r'$B_\mathrm{surf}$ [G]')
         ax2.set_xlabel('N(R)')
-    # ax2.set_ylabel('Radius $[R_\oplus]$')
-    # ax2.set_ylim(0, 7.5)
-    # ax2.yaxis.set_label_position("right")
     ax2.yaxis.tick_right()
 
     plt.tight_layout()
     plt.subplots_adjust(hspace=0.05, wspace=0.05)
     if i == 1:
         ax2.legend(loc=1, fontsize=12)
+plt.savefig("valleys.pdf")
+plt.show()
+
+
+# Begin single valley plot that does not go into the paper
+
+colors = np.where(pers > np.median(pers), color1, color2)
+plt.rcParams['font.size'] = 19
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7, 5), gridspec_kw={'width_ratios': [1, 1]}, sharey=True)
+# Scatter plot on the left
+for color in [color1, color2]:
+    idx = np.where(colors == color)
+    ax1.scatter(x[idx], radii[idx], marker="o", linewidth=0.7, facecolors="none", edgecolors=color)
+
+ax1.set_xscale('log')
+ax1.set_xlabel(r'$B_\mathrm{surf}$ [G]')
+ax1.set_ylabel(r'Radius $[R_\oplus]$')
+ax1.tick_params(which="major", length=12)
+ax1.tick_params(which="minor", length=6)
+ax1.grid("on", alpha=0.2)
+
+# Histogram on the right
+bins = np.linspace(0, 7, 25)
+ax2.hist(radii[colors == color1], bins=bins, orientation='horizontal', color=color1, alpha=0.8, edgecolor=color1, linewidth=1, histtype="step", hatch="//////", label=r"Longer $T_\mathrm{orb}$")
+ax2.hist(radii[colors == color2], bins=bins, orientation='horizontal', color=color2, alpha=0.8, edgecolor=color2, linewidth=1, histtype="step", hatch="\\\\\\\\\\\\", label=r"Shorter $T_\mathrm{orb}$")
+ax2.hist(radii, bins=bins, orientation='horizontal', color='k', edgecolor='black', linewidth=2, histtype="step")
+ax2.tick_params(which="major", length=15)
+ax2.tick_params(which="minor", length=8)
+
+ax2.set_xlabel('N(R)')
+ax2.yaxis.tick_right()
+
+plt.tight_layout()
+plt.legend(fontsize=12)
+plt.savefig("single_valley.pdf")
 plt.show()
 

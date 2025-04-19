@@ -277,13 +277,6 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
                             ecolor="black",
                             elinewidth=0.5,
                             capsize=0)
-    # errorbar = ax0.errorbar(df.x, df.y,
-    #                  yerr=y_err_clean,
-    #                  xerr=x_err_clean,
-    #                  fmt="None",
-    #                  ecolor="black",
-    #                  elinewidth=0.5,
-    #                  capsize=0)
 
     x_lba = []
     y_lba = []
@@ -376,7 +369,7 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
             texts = [plt.text(df.x[i], df.y[i], lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab))
                      if lab[i] != "" and is_within_limits(df.x[i], df.y[i], xlim, ylim)]
         else:
-            texts = [ax0.text(df.x[i]*1.13, df.y[i]*1.10, lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab))
+            texts = [ax0.text(df.x[i], df.y[i], lab[i], ha='center', va='center', fontsize=8) for i in range(len(lab))
                      if lab[i] != ""]
             ax0.xaxis.set_minor_formatter(ticker.FuncFormatter(minor_tick_format))
             ax0.xaxis.set_major_formatter(ticker.LogFormatter())
@@ -389,6 +382,8 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
         # adjust_text(texts, arrowprops=dict(arrowstyle="-", color="k", lw=0.5),
         #             force_points=(3, 3), force_text=(2, 2), force_objects=(1.5, 1.5),
         #             expand_points=(1.15, 1.15), expand_objects=(1.5, 1.5), expand_align=(1.2, 1.2), precision=20)
+
+        adjust_text(texts, arrowprops=dict(arrowstyle="-", color="k", lw=0.5))
 
     else:
         ax0.set_xlim(left=0.05)

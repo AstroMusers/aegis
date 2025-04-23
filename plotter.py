@@ -359,7 +359,7 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
         if fix_lim or strict:
             det = det[~det["Name"].isin(real_outliers)]
         ax0.set_xlim(left=min(det["Freq"]) / 1.25, right=max(det["Freq"]) * 1.25)
-        ax0.set_ylim(bottom=min(det["Flux"]) / 1.75, top=max(det["Flux"]) * 1.75)
+        ax0.set_ylim(bottom=min(det["Flux"]) / 1.8, top=max(det["Flux"]) * 3)
         xlim = ax0.get_xlim()
         ylim = ax0.get_ylim()
         if strict:
@@ -395,7 +395,7 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
         #     if txt:
         #         ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(2, 2), textcoords="offset pixels", fontsize=7)
         center_x = 200
-        center_y = 3
+        center_y = 2
         arrowprops = dict(arrowstyle='<->,  head_length=0.1', color='k', lw=2)
         ax0.annotate("", xy=(center_x, center_y * avg_err[2]), xytext=(center_x, center_y * avg_err[3]),
                      arrowprops=arrowprops)

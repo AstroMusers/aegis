@@ -9,7 +9,8 @@ from various research papers and books.
 The most essential prior file that needs to exist in the same directory with the
 python scripts is a .csv file containing data from NASA Exoplanet Archive with
 the required parameters. The name of this file is "NASA[sample].csv", where
-[sample] is usually the date (DDMM) the data was downloaded.
+[sample] is usually the date (DDMM) the data was downloaded. The code is
+written entirely in Python, and the required packages are listed in "requirements.txt".
 
 ## Python Scripts 
 

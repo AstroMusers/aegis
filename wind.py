@@ -8,7 +8,7 @@ import smplotlib
 
 
 # Read CSV using pandas
-filename = "NASA1904.csv"
+filename = "NASA3004.csv"
 data = pd.read_csv(filename, comment="#")
 
 # Extract columns into separate arrays
@@ -16,7 +16,7 @@ names = data['pl_name'].to_numpy()
 semis = data['pl_orbsmax'].to_numpy()
 masses = data['st_mass'].to_numpy()
 ages = data['st_age'].to_numpy()
-spects = data["st_spectype"].to_numpy()
+spects = data["st_spectype"].fillna("NA").to_numpy()
 specs = np.array([s[0] for s in spects])
 
 
@@ -77,12 +77,13 @@ for j in range(len(ages)):
         fast_bois_2903 = [13, 139, 243, 440, 1350, 1356]
         fast_bois_1407 = [249, 250]
         fast_bois_1904 = [264, 250]
+        fast_bois_3004 = [382, 1362]
 
         if r < r_c:
             guess = 0
         else:
             guess = 3
-            if j in fast_bois_1904:
+            if j in fast_bois_3004:
                 guess = 3.5
 
         guess = np.array([guess])
@@ -110,6 +111,8 @@ data1 = {"names": names,
 df = pd.DataFrame(data1)
 df["star_names"] = df["names"].str[:-1]
 df = df.drop_duplicates(subset=["star_names"])
+df = df[df["specs"] != "N"]
+df = df[df["specs"] != "A"]
 
 grouped = df.groupby("specs")
 dfs = {category: group.reset_index(drop=True) for category, group in grouped}

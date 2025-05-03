@@ -77,7 +77,7 @@ from "exoplanet_predictions.py" are written
 out in two manners. First, the potentially visible candidates determined from
 the magnetic and kinetic RBLs, and the candidates determined from an integration
 of both RBLs are separated, sorted by their names, frequencies, and flux densities
-separately into nine .txt files in "old_result_tables". 
+separately into nine .txt files in folder "Old Result Tables". 
 Secondly, only the "both" RBL methods results for all exoplanets are 
 written out to csv files with the uncertainties included in "Output Tables".
 In this case, the results for all exoplanets can be found in "all.csv", while

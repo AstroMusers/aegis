@@ -73,7 +73,7 @@ integration_time = 8 * 60  # minutes
 MWA["RMS Noise"] *= np.sqrt((2 / integration_time)) * 10 ** (-3) * 5
 
 # Retrieve Data
-filename = "NASA1904.csv"
+filename = "NASA3004.csv"
 df = pd.read_csv(filename, comment="#")
 windfile = "new_wind_info" + filename[4:-4] + ".txt"
 
@@ -132,7 +132,7 @@ ax6 = axs[1, 2]
 axes = [ax1, ax2, ax3, ax4, ax5, ax6]
 
 bins = [np.logspace(-1, 5, 13), np.logspace(-2.5, 1.5, 13), np.logspace(-3, 1.5, 9),
-        np.logspace(-1, 1, 9), np.logspace(-2, 1.5, 15), np.logspace(0.5, 3.5, 10)]
+        np.logspace(-1, 1, 9), np.logspace(-2, 1.5, 15), np.logspace(0.5, 2.5, 10)]
 
 ax1.hist(orbs, bins=bins[0], edgecolor="black", color="xkcd:ocean")
 ax2.hist(smas, bins=bins[1], edgecolor="black", color="xkcd:ocean")

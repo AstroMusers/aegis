@@ -1,0 +1,6 @@
+Total: 1579
+Can reach: 1111
+Can reach (%): 70.4
+Can penetrate ionosphere:  532
+Can penetrate ionosphere in can reach (%): 47.9
+Not close-in but reach: 88

@@ -4,7 +4,7 @@ from radio_module import *
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 
-filename = "NASA1904.csv"
+filename = "NASA3004.csv"
 df = pd.read_csv(filename, comment="#")
 
 # det, freq, flux = np.genfromtxt("detectables_both.txt", dtype=str, delimiter="  ", skip_header=1, skip_footer=1, usecols=(0,1,2), unpack=True)

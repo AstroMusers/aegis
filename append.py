@@ -2,7 +2,7 @@ import pandas as pd
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 
-filename = "NASA1904.csv"
+filename = "NASA3004.csv"
 df = pd.read_csv(filename, comment="#")
 
 df2 = pd.read_csv("Output Tables/all.csv")

@@ -44,4 +44,4 @@ Known problems of the project are summarized in the markdown file
 
 # Acknowledgements
 
-The development of DarkInferno has been supported by the McDonnell Center for Space Sciences at Washington University in St. Louis.
+The development of aegis has been supported by the McDonnell Center for Space Sciences at Washington University in St. Louis.

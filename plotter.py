@@ -1,20 +1,29 @@
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import math
-from adjustText import adjust_text
+try:
+    from adjustText import adjust_text
+except ImportError:
+    adjust_text = None
 from radio_module import *
 from rotation_script import *
 from copy import deepcopy
-import smplotlib
+try:
+    import smplotlib
+except ImportError:
+    smplotlib = None
 from matplotlib.colors import Normalize
 from matplotlib.cm import ScalarMappable
 from matplotlib.lines import Line2D
 import matplotlib.ticker as ticker
 import json
 
+DATA_DIR = Path(__file__).parent
+
 # LOFAR:
 lofar = pd.read_csv(
-    "sensitivities.csv")  # Obtained from van Haarlem et al. (2017), 8h integration time, 4.66MHz effective bandwidth
+    DATA_DIR / "sensitivities.csv")  # Obtained from van Haarlem et al. (2017), 8h integration time, 4.66MHz effective bandwidth
 lofar.columns = lofar.iloc[0]
 lofar = lofar[1:]
 lofar = lofar.drop([1, 2, 3, 11, 12, 13])
@@ -37,7 +46,7 @@ Freq_2 = Freq[4:]
 NenuNoise = np.array([130.0, 9.0])  # MJy (10 MHz, 1h, website)
 NenuFreq = np.array([15.0, 85.0])  # MHz (website)
 NenuNoise *= np.sqrt(1 / 8) * 10 ** (-3) * 5  # 5 sigma sensitivity in Jy
-nenu_data = np.load("nenufar.npz")
+nenu_data = np.load(DATA_DIR / "nenufar.npz")
 NenuFreq = nenu_data["nenu_freqs"]
 NenuNoise = nenu_data["nenu_noise"] * 5
 
@@ -69,9 +78,9 @@ MWA["RMS Noise"] *= np.sqrt((2 / integration_time)) * 10 ** (-3) * 5
 
 IsBurst = 1
 
-df = pd.read_csv("df1.csv")
+df = pd.read_csv(DATA_DIR / "df1.csv")
 df.fillna('', inplace=True)
-all = np.load("all.npz", allow_pickle=True)
+all = np.load(DATA_DIR / "all.npz", allow_pickle=True)
 
 y_both_maxerr, y_both_minerr, y_kin_minerr, y_kin_maxerr, y_mag_minerr, y_mag_maxerr = all["y_both_maxerr"], all["y_both_minerr"], all["y_kin_minerr"], all["y_kin_maxerr"], all["y_mag_minerr"], all["y_mag_maxerr"]
 x_minerr, x_maxerr = all["x_minerr"], all["x_maxerr"]
@@ -236,10 +245,11 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
     else:
         size = df.d
 
-    if not zoom:
-        smplotlib.set_style(edgecolor='face')
-    else:
-        smplotlib.set_style(edgecolor='k')
+    if smplotlib is not None:
+        if not zoom:
+            smplotlib.set_style(edgecolor='face')
+        else:
+            smplotlib.set_style(edgecolor='k')
 
     outliers = df[df['Names'].isin(real_outliers)]
     non_outliers = df[~df['Names'].isin(real_outliers)]
@@ -383,7 +393,8 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
         #             force_points=(3, 3), force_text=(2, 2), force_objects=(1.5, 1.5),
         #             expand_points=(1.15, 1.15), expand_objects=(1.5, 1.5), expand_align=(1.2, 1.2), precision=20)
 
-        adjust_text(texts, arrowprops=dict(arrowstyle="-", color="k", lw=0.5))
+        if adjust_text is not None:
+            adjust_text(texts, arrowprops=dict(arrowstyle="-", color="k", lw=0.5))
 
     else:
         ax0.set_xlim(left=0.05)
@@ -432,16 +443,18 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
 
     if save:
         if not zoom:
-            plt.savefig("scatter.pdf")
+            plt.savefig(DATA_DIR / "scatter.pdf")
         elif not strict:
-            plt.savefig("zoom.pdf")
+            plt.savefig(DATA_DIR / "zoom.pdf")
         elif strict:
-            plt.savefig("zoom_inside.pdf")
+            plt.savefig(DATA_DIR / "zoom_inside.pdf")
         elif fix_lim and not strict:
-            plt.savefig("zoom_fixed.pdf")
+            plt.savefig(DATA_DIR / "zoom_fixed.pdf")
 
     plt.show()
 
-scatter_plot(df, "both", y_err, x_err, df_det, average_errors, save=True)
-scatter_plot(df, "both", y_err, x_err, df_det, average_errors, save=True, zoom=True, others=10)
-outcome_dist_hists(intensities, "both", magnetic_fields)
+
+if __name__ == "__main__":
+    scatter_plot(df, "both", y_err, x_err, df_det, average_errors, save=True)
+    scatter_plot(df, "both", y_err, x_err, df_det, average_errors, save=True, zoom=True, others=10)
+    outcome_dist_hists(intensities, "both", magnetic_fields)

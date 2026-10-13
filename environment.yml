@@ -111,4 +111,5 @@ dependencies:
   - zstd=1.5.6=hfb09047_0
   - pip:
       - smplotlib==0.0.9
+      - pcat @ git+https://github.com/tansudaylan/pcat.git
 prefix: /opt/miniconda3/envs/exoradio

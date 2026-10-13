@@ -1,12 +1,19 @@
+from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import math
-from tabulate import tabulate
-from adjustText import adjust_text
+try:
+    from tabulate import tabulate
+except ImportError:
+    tabulate = None
+try:
+    from adjustText import adjust_text
+except ImportError:
+    adjust_text = None
 from radio_module import *
 from rotation_script import *
-import smplotlib
+from coordinate_formatting import format_coords, two_format, three_format
 from matplotlib.colors import Normalize
 from matplotlib.cm import ScalarMappable
 from matplotlib.lines import Line2D
@@ -14,13 +21,14 @@ from tqdm import tqdm
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 
+DATA_DIR = Path(__file__).parent
 plt.rcParams['figure.figsize'] = [10, 5]
 
 rng = np.random.default_rng()
 
 # LOFAR:
 lofar = pd.read_csv(
-    "sensitivities.csv")  # Obtained from van Haarlem et al. (2017), 8h integration time, 4.66MHz effective bandwidth
+    DATA_DIR / "sensitivities.csv")  # Obtained from van Haarlem et al. (2017), 8h integration time, 4.66MHz effective bandwidth
 lofar.columns = lofar.iloc[0]
 lofar = lofar[1:]
 lofar = lofar.drop([1, 2, 3, 11, 12, 13])
@@ -43,7 +51,7 @@ Freq_2 = Freq[4:]
 NenuNoise = np.array([130.0, 9.0])  # MJy (10 MHz, 1h, website)
 NenuFreq = np.array([15.0, 85.0])  # MHz (website)
 NenuNoise *= np.sqrt(1 / 8) * 10 ** (-3) * 5  # 5 sigma sensitivity in Jy
-nenu_data = np.load("nenufar.npz")
+nenu_data = np.load(DATA_DIR / "nenufar.npz")
 NenuFreq = nenu_data["nenu_freqs"]
 NenuNoise = nenu_data["nenu_noise"] * 5
 
@@ -73,9 +81,9 @@ integration_time = 8 * 60  # minutes
 MWA["RMS Noise"] *= np.sqrt((2 / integration_time)) * 10 ** (-3) * 5
 
 # Retrieve Data
-filename = "NASA3004.csv"
+filename = str(DATA_DIR / "NASA3004.csv")
 df = pd.read_csv(filename, comment="#")
-windfile = "new_wind_info" + filename[4:-4] + ".txt"
+windfile = str(DATA_DIR / ("new_wind_info" + Path(filename).stem[4:] + ".txt"))
 
 headers_to_find = ["pl_name", "pl_orbper", "pl_orbsmax", "pl_radj", "pl_bmassj", "pl_bmassprov", "pl_dens", "st_rad",
                    "st_mass", "st_age", "sy_dist"]
@@ -632,7 +640,7 @@ y_low_avg = np.exp(np.mean(np.log(np.array(y_low))))
 y_up_avg = np.exp(np.mean(np.log(np.array(y_up))))
 average_errors = [x_low_avg, x_up_avg, y_low_avg, y_up_avg]
 
-np.savez("all.npz", y_mag_minerr=y_mag_minerr, y_mag_maxerr=y_mag_maxerr,
+np.savez(DATA_DIR / "all.npz", y_mag_minerr=y_mag_minerr, y_mag_maxerr=y_mag_maxerr,
          y_kin_maxerr=y_mag_maxerr, y_kin_minerr=y_mag_minerr, y_both_minerr=y_both_minerr,
          y_both_maxerr=y_both_maxerr, x_minerr=x_minerr, x_maxerr=x_maxerr, average_errors=np.array(average_errors),
          detectables_both=np.array(detectables_both), intensities=np.array(intensities),
@@ -655,7 +663,7 @@ df1 = pd.DataFrame({"Names": names,
                     "x_err_max": x_maxerr})
 
 df1['Color'] = df1['Names'].apply(lambda x: 'gray' if x in real_outliers else 'black').astype(str)
-df1.to_csv("df1.csv", index=False)
+df1.to_csv(DATA_DIR / "df1.csv", index=False)
 
 det_data = [[exo.name, exo.freq, exo.intensity_both] for exo in detectables_both]
 df_det = pd.DataFrame(det_data[0:], columns=["Name", "Freq", "Flux"])
@@ -690,56 +698,37 @@ for i in range(len(intensities)):
 
     detectable_data["Flux"] *= 10 ** 3
 
-
-    def freq_format(x):
-        return '{:.2f}'.format(x)
-
-
-    def flux_format(x):
-        return '{:.3f}'.format(x)
-
-
-    detectable_data["Freq"] = detectable_data["Freq"].map(freq_format)
-    detectable_data["Flux"] = detectable_data["Flux"].map(flux_format)
+    detectable_data["Freq"] = detectable_data["Freq"].map(two_format)
+    detectable_data["Flux"] = detectable_data["Flux"].map(three_format)
     detectable_data = detectable_data.sort_values(by="Name")
     detectable_data.columns = ["Name", "Freq(MHz)", "Flux(mJy)"]
-    detectable_data.to_csv(file_names[3], index=False)
+    detectable_data.to_csv(DATA_DIR / file_names[3], index=False)
 
     table = list(zip(*l2))
 
     table = sorted(table, key=lambda x: x[0].lower())
-    file_name = f"Old Result Tables/{file_names[0]}"
+    file_name = DATA_DIR / f"Old Result Tables/{file_names[0]}"
     with open(file_name, 'w') as f:
-        f.write(tabulate(table))
-        f.close()
+        f.write(tabulate(table) if tabulate is not None else str(table))
 
     table = sorted(table, key=lambda x: x[1])
-    file_name = f"Old Result Tables/{file_names[1]}"
+    file_name = DATA_DIR / f"Old Result Tables/{file_names[1]}"
     with open(file_name, 'w') as f:
-        f.write(tabulate(table))
-        f.close()
+        f.write(tabulate(table) if tabulate is not None else str(table))
 
     table = sorted(table, key=lambda x: x[2], reverse=True)
-    file_name = f"Old Result Tables/{file_names[2]}"
+    file_name = DATA_DIR / f"Old Result Tables/{file_names[2]}"
     with open(file_name, 'w') as f:
-        f.write(tabulate(table))
-        f.close()
+        f.write(tabulate(table) if tabulate is not None else str(table))
 
 final_df = df1[["Names", "x", "y_both", "x_err_min", "x_err_max", "y_err_min", "y_err_max"]]
 # Step 1: Merge the two dataframes on the name column
 merged = final_df.merge(df, left_on='Names', right_on='pl_name', how='left')
 
-# Step 2: Define the formatting function
-def format_coords(row):
-    coord = SkyCoord(ra=row['ra']*u.deg, dec=row['dec']*u.deg)
-    ra_str = coord.ra.to_string(unit=u.hour, sep=':', precision=0, pad=True)
-    dec_str = coord.dec.to_string(unit=u.deg, sep=':', precision=0, alwayssign=True, pad=True)
-    return pd.Series({'RA_formatted': ra_str, 'DEC_formatted': dec_str})
-
-# Step 3: Apply formatting to merged dataframe
+# Step 2: Apply formatting to merged dataframe
 formatted_coords = merged.apply(format_coords, axis=1)
 
-# Step 4: Add formatted columns to final_df
+# Step 3: Add formatted columns to final_df
 final_df[['RA', 'DEC']] = formatted_coords
 final_df.columns = ["Name", "Max. Frequency [MHz]", "Max. Flux Density [Jy]", "Max. Frequency Lower Uncertainty [MHz]",
                     "Max. Frequency Upper Uncertainty [MHz]", "Max. Flux Density Lower Uncertainty [Jy]",
@@ -756,23 +745,22 @@ final_df = final_df[cols]
 
 final_df = final_df.sort_values(by="Max. Flux Density [Jy]", ascending=False)
 
-final_df.to_csv("Output Tables/all.csv", index=False)
+final_df.to_csv(DATA_DIR / "Output Tables/all.csv", index=False)
 end0 = final_df[(final_df["Max. Frequency [MHz]"] > 1e-1) & (final_df["Max. Frequency [MHz]"] < 1)]
 end1 = final_df[(final_df["Max. Frequency [MHz]"] > 1) & (final_df["Max. Frequency [MHz]"] < 1e1)]
 end2 = final_df[(final_df["Max. Frequency [MHz]"] > 1e1) & (final_df["Max. Frequency [MHz]"] < 1e2)]
 end3 = final_df[(final_df["Max. Frequency [MHz]"] > 1e2) & (final_df["Max. Frequency [MHz]"] < 1e3)]
-end0.to_csv("Output Tables/0.1-1 MHz.csv", index=False)
-end1.to_csv("Output Tables/1-10 MHz.csv", index=False)
-end2.to_csv("Output Tables/10-100 MHz.csv", index=False)
-end3.to_csv("Output Tables/100-1000 MHz.csv", index=False)
+end0.to_csv(DATA_DIR / "Output Tables/0.1-1 MHz.csv", index=False)
+end1.to_csv(DATA_DIR / "Output Tables/1-10 MHz.csv", index=False)
+end2.to_csv(DATA_DIR / "Output Tables/10-100 MHz.csv", index=False)
+end3.to_csv(DATA_DIR / "Output Tables/100-1000 MHz.csv", index=False)
 
-np.savez("observables", lofar=lofar_obs, nenufar=nenufar_obs, mwa=mwa_obs, ugmrt=ugmrt_obs)
+np.savez(DATA_DIR / "observables", lofar=lofar_obs, nenufar=nenufar_obs, mwa=mwa_obs, ugmrt=ugmrt_obs)
 
-with open("result_stats.txt", "w") as fl:
+with open(DATA_DIR / "result_stats.txt", "w") as fl:
     fl.write(f"Total: {len(df)}\n"
              f"Can reach: {len(frequencies)}\n"
              f"Can reach (%): {len(frequencies) / len(df) * 100:.1f}\n"
              f"Can penetrate ionosphere:  {len(frequencies[np.where(frequencies > 10)])}\n"
              f"Can penetrate ionosphere in can reach (%): {len(frequencies[np.where(frequencies > 10)]) / len(frequencies) * 100:.1f}\n"
              f"Not close-in but reach: {len(frequencies[np.where((frequencies > 10) & (semis > -1))])}\n")
-    fl.close()

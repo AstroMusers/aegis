@@ -1,27 +1,28 @@
+from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from adjustText import adjust_text
+try:
+    from adjustText import adjust_text
+except ImportError:
+    adjust_text = None
 from radio_module import *
-from astropy.coordinates import SkyCoord, EarthLocation, AltAz, get_sun, get_moon
-from astropy.time import Time
-import astropy.units as u
 import matplotlib.colors as mcolors
 import matplotlib.patheffects as path_effects
-from datetime import datetime
-# import smplotlib
 
+from coordinate_formatting import one_format, three_format, two_format, zero_format
+
+DATA_DIR = Path(__file__).parent
 plt.rcParams['figure.figsize'] = [7, 4]
-# plt.rcParams['font.size'] = 10
 
-df = pd.read_csv("obs_table.csv")
+df = pd.read_csv(DATA_DIR / "obs_table.csv")
 
 norm = mcolors.PowerNorm(gamma=0.3)  # Adjust gamma to control brightness
 
 cmap = plt.cm.jet
 cmap1 = plt.cm.turbo
 
-which_data = np.load("observables.npz")
+which_data = np.load(DATA_DIR / "observables.npz")
 lofar = which_data["lofar"]
 nenufar = which_data["nenufar"]
 mwa = which_data["mwa"]
@@ -38,17 +39,6 @@ uGMRT_lat = 19.1
 lats = np.array([LOFAR_lat, NenuFAR_lat, uGMRT_lat, MWA_lat])
 
 
-def retro_noir(ax):
-    ax.grid(alpha=0.1)
-    ax.tick_params(direction="in", which="major", length=4, right=True, top=True, width=1.25)
-    ax.tick_params(direction="in", which="minor", length=2, right=True, top=True, width=1.25)
-    ax.spines['top'].set_linewidth(1.25)
-    ax.spines['bottom'].set_linewidth(1.25)
-    ax.spines['left'].set_linewidth(1.25)
-    ax.spines['right'].set_linewidth(1.25)
-    ax.minorticks_on()
-
-
 def formatter(s):
     main, m, sec = s.split(":")
     val = abs(float(main)) + float(m)/60 + float(sec)/3600
@@ -57,29 +47,6 @@ def formatter(s):
         return val
     elif sign == "-":
         return -val
-
-
-def format_ra(ra_string):
-    hours, minutes, seconds = ra_string.split()
-    seconds = round(float(seconds))
-    return f"{hours}:{minutes}:{seconds:02d}"
-
-
-def two_format(x):
-    return '{:.2f}'.format(x)
-
-
-def three_format(x):
-    return '{:.3f}'.format(x)
-
-
-def one_format(x):
-    return '{:.1f}'.format(x)
-
-
-def zero_format(x):
-    return '{:.0f}'.format(x)
-
 
 
 all_df = df[["Name", "RA (J2000)", "DEC (J2000)"]].copy()
@@ -117,8 +84,13 @@ def possible_time_for_target(name, min=20, default=True, obs="LOFAR"):
                 t = time_above_elevation(ra, dec, lat, min)[0]
                 times.append(t)
     else:
-        tel = obs
-        lat = lats[tel_names == tel]
+        indxobs = np.flatnonzero(tel_names == obs)
+        if indxobs.size == 0:
+            raise ValueError("Unknown observatory: %s" % obs)
+        tel = [obs]
+        latits = [lats[indxobs[0]]]
+        ra, dec = all_df["ra"][df["Name"] == name], all_df["dec"][df["Name"] == name]
+        times = [time_above_elevation(ra, dec, latits[0], min)[0]]
     df_times = pd.DataFrame({"tel": tel,
                              "times": times})
     df_times = df_times.sort_values(by="times", ascending=False)
@@ -141,25 +113,30 @@ def possible_time_for_target(name, min=20, default=True, obs="LOFAR"):
 max_elev = np.vectorize(max_elev)
 time_above_elevation = np.vectorize(time_above_elevation)
 possible_time_for_target = np.vectorize(possible_time_for_target)
-final = pd.read_csv("obs_table.csv")
-final[["Telescope", "t20"]] = final["Name"].apply(lambda x: pd.Series(possible_time_for_target(x)))
-final["a (AU)"] *= 1e2
-final.rename(columns={"a (AU)": "a (10^-2 AU)"}, inplace=True)
-
-# final["RA (J2000)"] = final["RA (J2000)"].apply(format_ra)
-# final["DEC (J2000)"] = final["DEC (J2000)"].apply(format_ra)
-
-final["Mass (MJ)"] = final["Mass (MJ)"].apply(three_format)
-final["a (10^-2 AU)"] = final["a (10^-2 AU)"].apply(one_format)
-
-final["Radius (RJ)"] = final["Radius (RJ)"].apply(two_format)
-final["d (pc)"] = final["d (pc)"].apply(zero_format)
-final["t (Gyr)"] = final["t (Gyr)"].apply(two_format)
-final["vmax"] = final["vmax"].apply(zero_format)
-final["Phi (mJy)"] = final["Phi (mJy)"].apply(two_format)
 
 
-final.to_csv("final-table.csv", index=False)
+def generate_final_table(input_path=None, output_path=None):
+    if input_path is None:
+        input_path = DATA_DIR / "obs_table.csv"
+    if output_path is None:
+        output_path = DATA_DIR / "final-table.csv"
+
+    final = pd.read_csv(input_path)
+    final[["Telescope", "t20"]] = final["Name"].apply(lambda x: pd.Series(possible_time_for_target(x)))
+    final["a (AU)"] *= 1e2
+    final.rename(columns={"a (AU)": "a (10^-2 AU)"}, inplace=True)
+
+    final["Mass (MJ)"] = final["Mass (MJ)"].apply(three_format)
+    final["a (10^-2 AU)"] = final["a (10^-2 AU)"].apply(one_format)
+    final["Radius (RJ)"] = final["Radius (RJ)"].apply(two_format)
+    final["d (pc)"] = final["d (pc)"].apply(zero_format)
+    final["t (Gyr)"] = final["t (Gyr)"].apply(two_format)
+    final["vmax"] = final["vmax"].apply(zero_format)
+    final["Phi (mJy)"] = final["Phi (mJy)"].apply(two_format)
+
+    final.to_csv(output_path, index=False)
+    return final
+
 
 obs = [LOFAR_lat, NenuFAR_lat, uGMRT_lat, MWA_lat]
 obs_names = ["LOFAR", "NenuFAR", "uGMRT", "MWA"]
@@ -169,42 +146,40 @@ decs = np.linspace(-90, 90, 200)
 
 ras, decs = np.meshgrid(ras, decs)
 
-results = []
-for i in range(len(obs)):
-    result = max_elev(ras, decs, obs[i])
-    results.append(result)
+
+def compute_elevation_maps():
+    results = []
+    for i in range(len(obs)):
+        result = max_elev(ras, decs, obs[i])
+        results.append(result)
+    return results
 
 
-def visibility_plot(results, save=False):
+def visibility_plot(results=None, save=False, show=False):
+    if results is None:
+        results = compute_elevation_maps()
 
-    plt.rcParams['font.size'] = 7  # 7 with NenuFAR
-    fig, axs = plt.subplots(len(obs), 2, figsize=(7, 9))  # (7, 9) with NenuFAR, (9, 10) otherwise
+    plt.rcParams['font.size'] = 7
+    fig, axs = plt.subplots(len(obs), 2, figsize=(7, 9))
 
     for i in range(len(results)):
-
         result = results[i]
-
         ax_0, ax_1 = axs[:, 0], axs[:, 1]
-
         ax = ax_0[i]
         ax1 = ax_1[i]
 
-        # cp = ax.contourf(X, Y, L_r)
         cp = ax.imshow(result, cmap=cmap, origin="lower",
-                        extent=[ras.min(), ras.max(), decs.min(), decs.max()], aspect="auto")
-        fig.colorbar(cp, label=r"Max. Elevation Angle ($\degree$)", ax=ax, extend="both")  # Add a colorbar to a plot
+                       extent=[ras.min(), ras.max(), decs.min(), decs.max()], aspect="auto")
+        fig.colorbar(cp, label=r"Max. Elevation Angle ($\degree$)", ax=ax, extend="both")
         ax.set_title(obs_names[i])
         ax.set_xlabel(r'R.A. (h)')
         ax.set_ylabel(r'DEC ($\degree$)')
 
         df1 = all_df[all_df["Name"].isin(which[i])].reset_index(drop=True)
         for index, row in df1.iterrows():
-            # Extract the values from the current row
             name = row['Name']
             ra = row['ra']
             dec = row['dec']
-
-            # Add a circular point at coordinates (ra, dec) with white face color and black edge color
             ax.plot(ra, dec, 'o', color='white', markersize=7, markeredgewidth=1, markeredgecolor='black')
             ax1.plot(ra, dec, 'o', color='white', markersize=7, markeredgewidth=1, markeredgecolor='black')
 
@@ -233,8 +208,8 @@ def visibility_plot(results, save=False):
 
         res1 = time_above_elevation(ras, decs, obs[i], 20)
         cp = ax1.imshow(res1, cmap=cmap1, origin="lower",
-                       extent=[ras.min(), ras.max(), decs.min(), decs.max()], aspect="auto")
-        fig.colorbar(cp, label=r"Time above $20\degree$ (Hours/day)", ax=ax1, extend="both")  # Add a colorbar to a plot
+                        extent=[ras.min(), ras.max(), decs.min(), decs.max()], aspect="auto")
+        fig.colorbar(cp, label=r"Time above $20\degree$ (Hours/day)", ax=ax1, extend="both")
         ax1.set_title(obs_names[i])
         ax1.set_xlabel(r'R.A. (h)')
         ax1.set_ylabel(r'DEC ($\degree$)')
@@ -242,15 +217,22 @@ def visibility_plot(results, save=False):
         retro_noir(ax)
         retro_noir(ax1)
 
-        adjust_text(texts, ax=ax)
-        adjust_text(texts1, ax=ax1)
+        if adjust_text is not None:
+            adjust_text(texts, ax=ax)
+            adjust_text(texts1, ax=ax1)
 
     plt.subplots_adjust(hspace=0.6)
 
-    plt.show()
-
     if save:
-        fig.savefig("visibility.pdf")
+        fig.savefig(DATA_DIR / "visibility.pdf")
+
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
 
 
-visibility_plot(results, save=True)
+if __name__ == "__main__":
+    generate_final_table()
+    results = compute_elevation_maps()
+    visibility_plot(results, save=True, show=True)

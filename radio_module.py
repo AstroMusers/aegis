@@ -127,15 +127,13 @@ def freq_condition(nu, n):
     return nu > nu_p
 
 
-def keplerian(M, r):
-    """
-
-    :param M: Host star's mass in M_sun
-    :param r: Semi-major axis in AU
-    :return: Keplerian velocity in km/s
-    """
-    G = 8.87129 * 10 ** 2  # Gravitational constant in AU (M_sun)-1 (km/s)2
-    return np.sqrt(G * M / r)
+try:
+    from tdpy.exoplanet import keplerian_orbital_speed as keplerian
+except ImportError:
+    def keplerian(M, r):
+        """Calculate circular Keplerian velocity in km/s."""
+        G = 8.87129 * 10 ** 2  # Gravitational constant in AU (M_sun)-1 (km/s)2
+        return np.sqrt(G * M / r)
 
 
 def v_eff(v_wind, v_kepler):

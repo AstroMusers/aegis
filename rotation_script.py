@@ -1,12 +1,13 @@
+from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
 from numba import njit
 from numba import jit
 
-
-names, types, per = np.genfromtxt("rotation.csv", delimiter=",", dtype=str, skip_header=1, skip_footer=2, unpack=True, usecols=(0,1,2))
-flag, mass, radius = np.genfromtxt("rotation.csv", delimiter=",", dtype=float, skip_header=1, skip_footer=2, unpack=True, usecols=(3,4,5))
+DATA_DIR = Path(__file__).parent
+names, types, per = np.genfromtxt(DATA_DIR / "rotation.csv", delimiter=",", dtype=str, skip_header=1, skip_footer=2, unpack=True, usecols=(0,1,2))
+flag, mass, radius = np.genfromtxt(DATA_DIR / "rotation.csv", delimiter=",", dtype=float, skip_header=1, skip_footer=2, unpack=True, usecols=(3,4,5))
 
 
 def time_string_to_days(time_str):
@@ -75,13 +76,13 @@ def rotation_script_example():
 
     plt.figure(1)
     plt.hist(log_momenta, bins=29, color="teal", edgecolor="black")
-    plt.xlabel('$\log_{10}{\mathrm{(Spin \, Angular \, Momentum \, [L_J])}}$')
+    plt.xlabel(r'$\log_{10}{\mathrm{(Spin \, Angular \, Momentum \, [L_J])}}$')
     plt.ylabel("Occurence")
     plt.title("Histogram of Solar System Bodies' Spin Angular Momenta")
     # Create histogram
     plt.figure(2)
     plt.hist(samples, bins=30, color='skyblue', edgecolor='black')
-    plt.xlabel('$\log_{10}{\mathrm{(Simulated \, Spin \, Angular \, Momentum \, [L_J])}}$')
+    plt.xlabel(r'$\log_{10}{\mathrm{(Simulated \, Spin \, Angular \, Momentum \, [L_J])}}$')
     plt.ylabel('Density (arbitrary units)')
     plt.title('Histogram of Random Samples')
     #

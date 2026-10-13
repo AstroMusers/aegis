@@ -1,11 +1,13 @@
+from pathlib import Path
 from radio_module import *
 from rotation_script import *
 import pandas as pd
 import numpy as np
 
-filename = "NASA1904.csv"
+DATA_DIR = Path(__file__).parent
+filename = str(DATA_DIR / "NASA3004.csv")
 df = pd.read_csv(filename, comment="#")
-windfile = "new_wind_info" + filename[4:-4] + ".txt"
+windfile = str(DATA_DIR / ("new_wind_info" + Path(filename).stem[4:] + ".txt"))
 
 wind_temperatures, wind_speeds = np.genfromtxt(windfile, usecols=(1, 2), skip_header=1, delimiter="\t", unpack=True)
 
@@ -17,14 +19,14 @@ def default_calculate(name, burst=10, filename=filename):
     T, a, R, p, M_s, t, Rs, = df.loc[ind, ["pl_orbper", "pl_orbsmax", "pl_radj", "pl_dens", "st_mass", "st_age", "st_rad"]]
     print(T, a, R)
     T_wind, v_wind = wind_temperatures[ind], wind_speeds[ind]
-    if (df.loc[ind, ["pl_bmassprov"]] == "Mass")[0] or (df.loc[ind, ["pl_bmassprov"]] == "Msin(i)/sin(i)")[0]:
-        M = df.loc[ind, ["pl_bmassj"]][0]
+    if (df.loc[ind, "pl_bmassprov"] == "Mass") or (df.loc[ind, "pl_bmassprov"] == "Msin(i)/sin(i)"):
+        M = df.loc[ind, "pl_bmassj"]
     else:
-        M = df.loc[ind, ["pl_bmassj"]][0] * 1.15  # Expected Value of the mass based on projected mass
+        M = df.loc[ind, "pl_bmassj"] * 1.15  # Expected Value of the mass based on projected mass
     b0_exponent = -0.655
     flux_exponent = -1.74
     loss_exponent = 0.79
-    d = df.loc[ind, ["sy_dist"]][0] * 3.261561
+    d = df.loc[ind, "sy_dist"] * 3.261561
     L = moment_sampler()
     Mdot = mass_loss(t, flux_exponent, loss_exponent)
     sigma = 1  # Jupiter conductivity
@@ -51,19 +53,18 @@ def default_calculate(name, burst=10, filename=filename):
     return float(nu/1e6), float(P_rad_both)
 
 
-default_calculate("tau Boo b")
-calculator = np.vectorize(default_calculate)
+if __name__ == "__main__":
+    default_calculate("tau Boo b")
+    calculator = np.vectorize(default_calculate)
 
-MCdf = pd.read_csv("Output Tables/all.csv")
-meta_sub = df[df["pl_orbsmax"] < 0.075][["pl_name", "pl_orbsmax", "pl_orbsmaxerr1"]]
-meta_sub.rename(columns={"pl_name": "Name"}, inplace=True)
-merged = pd.merge(MCdf, meta_sub, on="Name")
-# merged[["Freq, Flux"]] = merged["Name"].apply(lambda x: pd.Series(calculator(x)))
-merged["Freq"], merged["Flux"] = zip(*merged["Name"].apply(calculator))
-merged["freq_ratio"] = merged["Max. Frequency [MHz]"] / merged["Freq"]
-merged["flux_ratio"] = merged["Max. Flux Density [Jy]"] / merged["Flux"]
-freq_sorted = merged.sort_values(by="freq_ratio", ascending=False)
-flux_sorted = merged.sort_values(by="flux_ratio", ascending=False)
-# MCdf_sub = MCdf[MCdf[""]]
-print(len(merged["freq_ratio"][(merged["freq_ratio"] < 0.667) | (merged["freq_ratio"] > 1.5)]))
-print(len(merged["flux_ratio"][(merged["flux_ratio"] < 0.667) | (merged["flux_ratio"] > 1.5)]))
+    MCdf = pd.read_csv(DATA_DIR / "Output Tables" / "all.csv")
+    meta_sub = df[df["pl_orbsmax"] < 0.075][["pl_name", "pl_orbsmax", "pl_orbsmaxerr1"]]
+    meta_sub.rename(columns={"pl_name": "Name"}, inplace=True)
+    merged = pd.merge(MCdf, meta_sub, on="Name")
+    merged["Freq"], merged["Flux"] = zip(*merged["Name"].apply(calculator))
+    merged["freq_ratio"] = merged["Max. Frequency [MHz]"] / merged["Freq"]
+    merged["flux_ratio"] = merged["Max. Flux Density [Jy]"] / merged["Flux"]
+    freq_sorted = merged.sort_values(by="freq_ratio", ascending=False)
+    flux_sorted = merged.sort_values(by="flux_ratio", ascending=False)
+    print(len(merged["freq_ratio"][(merged["freq_ratio"] < 0.667) | (merged["freq_ratio"] > 1.5)]))
+    print(len(merged["flux_ratio"][(merged["flux_ratio"] < 0.667) | (merged["flux_ratio"] > 1.5)]))

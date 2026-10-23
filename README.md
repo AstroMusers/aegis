@@ -11,6 +11,21 @@ The required packages are listed in `environment.yml` and `requirements.txt`.
 Start with a NASA Exoplanet Archive table containing the required system parameters. Save it as `NASA[sample].csv`, where `[sample]` is usually the download date in DDMM format. The scripts use that sample label to connect their inputs and outputs.
 
 
+## Radio catalog
+
+We publish five selected predicted targets in a searchable radio
+catalog. The page sorts by target, maximum frequency, or predicted flux and
+filters by name and frequency. These are model predictions, not detections.
+
+To rebuild the site data from `append_table.csv`, run:
+
+```bash
+python publish_radio_catalog.py --check-physicality
+```
+
+The catalog is published at <https://astromusers.github.io/aegis/> when the
+GitHub Pages environment is enabled for this repository.
+
 ## Calculations
 
 ### Planetary spin

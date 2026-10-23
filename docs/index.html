@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Predicted radio emission from selected exoplanets in the Aegis catalog.">
+  <title>Aegis Radio Catalog</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172b2b;
+      --muted: #536766;
+      --paper: #f4f7f5;
+      --surface: #ffffff;
+      --line: #d4dfda;
+      --green: #007360;
+      --red: #a51417;
+      --focus: #ecb21f;
+      font-family: "Avenir Next", "Trebuchet MS", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    header {
+      padding: 2rem max(1rem, calc((100vw - 1180px) / 2));
+      color: white;
+      background: var(--green);
+      border-bottom: 5px solid var(--red);
+    }
+
+    .eyebrow {
+      margin: 0 0 0.5rem;
+      color: #d8ece5;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 760px;
+      margin: 0;
+      font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+      font-size: 3rem;
+      font-weight: 500;
+    }
+
+    header p:last-child {
+      max-width: 720px;
+      margin: 0.8rem 0 0;
+      color: #e5efeb;
+      line-height: 1.55;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 2rem));
+      margin: 1.5rem auto 3rem;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(130px, 190px)) auto;
+      align-items: end;
+      gap: 0.8rem;
+      padding: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 6px 6px 0 0;
+    }
+
+    label {
+      display: grid;
+      gap: 0.35rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    input {
+      width: 100%;
+      min-height: 42px;
+      padding: 0.6rem 0.7rem;
+      color: var(--ink);
+      background: white;
+      border: 1px solid #a9bbb5;
+      border-radius: 4px;
+      font: inherit;
+    }
+
+    input:focus-visible, button:focus-visible, a:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    .download {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      padding: 0.6rem 0.9rem;
+      color: white;
+      background: var(--red);
+      border-radius: 4px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-top: 0;
+      border-radius: 0 0 6px 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    caption {
+      padding: 0.75rem 1rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 0.8rem 1rem;
+      border-top: 1px solid var(--line);
+    }
+
+    th {
+      color: var(--muted);
+      background: #edf3ef;
+      font-size: 0.8rem;
+    }
+
+    th button {
+      padding: 0;
+      color: inherit;
+      background: none;
+      border: 0;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    th[aria-sort="ascending"] button::after { content: "  ↑"; color: var(--green); }
+    th[aria-sort="descending"] button::after { content: "  ↓"; color: var(--green); }
+
+    tbody tr:nth-child(even) { background: #f8faf8; }
+    tbody tr:hover { background: #e6f1ec; }
+    td:first-child { font-weight: 700; }
+    .number { font-variant-numeric: tabular-nums; }
+
+    #status {
+      min-height: 1.5rem;
+      margin: 0.75rem 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .note {
+      max-width: 850px;
+      margin-top: 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    footer {
+      padding: 1rem;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      font-size: 0.82rem;
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      .toolbar { grid-template-columns: 1fr 1fr; }
+      .toolbar label:first-child { grid-column: 1 / -1; }
+      .download { grid-column: 1 / -1; }
+      header { padding-block: 1.5rem; }
+      h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="eyebrow">AstroMusers · Aegis</p>
+    <h1>Predicted exoplanet radio emission</h1>
+    <p>Browse selected targets in the Aegis radio catalog. Search by name, narrow the predicted maximum frequency, or sort the measurements.</p>
+  </header>
+  <main>
+    <section class="toolbar" aria-label="Catalog filters">
+      <label for="search">Target name
+        <input id="search" type="search" autocomplete="off" placeholder="Search targets">
+      </label>
+      <label for="frequency-min">Minimum frequency [MHz]
+        <input id="frequency-min" type="number" min="0" step="any" value="0.1">
+      </label>
+      <label for="frequency-max">Maximum frequency [MHz]
+        <input id="frequency-max" type="number" min="0" step="any" value="10">
+      </label>
+      <a class="download" href="radio_catalog.csv" download>Download CSV</a>
+    </section>
+    <p id="status" role="status" aria-live="polite">Loading predicted targets...</p>
+    <div class="table-wrap">
+      <table>
+        <caption>Maximum emission frequency and predicted flux density for selected targets</caption>
+        <thead>
+          <tr>
+            <th scope="col" aria-sort="none"><button type="button" data-sort="Name">Target</button></th>
+            <th scope="col" aria-sort="none"><button type="button" data-sort="RA (J2000)">RA (J2000)</button></th>
+            <th scope="col" aria-sort="none"><button type="button" data-sort="DEC (J2000)">Dec (J2000)</button></th>
+            <th scope="col" aria-sort="descending"><button type="button" data-sort="vmax">Maximum frequency [MHz]</button></th>
+            <th scope="col" aria-sort="none"><button type="button" data-sort="Phi (Jy)">Predicted flux density [Jy]</button></th>
+          </tr>
+        </thead>
+        <tbody id="catalog-rows"></tbody>
+      </table>
+    </div>
+    <p class="note">These values are model predictions, not radio detections. We select the displayed targets from the manuscript table by predicted flux and the 0.1–10 MHz emission band. Predictions depend on the adopted planetary, stellar-wind, and magnetic-field assumptions.</p>
+  </main>
+  <footer>Aegis · AstroMusers</footer>
+  <script>
+    const searchInput = document.querySelector("#search");
+    const minimumFrequencyInput = document.querySelector("#frequency-min");
+    const maximumFrequencyInput = document.querySelector("#frequency-max");
+    const tableBody = document.querySelector("#catalog-rows");
+    const status = document.querySelector("#status");
+    const table = document.querySelector("table");
+    const numberFormat = new Intl.NumberFormat("en", { maximumSignificantDigits: 4 });
+    let records = [];
+    let sortColumn = "vmax";
+    let sortDirection = -1;
+
+    function renderCatalog() {
+      const query = searchInput.value.trim().toLocaleLowerCase();
+      const minimumFrequency = Number(minimumFrequencyInput.value);
+      const maximumFrequency = Number(maximumFrequencyInput.value);
+      const visibleRecords = records
+        .filter((record) => {
+          const matchesName = record.Name.toLocaleLowerCase().includes(query);
+          const frequency = Number(record.vmax);
+          return matchesName && frequency >= minimumFrequency && frequency <= maximumFrequency;
+        })
+        .sort((left, right) => {
+          const leftValue = left[sortColumn];
+          const rightValue = right[sortColumn];
+          const comparison = ["vmax", "Phi (Jy)"].includes(sortColumn)
+            ? Number(leftValue) - Number(rightValue)
+            : String(leftValue).localeCompare(String(rightValue));
+          return sortDirection * comparison;
+        });
+
+      tableBody.replaceChildren();
+      for (const record of visibleRecords) {
+        const row = document.createElement("tr");
+        const values = [
+          record.Name,
+          record["RA (J2000)"],
+          record["DEC (J2000)"],
+          `${numberFormat.format(Number(record.vmax))} MHz`,
+          `${numberFormat.format(Number(record["Phi (Jy)"]))} Jy`,
+        ];
+        for (const value of values) {
+          const cell = document.createElement("td");
+          cell.textContent = value;
+          if (value.endsWith("MHz") || value.endsWith("Jy")) cell.className = "number";
+          row.append(cell);
+        }
+        tableBody.append(row);
+      }
+      status.textContent = `${visibleRecords.length} of ${records.length} predicted targets`;
+    }
+
+    for (const button of document.querySelectorAll("[data-sort]")) {
+      button.addEventListener("click", () => {
+        const nextColumn = button.dataset.sort;
+        sortDirection = nextColumn === sortColumn ? -sortDirection : 1;
+        sortColumn = nextColumn;
+        for (const heading of table.tHead.rows[0].cells) {
+          heading.setAttribute("aria-sort", "none");
+        }
+        button.closest("th").setAttribute(
+          "aria-sort",
+          sortDirection === 1 ? "ascending" : "descending",
+        );
+        renderCatalog();
+      });
+    }
+
+    for (const input of [searchInput, minimumFrequencyInput, maximumFrequencyInput]) {
+      input.addEventListener("input", renderCatalog);
+    }
+
+    fetch("radio_catalog.json")
+      .then((response) => {
+        if (!response.ok) throw new Error("Catalog data could not be loaded");
+        return response.json();
+      })
+      .then((catalog) => {
+        records = catalog;
+        renderCatalog();
+      })
+      .catch((error) => {
+        status.textContent = `${error.message}. Download the CSV or try again later.`;
+      });
+  </script>
+</body>
+</html>

@@ -48,6 +48,8 @@ workflow; they are not radio observations or field measurements of real
 exoplanets. The short chains illustrate the API and do not establish
 convergence.
 
+![Posterior field distributions for two explicitly synthetic radio-cutoff measurements](examples/visuals/aegis_synthetic_cutoff_field_posterior.png)
+
 The calculation requires the exoplanet archive table in comma-separated value format. We use 10,000 Monte Carlo samples. Reduce the count for faster exploratory calculations. The script also writes `df1.csv` and `all.npz` for the population figures. These draws propagate stated measurement uncertainties and the empirical Solar System spin distribution through a forward model. The cutoff fit above estimates a model parameter from an observed frequency.
 
 ### Emission and observability figures

@@ -25,6 +25,9 @@ def test_cutoff_notebook_uses_pcat_inference_and_keeps_paths_private():
     assert "PCAT" in document
     assert "not telescope measurements" in document
     assert "/" + "Users/" not in document
+    assert 'repository_root / "examples" / "visuals"' in code
+    figure_path = Path(__file__).parent / "examples" / "visuals" / "aegis_synthetic_cutoff_field_posterior.png"
+    assert figure_path.is_file() and figure_path.stat().st_size > 0
 
 
 def test_cutoff_likelihood_peaks_at_aegis_field_relation():

@@ -25,6 +25,14 @@ Start with a NASA Exoplanet Archive table containing the required system paramet
 ### Magnetic-field inference
 For a detected cyclotron-maser cutoff, `magnetic_field_inference.py` estimates the surface field from Aegis's cutoff-frequency relation and a Gaussian measurement likelihood. Install the dependencies in `requirements.txt`, then run the explicitly synthetic example with `python examples/infer_magnetic_field.py`. The fit uses a uniform magnetic-field prior and complements the forward Monte Carlo predictions with an observation-driven estimate.
 
+The [cutoff-inference notebook](examples/magnetic_field_cutoff.ipynb) compares
+two seeded synthetic measurements by passing them through
+`infer_surface_field()`. It displays the returned PCAT posterior intervals and
+their distributions. These toy inputs exercise the likelihood and sampling
+workflow; they are not radio observations or field measurements of real
+exoplanets. The short chains illustrate the API and do not establish
+convergence.
+
 The calculation requires the exoplanet archive table in comma-separated value format. We use 10,000 Monte Carlo samples. Reduce the count for faster exploratory calculations. The script also writes `df1.csv` and `all.npz` for the population figures. These draws propagate stated measurement uncertainties and the empirical Solar System spin distribution through a forward model. The cutoff fit above estimates a model parameter from an observed frequency.
 
 ### Emission and observability figures

@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 import sys
 from types import ModuleType
 
@@ -5,6 +7,24 @@ import numpy as np
 import pytest
 
 from magnetic_field_inference import _cutoff_log_likelihood, infer_surface_field
+
+
+def test_cutoff_notebook_uses_pcat_inference_and_keeps_paths_private():
+    path = Path(__file__).parent / "examples" / "magnetic_field_cutoff.ipynb"
+    print("Reading from examples/magnetic_field_cutoff.ipynb...")
+    notebook = json.loads(path.read_text(encoding="utf-8"))
+    code = "\n".join(
+        "".join(cell["source"])
+        for cell in notebook["cells"]
+        if cell["cell_type"] == "code"
+    )
+    document = json.dumps(notebook)
+
+    assert "from magnetic_field_inference import infer_surface_field" in code
+    assert "infer_surface_field(" in code
+    assert "PCAT" in document
+    assert "not telescope measurements" in document
+    assert "/" + "Users/" not in document
 
 
 def test_cutoff_likelihood_peaks_at_aegis_field_relation():

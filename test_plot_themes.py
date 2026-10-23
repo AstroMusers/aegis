@@ -20,7 +20,7 @@ from tdpy.plotting import apply_plot_theme, configure_plot_style, plot_backgroun
 def plot_functions(tmp_path):
     path = Path(__file__).with_name('plotter.py')
     tree = ast.parse(path.read_text())
-    names = {'minor_tick_format', 'outcome_dist_hists', 'is_within_limits', 'scatter_plot'}
+    names = {'minor_tick_format', 'outcome_dist_hists', 'is_within_limits', 'scatter_plot', 'scatter_plot_bokeh'}
     functions = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in names]
 
     def late_style(axis):
@@ -98,3 +98,28 @@ def test_plot_functions_honor_requested_theme(plot_functions, monkeypatch, tmp_p
                 assert filename.read_bytes().startswith(b'%PDF-')
         finally:
             plt.close('all')
+
+
+def test_bokeh_radio_plot_is_hoverable_and_serializes_without_mutating_inputs(plot_functions):
+    pytest.importorskip('bokeh')
+    from bokeh.embed import file_html
+    from bokeh.models import HoverTool
+    from bokeh.resources import INLINE
+
+    data = pd.DataFrame({'Names': ['A', 'B'], 'l_both': ['A', 'B'], 'x': [20.0, 40.0],
+                         'y_both': [0.001, 0.01], 's': [-2.0, -1.0]})
+    before = data.copy(deep=True)
+    errors = [[np.full(2, 0.0001), np.full(2, 0.0001)] for _ in range(3)]
+    x_errors = [np.full(2, 1.0), np.full(2, 1.0)]
+
+    figure = plot_functions['scatter_plot_bokeh'](data, 'both', errors, x_errors)
+
+    pd.testing.assert_frame_equal(data, before)
+    assert len(figure.select({'type': HoverTool})) == 1
+    scatter_renderers = [renderer for renderer in figure.renderers
+                         if getattr(renderer, 'glyph', None) is not None
+                         and renderer.glyph.__class__.__name__ == 'Scatter']
+    assert sum(len(renderer.data_source.data['name']) for renderer in scatter_renderers) == 2
+    html = file_html(figure, INLINE, 'Aegis radio predictions')
+    assert 'Maximum Emission Frequency [MHz]' in html
+    assert 'LOFAR LBA' in html

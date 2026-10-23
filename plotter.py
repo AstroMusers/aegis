@@ -466,6 +466,102 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
     plt.show()
 
 
+def scatter_plot_bokeh(df1, which, y_err, x_err):
+    """Create an interactive radio-prediction plot from the static-plot inputs."""
+
+    try:
+        from bokeh.models import ColorBar, ColumnDataSource, HoverTool, LinearColorMapper, Span
+        from bokeh.palettes import Viridis256
+        from bokeh.plotting import figure
+    except ImportError as error:
+        raise ImportError("Install Bokeh to create the interactive Aegis plot") from error
+
+    y_columns = {"mag": "y_mag", "kin": "y_kin", "both": "y_both"}
+    if which not in y_columns:
+        raise ValueError("which must be 'mag', 'kin', or 'both'")
+
+    data = df1.copy().reset_index(drop=True)
+    data["x"] = pd.to_numeric(data["x"], errors="coerce")
+    data["y"] = pd.to_numeric(data[y_columns[which]], errors="coerce")
+    data["s"] = pd.to_numeric(data["s"], errors="coerce")
+    values = data[["x", "y", "s"]].to_numpy(dtype=float)
+    valid = np.isfinite(values).all(axis=1) & (values[:, :2] > 0).all(axis=1)
+    if not valid.any():
+        raise ValueError("The selected prediction column has no positive finite values")
+
+    error_index = {"mag": 0, "kin": 1, "both": 2}[which]
+    y_errors = [np.asarray(value, dtype=float) for value in y_err[error_index]]
+    x_errors = [np.asarray(value, dtype=float) for value in x_err]
+    if any(value.shape != (len(data),) or not np.isfinite(value).all() or np.any(value < 0)
+           for value in y_errors + x_errors):
+        raise ValueError("Plot uncertainties must be matching nonnegative finite vectors")
+    label_column = {"mag": "l_mag", "kin": "l_kin", "both": "l_both"}[which]
+    has_label = data[label_column].fillna("").astype(str).ne("").to_numpy() if label_column in data else np.ones(len(data), dtype=bool)
+    x_errors = [np.where(has_label, value, 0.0)[valid] for value in x_errors]
+    y_errors = [np.where(has_label, value, 0.0)[valid] for value in y_errors]
+    data = data.loc[valid].copy()
+    data["name"] = data["Names"].astype(str)
+    source_data = {
+        "name": data["name"].to_numpy(), "x": data["x"].to_numpy(), "y": data["y"].to_numpy(),
+        "s": data["s"].to_numpy(),
+        "x_low": np.maximum(data["x"].to_numpy() - x_errors[0], np.finfo(float).tiny),
+        "x_high": data["x"].to_numpy() + x_errors[1],
+        "y_low": np.maximum(data["y"].to_numpy() - y_errors[0], np.finfo(float).tiny),
+        "y_high": data["y"].to_numpy() + y_errors[1],
+    }
+    source = ColumnDataSource(source_data)
+    outliers = set(real_outliers)
+    outlier_mask = np.isin(source_data["name"], list(outliers))
+    color_low = float(np.min(source_data["s"]))
+    color_high = float(np.max(source_data["s"]))
+    if color_low == color_high:
+        color_high = color_low + 1.0
+    color_mapper = LinearColorMapper(palette=Viridis256, low=color_low, high=color_high)
+
+    plot = figure(
+        width=950, height=600, x_axis_type="log", y_axis_type="log",
+        x_axis_label="Maximum Emission Frequency [MHz]",
+        y_axis_label="Radio Flux Density [Jy]",
+        title=f"Aegis {which} radio-emission predictions",
+        tools="pan,wheel_zoom,box_zoom,reset,save",
+    )
+    plot.segment("x_low", "y", "x_high", "y", source=source, line_color="#555555", line_alpha=0.35)
+    plot.segment("x", "y_low", "x", "y_high", source=source, line_color="#555555", line_alpha=0.35)
+
+    renderers = []
+    for mask, marker, label in ((~outlier_mask, "circle", "Other targets"),
+                                (outlier_mask, "inverted_triangle", "Predicted outliers")):
+        if not mask.any():
+            continue
+        group = ColumnDataSource({key: value[mask] for key, value in source_data.items()})
+        renderers.append(plot.scatter(
+            "x", "y", source=group, marker=marker, size=9,
+            color={"field": "s", "transform": color_mapper}, line_color="#333333",
+            legend_label=label,
+        ))
+
+    plot.add_tools(HoverTool(
+        renderers=renderers,
+        tooltips=[("Target", "@name"), ("Frequency", "@x{0.00} MHz"),
+                  ("Flux density", "@y{0.000} Jy"), ("log10(a/AU)", "@s{0.00}")],
+    ))
+    plot.add_layout(ColorBar(color_mapper=color_mapper, title="log10(a/AU)"), "right")
+
+    plot.line(Freq_1, L_EU_1, color="red", line_width=2, legend_label="LOFAR LBA")
+    plot.line(Freq_2, L_EU_2, color="purple", line_width=2, legend_label="LOFAR HBA")
+    plot.line(NenuFreq, NenuNoise, color="green", line_width=2, legend_label="NenuFAR")
+    for index, row in uGMRT.iterrows():
+        options = {"legend_label": "uGMRT"} if index == 0 else {}
+        plot.line(row["Frequencies"], row["RMS Noise"], color="blue", line_width=2, **options)
+    for index, row in MWA.iterrows():
+        options = {"legend_label": "MWA"} if index == 0 else {}
+        plot.line(row["Frequencies"], row["RMS Noise"], color="#777777", line_width=2, **options)
+
+    plot.add_layout(Span(location=10, dimension="height", line_color="#555555", line_dash="dashed"))
+    plot.legend.click_policy = "hide"
+    return plot
+
+
 if __name__ == "__main__":
     scatter_plot(df, "both", y_err, x_err, df_det, average_errors, save=True)
     scatter_plot(df, "both", y_err, x_err, df_det, average_errors, save=True, zoom=True, others=10)

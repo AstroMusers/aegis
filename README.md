@@ -55,6 +55,16 @@ The calculation requires the exoplanet archive table in comma-separated value fo
 ### Emission and observability figures
 `plotter.py` plots the Monte Carlo predictive emission-frequency and radio-flux distributions from `df1.csv` and `all.npz`. The `nenufar.npz` and `sensitivities.csv` inputs add the sensitivity limits of NenuFAR and other radio telescopes.
 
+For an interactive target view with hover values, uncertainty bars, and telescope sensitivity curves, install Bokeh and save the returned figure as HTML:
+
+```python
+from bokeh.io import output_file, save
+from plotter import df, scatter_plot_bokeh, x_err, y_err
+
+output_file("visuals/radio_predictions_bokeh.html")
+save(scatter_plot_bokeh(df, "both", y_err, x_err))
+```
+
 `outcome_dist_hists()` and `scatter_plot()` use white backgrounds with black
 axes by default. Pass `typeplotback='dark'` for black backgrounds with white
 axes, including saved figures. They also inherit an enclosing TDpy

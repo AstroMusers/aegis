@@ -61,7 +61,7 @@ For an interactive target view with hover values, uncertainty bars, and telescop
 from bokeh.io import output_file, save
 from plotter import df, scatter_plot_bokeh, x_err, y_err
 
-output_file("visuals/radio_predictions_bokeh.html")
+output_file("visuals/aegis_radio_predictions_bokeh.html")
 save(scatter_plot_bokeh(df, "both", y_err, x_err))
 ```
 

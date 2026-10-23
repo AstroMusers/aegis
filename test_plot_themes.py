@@ -116,6 +116,7 @@ def test_bokeh_radio_plot_is_hoverable_and_serializes_without_mutating_inputs(pl
 
     pd.testing.assert_frame_equal(data, before)
     assert len(figure.select({'type': HoverTool})) == 1
+    assert all(grid.grid_line_color is None for grid in figure.grid)
     scatter_renderers = [renderer for renderer in figure.renderers
                          if getattr(renderer, 'glyph', None) is not None
                          and renderer.glyph.__class__.__name__ == 'Scatter']

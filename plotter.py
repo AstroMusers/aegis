@@ -525,6 +525,8 @@ def scatter_plot_bokeh(df1, which, y_err, x_err):
         title=f"Aegis {which} radio-emission predictions",
         tools="pan,wheel_zoom,box_zoom,reset,save",
     )
+    plot.xgrid.grid_line_color = None
+    plot.ygrid.grid_line_color = None
     plot.segment("x_low", "y", "x_high", "y", source=source, line_color="#555555", line_alpha=0.35)
     plot.segment("x", "y_low", "x", "y_high", source=source, line_color="#555555", line_alpha=0.35)
 

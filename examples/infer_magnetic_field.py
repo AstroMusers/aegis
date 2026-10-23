@@ -3,15 +3,21 @@
 
 import argparse
 from pathlib import Path
+import sys
+
+REPOSITORY_PATH = Path(__file__).resolve().parents[1]
+if str(REPOSITORY_PATH) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_PATH))
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from radio_module import max_freq
 from magnetic_field_inference import infer_surface_field
+from repository_paths import get_repository_path
 
 
-DATA_DIR = Path(__file__).resolve().parents[1]
+DATA_DIR = get_repository_path()
 TRUE_FIELD_GAUSS = 24.0  # [G], assumed synthetic truth
 MEASUREMENT_UNCERTAINTY_MHZ = 2.0  # [MHz], assumed synthetic uncertainty
 

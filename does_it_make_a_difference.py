@@ -3,11 +3,12 @@ from radio_module import *
 from rotation_script import *
 import pandas as pd
 import numpy as np
+from repository_paths import get_repository_path
 
-DATA_DIR = Path(__file__).parent
+DATA_DIR = get_repository_path()
 filename = str(DATA_DIR / "NASA3004.csv")
 df = pd.read_csv(filename, comment="#")
-windfile = str(DATA_DIR / ("new_wind_info" + Path(filename).stem[4:] + ".txt"))
+windfile = DATA_DIR / f"stellar_wind_predictions_{Path(filename).stem[4:]}.tsv"
 
 wind_temperatures, wind_speeds = np.genfromtxt(windfile, usecols=(1, 2), skip_header=1, delimiter="\t", unpack=True)
 

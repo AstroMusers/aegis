@@ -18,6 +18,24 @@ def test_cutoff_likelihood_peaks_at_aegis_field_relation():
     assert np.isfinite(at_truth)
 
 
+@pytest.mark.parametrize("field_gauss", [12.0, 24.0, 48.0])
+@pytest.mark.parametrize("uncertainty_mhz", [0.02, 1.0, 9.0])
+def test_cutoff_likelihood_preserves_normalized_measurement_density(field_gauss, uncertainty_mhz):
+    from radio_module import max_freq
+
+    observed = 40.0 * 24.0 / 14.0  # [MHz]
+    predicted = max_freq(field_gauss) / 1.0e6  # [MHz]
+    residual = (observed - predicted) / uncertainty_mhz
+    expected = -0.5 * (residual**2 + np.log(2.0 * np.pi * uncertainty_mhz**2))
+    state = {"observed_frequency_mhz": observed, "uncertainty_mhz": uncertainty_mhz}
+    assert _cutoff_log_likelihood([field_gauss], state) == pytest.approx(expected, rel=1e-14)
+
+
+@pytest.mark.parametrize("field_gauss", [0.0, -1.0, np.nan, np.inf])
+def test_cutoff_likelihood_retains_invalid_field_rejection(field_gauss):
+    assert _cutoff_log_likelihood([field_gauss], {}) == -np.inf
+
+
 def test_infer_surface_field_delegates_to_pcat(monkeypatch):
     captured = {}
     fake_pcat = ModuleType("pcat")

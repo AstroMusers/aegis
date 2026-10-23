@@ -112,4 +112,5 @@ dependencies:
   - pip:
       - smplotlib==0.0.9
       - pcat @ git+https://github.com/tansudaylan/pcat.git
+      - tdpy
 prefix: /opt/miniconda3/envs/exoradio

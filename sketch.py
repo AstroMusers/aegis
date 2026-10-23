@@ -3,8 +3,9 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Arc
+from repository_paths import get_repository_path
 
-DATA_DIR = Path(__file__).parent
+DATA_DIR = get_repository_path()
 
 
 # Note! By convention, polar angle is measured from the equator instead of the poles. Caution is required when using mainstream physics conventions

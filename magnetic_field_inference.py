@@ -30,8 +30,11 @@ def _cutoff_log_likelihood(parameters, state) -> float:
     if not np.isfinite(field_gauss) or field_gauss <= 0.0:
         return -np.inf
     predicted_frequency_mhz = float(max_freq(field_gauss) / 1.0e6)  # [MHz]
-    residual = (state["observed_frequency_mhz"] - predicted_frequency_mhz) / state["uncertainty_mhz"]
-    return float(-0.5 * (residual**2 + np.log(2.0 * np.pi * state["uncertainty_mhz"] ** 2)))
+    from tdpy.numerics import logpdf_gaus
+
+    return float(logpdf_gaus(
+        state["observed_frequency_mhz"], predicted_frequency_mhz, state["uncertainty_mhz"]
+    ))
 
 
 def infer_surface_field(

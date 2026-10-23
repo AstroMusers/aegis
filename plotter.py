@@ -18,8 +18,10 @@ from matplotlib.cm import ScalarMappable
 from matplotlib.lines import Line2D
 import matplotlib.ticker as ticker
 import json
+from tdpy.plotting import apply_plot_theme, configure_plot_style, plot_background_colors, plot_style
+from repository_paths import get_repository_path
 
-DATA_DIR = Path(__file__).parent
+DATA_DIR = get_repository_path()
 
 # LOFAR:
 lofar = pd.read_csv(
@@ -104,7 +106,11 @@ def minor_tick_format(x, pos):
         return f"{x:g}"  # Format in plain numbers
     return ""
 
-def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
+@plot_style()
+def outcome_dist_hists(intensities, which, magnetic_fields, save=False, typeplotback=None):
+    if typeplotback is not None:
+        configure_plot_style(typeplotback)
+    foreground = plot_background_colors()[1]
     if which == "mag":
         intensities = intensities[0]
     elif which == "kin":
@@ -126,7 +132,7 @@ def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
 
     ax1, ax2 = axs[0], axs[1]
 
-    ax1.hist(intensities, bins=TheBins1, edgecolor="black", color="xkcd:sea")
+    ax1.hist(intensities, bins=TheBins1, edgecolor=foreground, color="xkcd:sea")
     if IsBurst:
         ax1.set_xlabel("Flux Density of Burst Emission (Jy)")
         # ax1.set_title("Histogram of Burst Emission Intensities")
@@ -142,7 +148,7 @@ def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
     n = (bin2_higher - bin2_lower) * 2 + 1
     TheBins2 = np.logspace(bin2_lower, bin2_higher, n)
 
-    ax2.hist(magnetic_fields, bins=TheBins2, edgecolor="black", color="xkcd:sea")
+    ax2.hist(magnetic_fields, bins=TheBins2, edgecolor=foreground, color="xkcd:sea")
     ax2.set_xlabel("Magnetic Field Strength at the Surface (Gauss)")
     # ax2.set_title("Histogram of the Magnetic Field Strengths")
 
@@ -150,9 +156,10 @@ def outcome_dist_hists(intensities, which, magnetic_fields, save=False):
     # hist_noir(ax1)
     # hist_noir(ax2)
     fig1.supylabel("Number of Exoplanets")
+    apply_plot_theme(fig1)
 
     if save:
-        plt.savefig("hist.pdf")
+        plt.savefig("hist.pdf", facecolor=fig1.get_facecolor())
 
     plt.show()
 
@@ -162,7 +169,11 @@ def is_within_limits(x, y, xlim, ylim):
 
 
 # The following function is a truly badly-written one. I have stopped caring for its readability at this point. Sorry about this. At least it gets the job done.
-def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False, fix_lim=False, strict=False, others=0):
+@plot_style()
+def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False, fix_lim=False, strict=False, others=0, typeplotback=None):
+    if typeplotback is not None:
+        configure_plot_style(typeplotback)
+    foreground = plot_background_colors()[1]
     df = df1.copy()
 
     plt.rcParams['figure.figsize'] = [10, 5]
@@ -284,7 +295,7 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
                             yerr=y_err,
                             xerr=x_err_new,
                             fmt="None",
-                            ecolor="black",
+                            ecolor=foreground,
                             elinewidth=0.5,
                             capsize=0)
 
@@ -328,7 +339,7 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
     for i in range(5):
         x = MWA["Frequencies"][i]
         y = MWA["RMS Noise"][i]
-        plt.plot(x, y, "k-", linewidth=0.5)
+        plt.plot(x, y, color=foreground, linestyle="-", linewidth=0.5)
         if i == 0:
             ax0.fill_between(x, y, 10 ** 6, color="grey", alpha=0.1, label="MWA")
         else:
@@ -346,7 +357,7 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
 
     # cbar.ax.tick_params(labelsize=10)
     # cbar.set_label('my label', size='xx-small')
-    ax0.axvline(x=10, color="black", linestyle="dashed")
+    ax0.axvline(x=10, color=foreground, linestyle="dashed")
     ax0.set_xscale("log")
     ax0.set_yscale("log")
     ax0.axvspan(0, 10, alpha=0.2, color="teal")
@@ -364,7 +375,7 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
             df1 = df[lab != ""]
         yerr = [df1["y_errmin"], df1["y_errmax"]]
         xerr = [df1["x_errmin"], df1["x_errmax"]]
-        ax0.errorbar(df1.x, df1.y, yerr=yerr, xerr=xerr, fmt="None", ecolor="black", elinewidth=1, capsize=2)
+        ax0.errorbar(df1.x, df1.y, yerr=yerr, xerr=xerr, fmt="None", ecolor=foreground, elinewidth=1, capsize=2)
         # ax0.errorbar(df1.x, df1.y, yerr=y_err_inclusive, xerr=x_err_inclusive, fmt="None", ecolor="black", elinewidth=1, capsize=2)
         if fix_lim or strict:
             det = det[~det["Name"].isin(real_outliers)]
@@ -384,8 +395,8 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
             ax0.xaxis.set_minor_formatter(ticker.FuncFormatter(minor_tick_format))
             ax0.xaxis.set_major_formatter(ticker.LogFormatter())
         fig0.legend(fontsize=13, bbox_to_anchor=(0.1, 0.15), loc="lower left", frameon=True)
-        line1 = Line2D([0], [0], marker="v", linestyle="None", markerfacecolor="orange", markeredgecolor="black")
-        line2 = Line2D([0], [0], marker="o", linestyle="None", markerfacecolor="orange", markeredgecolor="black")
+        line1 = Line2D([0], [0], marker="v", linestyle="None", markerfacecolor="orange", markeredgecolor=foreground)
+        line2 = Line2D([0], [0], marker="o", linestyle="None", markerfacecolor="orange", markeredgecolor=foreground)
         # fig0.legend((line1, line2), ("Outliers", "Insiders"), frameon=True, shadow=True, bbox_to_anchor=(0.8, 0.95), fontsize=12)
         fig0.legend((line1,), ("Outliers",), frameon=True, shadow=True, bbox_to_anchor=(0.8, 0.95), fontsize=12)
 
@@ -394,7 +405,7 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
         #             expand_points=(1.15, 1.15), expand_objects=(1.5, 1.5), expand_align=(1.2, 1.2), precision=20)
 
         if adjust_text is not None:
-            adjust_text(texts, arrowprops=dict(arrowstyle="-", color="k", lw=0.5))
+            adjust_text(texts, arrowprops=dict(arrowstyle="-", color=foreground, lw=0.5))
 
     else:
         ax0.set_xlim(left=0.05)
@@ -407,7 +418,7 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
         #         ax0.annotate(txt, xy=(df1.x[i], df1.y[i]), xytext=(2, 2), textcoords="offset pixels", fontsize=7)
         center_x = 200
         center_y = 2
-        arrowprops = dict(arrowstyle='<->,  head_length=0.1', color='k', lw=2)
+        arrowprops = dict(arrowstyle='<->,  head_length=0.1', color=foreground, lw=2)
         ax0.annotate("", xy=(center_x, center_y * avg_err[2]), xytext=(center_x, center_y * avg_err[3]),
                      arrowprops=arrowprops)
         ax0.annotate("", xy=(center_x * avg_err[0], center_y), xytext=(center_x * avg_err[1], center_y),
@@ -440,16 +451,17 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
     ax0.set_ylabel("Radio Flux Density [Jy]")
     retro_noir(ax0)
     fig0.tight_layout()
+    apply_plot_theme(fig0)
 
     if save:
         if not zoom:
-            plt.savefig(DATA_DIR / "scatter.pdf")
+            plt.savefig(DATA_DIR / "scatter.pdf", facecolor=fig0.get_facecolor())
         elif not strict:
-            plt.savefig(DATA_DIR / "zoom.pdf")
+            plt.savefig(DATA_DIR / "zoom.pdf", facecolor=fig0.get_facecolor())
         elif strict:
-            plt.savefig(DATA_DIR / "zoom_inside.pdf")
+            plt.savefig(DATA_DIR / "zoom_inside.pdf", facecolor=fig0.get_facecolor())
         elif fix_lim and not strict:
-            plt.savefig(DATA_DIR / "zoom_fixed.pdf")
+            plt.savefig(DATA_DIR / "zoom_fixed.pdf", facecolor=fig0.get_facecolor())
 
     plt.show()
 

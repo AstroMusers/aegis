@@ -61,3 +61,4 @@ wcwidth @ file:///Users/ktietz/demo/mc3/conda-bld/wcwidth_1629357192024/work
 webencodings @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/webencodings_1699243630039/work
 wheel>=0.46.2
 pcat @ git+https://github.com/tansudaylan/pcat.git
+tdpy

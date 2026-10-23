@@ -4,8 +4,9 @@ import pandas as pd
 from radio_module import *
 
 from coordinate_formatting import format_coords, three_format, two_format
+from repository_paths import get_repository_path
 
-DATA_DIR = Path(__file__).parent
+DATA_DIR = get_repository_path()
 
 
 def extract_observable_targets(save=True):

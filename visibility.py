@@ -11,8 +11,9 @@ import matplotlib.colors as mcolors
 import matplotlib.patheffects as path_effects
 
 from coordinate_formatting import one_format, three_format, two_format, zero_format
+from repository_paths import get_repository_path
 
-DATA_DIR = Path(__file__).parent
+DATA_DIR = get_repository_path()
 plt.rcParams['figure.figsize'] = [7, 4]
 
 df = pd.read_csv(DATA_DIR / "obs_table.csv")

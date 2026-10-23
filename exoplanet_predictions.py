@@ -20,8 +20,9 @@ from matplotlib.lines import Line2D
 from tqdm import tqdm
 from astropy.coordinates import SkyCoord
 import astropy.units as u
+from repository_paths import get_repository_path
 
-DATA_DIR = Path(__file__).parent
+DATA_DIR = get_repository_path()
 plt.rcParams['figure.figsize'] = [10, 5]
 
 rng = np.random.default_rng()
@@ -149,7 +150,7 @@ ax4.hist(Ms, bins=bins[3], edgecolor="black", color="xkcd:ocean")
 ax5.hist(ts, bins=bins[4], edgecolor="black", color="xkcd:ocean")
 ax6.hist(ds, bins=bins[5], edgecolor="black", color="xkcd:ocean")
 
-xlabels = ["Orbital Period (Days)", "Semi-major Axis (AU)", f"Planet Mass ($M_j$)", "Star Mass ($M_\odot$)",
+xlabels = ["Orbital Period (Days)", "Semi-major Axis (AU)", f"Planet Mass ($M_j$)", "Star Mass ($M_\\odot$)",
            "Star Age (Gyr)", "Distance (pc)"]
 for i in range(len(axes)):
     axes[i].set_xlabel(xlabels[i])

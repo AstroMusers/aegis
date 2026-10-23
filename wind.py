@@ -5,8 +5,9 @@ import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
 import pandas as pd
 from radio_module import *
+from repository_paths import get_repository_path
 
-DATA_DIR = Path(__file__).parent
+DATA_DIR = get_repository_path()
 
 
 # Read CSV using pandas
@@ -169,7 +170,9 @@ def run_wind_simulation(save=True, show=False):
     results = results.T
 
     column_headers = ["Name", "Corona Temp. (K)", "Wind Speed (km/s)"]
-    windfile = str(DATA_DIR / ("new_wind_info" + Path(filename).stem[4:] + ".txt"))
+    windfile = str(
+        DATA_DIR / f"stellar_wind_predictions_{Path(filename).stem[4:]}.tsv"
+    )
     with open(windfile, mode="w") as file:
         writer = csv.writer(file, delimiter="\t")
         writer.writerow(column_headers)

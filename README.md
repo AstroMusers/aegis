@@ -4,6 +4,9 @@ What would it take to hear an exoplanet's magnetic field? We use Aegis to predic
 ## Installation
 The required packages are listed in `environment.yml` and `requirements.txt`.
 
+## Repository paths
+`AEGIS_PATH` points to the Aegis checkout used by the analysis scripts. When it is unset, Aegis uses the directory containing `repository_paths.py`. The checkout's `data/` and `visuals/` directories are ignored by Git for local inputs and generated figures.
+
 ## Example use
 Start with a NASA Exoplanet Archive table containing the required system parameters. Save it as `NASA[sample].csv`, where `[sample]` is usually the download date in DDMM format. The scripts use that sample label to connect their inputs and outputs.
 
@@ -14,7 +17,7 @@ Start with a NASA Exoplanet Archive table containing the required system paramet
 `rotation_script.py` samples exoplanet spin angular momenta from the Solar System distribution in `rotation.csv`. The resulting spin distribution enters the planetary magnetic-field and radio-emission calculations.
 
 ### Stellar wind
-`wind.py` calculates the stellar-wind temperature and speed at each planet's orbit with an isothermal Parker wind model (Parker 1958). It reads the NASA Exoplanet Archive sample and writes `new_wind_info[sample].date` for the radio-emission calculation.
+`wind.py` calculates the stellar-wind temperature and speed at each planet's orbit with an isothermal Parker wind model (Parker 1958). It reads the NASA Exoplanet Archive sample and writes `stellar_wind_predictions_[sample].tsv` for the radio-emission calculation.
 
 ### Radio emission
 `exoplanet_predictions.py` propagates uncertainties in NASA Exoplanet Archive measurements through the magnetic-field and radio-emission models with Monte Carlo sampling. It calculates predictive distributions of emission frequency and radio flux density for each target.
@@ -26,6 +29,11 @@ The calculation requires the exoplanet archive table in comma-separated value fo
 
 ### Emission and observability figures
 `plotter.py` plots the Monte Carlo predictive emission-frequency and radio-flux distributions from `df1.csv` and `all.npz`. The `nenufar.npz` and `sensitivities.csv` inputs add the sensitivity limits of NenuFAR and other radio telescopes.
+
+`outcome_dist_hists()` and `scatter_plot()` use white backgrounds with black
+axes by default. Pass `typeplotback='dark'` for black backgrounds with white
+axes, including saved figures. They also inherit an enclosing TDpy
+`plot_style()` theme without changing later plots.
 
 `parker_spiral.py` plots the interplanetary magnetic-field component at the orbit of tau Boo b from `taub_wind.npz`. `visibility.py` maps maximum elevation and time above 20 degrees for the considered telescopes using `obs_table.csv`. `radius_valley.py` compares the planetary radii and predicted magnetic-field strengths in `Output Tables/all.csv`. `sketch.py` draws the magnetized-exoplanet geometry.
 

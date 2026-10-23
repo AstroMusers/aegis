@@ -2,8 +2,9 @@ from pathlib import Path
 import pandas as pd
 
 from coordinate_formatting import format_coords, one_format, three_format, two_format, zero_format
+from repository_paths import get_repository_path
 
-DATA_DIR = Path(__file__).parent
+DATA_DIR = get_repository_path()
 
 
 def append_predictions(save=True):

@@ -10,8 +10,9 @@ from matplotlib.cm import ScalarMappable
 from scipy.interpolate import griddata
 
 from radio_module import keplerian
+from repository_paths import get_repository_path
 
-DATA_DIR = Path(__file__).parent
+DATA_DIR = get_repository_path()
 
 
 def plot_parker_spiral(save=True, show=False):

@@ -3,14 +3,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from repository_paths import get_repository_path
+from tdpy.verbosity import print
 
 DATA_DIR = get_repository_path()
 
 
 def plot_radius_valleys(save=True, show=False):
     filename = str(DATA_DIR / "NASA3004.csv")
+    print(f"Reading from {filename}...")
     df = pd.read_csv(filename, comment="#")
-    df2 = pd.read_csv(DATA_DIR / "Output Tables" / "all.csv")
+    predictions_path = DATA_DIR / "Output Tables" / "all.csv"
+    print(f"Reading from {predictions_path}...")
+    df2 = pd.read_csv(predictions_path)
     reachers = df[df["pl_name"].isin(df2["Name"])]
     enough_data = reachers[["pl_name", "pl_bmassj", "pl_radj", "pl_orbsmax", "sy_dist", "st_age", "pl_orbper"]].copy()
     enough_data.rename(columns={"pl_name": "Name"}, inplace=True)
@@ -75,7 +79,9 @@ def plot_radius_valleys(save=True, show=False):
             ax2.legend(loc=1, fontsize=12)
 
     if save:
-        plt.savefig(DATA_DIR / "valleys.pdf")
+        output_path = DATA_DIR / "valleys.pdf"
+        print(f"Writing to {output_path}...")
+        plt.savefig(output_path)
     if show:
         plt.show()
     plt.close(fig)
@@ -109,7 +115,9 @@ def plot_radius_valleys(save=True, show=False):
     plt.tight_layout()
     plt.legend(fontsize=12)
     if save:
-        plt.savefig(DATA_DIR / "single_valley.pdf")
+        output_path = DATA_DIR / "single_valley.pdf"
+        print(f"Writing to {output_path}...")
+        plt.savefig(output_path)
     if show:
         plt.show()
     plt.close(fig2)

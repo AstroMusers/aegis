@@ -38,6 +38,8 @@ def test_plotter_import_narrates_input_files(verbosity):
         assert result.stdout == ""
     else:
         assert result.stdout.splitlines() == [
+            f"Reading from {repository_path / 'rotation.csv'}...",
+            f"Reading from {repository_path / 'rotation.csv'}...",
             f"Reading from {repository_path / 'sensitivities.csv'}...",
             f"Reading from {repository_path / 'nenufar.npz'}...",
             f"Reading from {repository_path / 'df1.csv'}...",

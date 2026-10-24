@@ -30,6 +30,8 @@ def test_radio_analysis_import_narrates_input_files(verbosity):
         assert result.stdout == ""
     else:
         assert result.stdout.splitlines() == [
+            f"Reading from {repository_path / 'rotation.csv'}...",
+            f"Reading from {repository_path / 'rotation.csv'}...",
             f"Reading from {repository_path / 'NASA3004.csv'}...",
             f"Reading from {repository_path / 'stellar_wind_predictions_3004.tsv'}...",
         ]

@@ -5,10 +5,14 @@ from scipy.stats import gaussian_kde
 from numba import njit
 from numba import jit
 from repository_paths import get_repository_path
+from tdpy.verbosity import print
 
 DATA_DIR = get_repository_path()
-names, types, per = np.genfromtxt(DATA_DIR / "rotation.csv", delimiter=",", dtype=str, skip_header=1, skip_footer=2, unpack=True, usecols=(0,1,2))
-flag, mass, radius = np.genfromtxt(DATA_DIR / "rotation.csv", delimiter=",", dtype=float, skip_header=1, skip_footer=2, unpack=True, usecols=(3,4,5))
+rotation_path = DATA_DIR / "rotation.csv"
+print(f"Reading from {rotation_path}...")
+names, types, per = np.genfromtxt(rotation_path, delimiter=",", dtype=str, skip_header=1, skip_footer=2, unpack=True, usecols=(0,1,2))
+print(f"Reading from {rotation_path}...")
+flag, mass, radius = np.genfromtxt(rotation_path, delimiter=",", dtype=float, skip_header=1, skip_footer=2, unpack=True, usecols=(3,4,5))
 
 
 def time_string_to_days(time_str):

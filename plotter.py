@@ -20,17 +20,28 @@ import matplotlib.ticker as ticker
 import json
 from tdpy.plotting import apply_plot_theme, configure_plot_style, plot_background_colors, plot_style
 from repository_paths import get_repository_path
+from tdpy.verbosity import print
 
 DATA_DIR = get_repository_path()
 
+
+def _to_numeric_or_keep(column):
+    try:
+        return pd.to_numeric(column)
+    except (TypeError, ValueError):
+        return column
+
+
 # LOFAR:
+sensitivities_path = DATA_DIR / "sensitivities.csv"
+print(f"Reading from {sensitivities_path}...")
 lofar = pd.read_csv(
-    DATA_DIR / "sensitivities.csv")  # Obtained from van Haarlem et al. (2017), 8h integration time, 4.66MHz effective bandwidth
+    sensitivities_path)  # Obtained from van Haarlem et al. (2017), 8h integration time, 4.66MHz effective bandwidth
 lofar.columns = lofar.iloc[0]
 lofar = lofar[1:]
 lofar = lofar.drop([1, 2, 3, 11, 12, 13])
 lofar = lofar.reset_index(drop=True)
-lofar = lofar.apply(pd.to_numeric, errors="ignore")
+lofar = lofar.apply(_to_numeric_or_keep)
 lofar["NL Core"] = lofar["NL Core"].multiply(10 ** (-3)) * 5  # 5 sigma sensitivity in Jy
 lofar["Full EU"] = lofar["Full EU"].multiply(10 ** (-3)) * 5  # 5 sigma sensitivity in Jy
 
@@ -48,7 +59,9 @@ Freq_2 = Freq[4:]
 NenuNoise = np.array([130.0, 9.0])  # MJy (10 MHz, 1h, website)
 NenuFreq = np.array([15.0, 85.0])  # MHz (website)
 NenuNoise *= np.sqrt(1 / 8) * 10 ** (-3) * 5  # 5 sigma sensitivity in Jy
-nenu_data = np.load(DATA_DIR / "nenufar.npz")
+nenu_path = DATA_DIR / "nenufar.npz"
+print(f"Reading from {nenu_path}...")
+nenu_data = np.load(nenu_path)
 NenuFreq = nenu_data["nenu_freqs"]
 NenuNoise = nenu_data["nenu_noise"] * 5
 
@@ -80,9 +93,13 @@ MWA["RMS Noise"] *= np.sqrt((2 / integration_time)) * 10 ** (-3) * 5
 
 IsBurst = 1
 
-df = pd.read_csv(DATA_DIR / "df1.csv")
+dataframe_path = DATA_DIR / "df1.csv"
+print(f"Reading from {dataframe_path}...")
+df = pd.read_csv(dataframe_path)
 df.fillna('', inplace=True)
-all = np.load(DATA_DIR / "all.npz", allow_pickle=True)
+results_path = DATA_DIR / "all.npz"
+print(f"Reading from {results_path}...")
+all = np.load(results_path, allow_pickle=True)
 
 y_both_maxerr, y_both_minerr, y_kin_minerr, y_kin_maxerr, y_mag_minerr, y_mag_maxerr = all["y_both_maxerr"], all["y_both_minerr"], all["y_kin_minerr"], all["y_kin_maxerr"], all["y_mag_minerr"], all["y_mag_maxerr"]
 x_minerr, x_maxerr = all["x_minerr"], all["x_maxerr"]
@@ -159,7 +176,9 @@ def outcome_dist_hists(intensities, which, magnetic_fields, save=False, typeplot
     apply_plot_theme(fig1)
 
     if save:
-        plt.savefig("hist.pdf", facecolor=fig1.get_facecolor())
+        output_path = Path("hist.pdf")
+        print(f"Writing to {output_path}...")
+        plt.savefig(output_path, facecolor=fig1.get_facecolor())
 
     plt.show()
 
@@ -455,13 +474,15 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
 
     if save:
         if not zoom:
-            plt.savefig(DATA_DIR / "scatter.pdf", facecolor=fig0.get_facecolor())
+            output_path = DATA_DIR / "scatter.pdf"
         elif not strict:
-            plt.savefig(DATA_DIR / "zoom.pdf", facecolor=fig0.get_facecolor())
+            output_path = DATA_DIR / "zoom.pdf"
         elif strict:
-            plt.savefig(DATA_DIR / "zoom_inside.pdf", facecolor=fig0.get_facecolor())
+            output_path = DATA_DIR / "zoom_inside.pdf"
         elif fix_lim and not strict:
-            plt.savefig(DATA_DIR / "zoom_fixed.pdf", facecolor=fig0.get_facecolor())
+            output_path = DATA_DIR / "zoom_fixed.pdf"
+        print(f"Writing to {output_path}...")
+        plt.savefig(output_path, facecolor=fig0.get_facecolor())
 
     plt.show()
 

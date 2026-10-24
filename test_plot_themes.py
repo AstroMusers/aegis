@@ -12,6 +12,7 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 import pytest
+from tdpy.verbosity import print
 
 from tdpy.plotting import apply_plot_theme, configure_plot_style, plot_background_colors, plot_style
 
@@ -28,9 +29,10 @@ def plot_functions(tmp_path):
         axis.figure.set_facecolor('gray')
 
     namespace = {
-        'np': np, 'pd': pd, 'math': math, 'plt': plt, 'deepcopy': deepcopy,
+        'np': np, 'pd': pd, 'math': math, 'plt': plt, 'Path': Path, 'deepcopy': deepcopy,
         'Normalize': Normalize, 'ScalarMappable': ScalarMappable, 'Line2D': Line2D, 'ticker': ticker,
         'plot_style': plot_style, 'configure_plot_style': configure_plot_style, 'apply_plot_theme': apply_plot_theme,
+        'print': print,
         'IsBurst': True, 'DATA_DIR': tmp_path, 'real_outliers': set(), 'adjust_text': None,
         'smplotlib': None, 'retro_noir': late_style,
         'Freq_1': pd.Series([20.0, 30.0]), 'L_EU_1': pd.Series([0.001, 0.002]),
@@ -48,7 +50,7 @@ def plot_functions(tmp_path):
 @pytest.mark.parametrize('typeplotback', ['white', 'dark'])
 @pytest.mark.parametrize('save', [False, True])
 @pytest.mark.parametrize('inherit', [False, True])
-def test_plot_functions_honor_requested_theme(plot_functions, monkeypatch, tmp_path, kind, typeplotback, save, inherit):
+def test_plot_functions_honor_requested_theme(plot_functions, monkeypatch, tmp_path, capsys, kind, typeplotback, save, inherit):
     background, foreground = plot_background_colors(typeplotback)
     displayed = []
 
@@ -67,6 +69,7 @@ def test_plot_functions_honor_requested_theme(plot_functions, monkeypatch, tmp_p
 
     monkeypatch.setattr(plt, 'show', inspect_display)
     monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv('TDPY_VERBOSITY', '1')
     plot_functions['plot_background_colors'] = plot_background_colors
     options = {} if inherit else {'typeplotback': typeplotback}
     outer_theme = typeplotback if inherit else ('dark' if typeplotback == 'white' else 'white')
@@ -96,6 +99,9 @@ def test_plot_functions_honor_requested_theme(plot_functions, monkeypatch, tmp_p
             if save:
                 filename = tmp_path / ('hist.pdf' if kind == 'histogram' else 'zoom.pdf')
                 assert filename.read_bytes().startswith(b'%PDF-')
+                assert capsys.readouterr().out == f'Writing to {filename.name if kind == "histogram" else filename}...\n'
+            else:
+                assert capsys.readouterr().out == ''
         finally:
             plt.close('all')
 

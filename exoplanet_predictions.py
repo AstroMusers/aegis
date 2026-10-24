@@ -610,7 +610,7 @@ for i, j in tqdm(df.iterrows(), total=len(df)):  # The loop that reads exoplanet
         lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
         fig.legend(lines, labels, loc="upper right", bbox_to_anchor=(1, 1), ncol=int(len(lines_labels) / 2),
                    frameon=True, shadow=True)
-        distribution_path = DATA_DIR / "Distribution Plots" / f"{EXO.name}.pdf"
+        distribution_path = Path("Distribution Plots") / f"{EXO.name}.pdf"
         print(f"Writing to {distribution_path}...")
         plt.savefig(distribution_path)
 

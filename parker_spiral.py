@@ -11,12 +11,15 @@ from scipy.interpolate import griddata
 
 from radio_module import keplerian
 from repository_paths import get_repository_path
+from tdpy.verbosity import print
 
 DATA_DIR = get_repository_path()
 
 
 def plot_parker_spiral(save=True, show=False):
-    data = np.load(DATA_DIR / "taub_wind.npz")
+    input_path = DATA_DIR / "taub_wind.npz"
+    print(f"Reading from {input_path}...")
+    data = np.load(input_path)
 
     ranges = data["ranges"]
     speeds = data["speeds"]
@@ -116,7 +119,9 @@ def plot_parker_spiral(save=True, show=False):
     fig.legend((line2,), ("Stellar Surface",), frameon=True, shadow=True, labelcolor="k", ncol=1, loc=2)
 
     if save:
-        fig.savefig(DATA_DIR / "parker_spiral.pdf", dpi=300)
+        output_path = DATA_DIR / "parker_spiral.pdf"
+        print(f"Writing to {output_path}...")
+        fig.savefig(output_path, dpi=300)
 
     if show:
         plt.show()

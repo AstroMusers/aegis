@@ -1,6 +1,7 @@
 adjustText==1.3.0
 astropy==6.1.3
 astroquery==0.4.7
+chalcedon @ git+https://github.com/tansudaylan/chalcedon.git@7f904b64b854fe3bee63af515317723ed49c9b06
 matplotlib==3.9.2
 numba==0.60.0
 numpy==1.26.4

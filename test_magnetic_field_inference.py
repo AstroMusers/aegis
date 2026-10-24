@@ -1,10 +1,12 @@
+import importlib.util
 import json
 from pathlib import Path
 import sys
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 
 import numpy as np
 import pytest
+from tdpy.verbosity import print
 
 from magnetic_field_inference import _cutoff_log_likelihood, infer_surface_field
 
@@ -28,6 +30,41 @@ def test_cutoff_notebook_uses_pcat_inference_and_keeps_paths_private():
     assert 'repository_root / "examples" / "visuals"' in code
     figure_path = Path(__file__).parent / "examples" / "visuals" / "aegis_synthetic_cutoff_field_posterior.png"
     assert figure_path.is_file() and figure_path.stat().st_size > 0
+
+
+def test_cutoff_example_narration_respects_verbosity(tmp_path, monkeypatch, capsys):
+    example_path = Path(__file__).parent / "examples" / "infer_magnetic_field.py"
+    print(f"Reading from {example_path.relative_to(Path(__file__).parent)}...")
+    example_spec = importlib.util.spec_from_file_location(
+        "aegis_infer_magnetic_field_example", example_path
+    )
+    assert example_spec is not None and example_spec.loader is not None
+    example = importlib.util.module_from_spec(example_spec)
+    example_spec.loader.exec_module(example)
+    monkeypatch.setattr(
+        example,
+        "infer_surface_field",
+        lambda *args, **kwargs: SimpleNamespace(
+            field_interval_gauss=(20.0, 24.0, 28.0),
+            chain_gauss=np.array([[22.0, 24.0]]),
+        ),
+    )
+    output_path = tmp_path / "posterior.png"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [str(example_path), "--output", str(output_path), "--seed", "0"],
+    )
+
+    monkeypatch.setenv("TDPY_VERBOSITY", "0")
+    example.main()
+    assert capsys.readouterr().out == ""
+
+    monkeypatch.setenv("TDPY_VERBOSITY", "1")
+    example.main()
+    output = capsys.readouterr().out.splitlines()
+    assert output[-1] == f"Writing to {output_path}..."
+    assert len(output) == 2
 
 
 def test_cutoff_likelihood_peaks_at_aegis_field_relation():

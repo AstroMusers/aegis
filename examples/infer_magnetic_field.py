@@ -11,6 +11,7 @@ if str(REPOSITORY_PATH) not in sys.path:
 
 import matplotlib.pyplot as plt
 import numpy as np
+from tdpy.verbosity import print
 
 from radio_module import max_freq
 from magnetic_field_inference import infer_surface_field

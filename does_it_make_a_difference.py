@@ -4,16 +4,20 @@ from rotation_script import *
 import pandas as pd
 import numpy as np
 from repository_paths import get_repository_path
+from tdpy.verbosity import print
 
 DATA_DIR = get_repository_path()
 filename = str(DATA_DIR / "NASA3004.csv")
+print(f"Reading from {filename}...")
 df = pd.read_csv(filename, comment="#")
 windfile = DATA_DIR / f"stellar_wind_predictions_{Path(filename).stem[4:]}.tsv"
 
+print(f"Reading from {windfile}...")
 wind_temperatures, wind_speeds = np.genfromtxt(windfile, usecols=(1, 2), skip_header=1, delimiter="\t", unpack=True)
 
 
 def default_calculate(name, burst=10, filename=filename):
+    print(f"Reading from {filename}...")
     df = pd.read_csv(filename, comment="#")
     ind = df.index[df["pl_name"] == name].tolist()[0]
     # print(ind)
@@ -58,7 +62,9 @@ if __name__ == "__main__":
     default_calculate("tau Boo b")
     calculator = np.vectorize(default_calculate)
 
-    MCdf = pd.read_csv(DATA_DIR / "Output Tables" / "all.csv")
+    predictions_path = DATA_DIR / "Output Tables" / "all.csv"
+    print(f"Reading from {predictions_path}...")
+    MCdf = pd.read_csv(predictions_path)
     meta_sub = df[df["pl_orbsmax"] < 0.075][["pl_name", "pl_orbsmax", "pl_orbsmaxerr1"]]
     meta_sub.rename(columns={"pl_name": "Name"}, inplace=True)
     merged = pd.merge(MCdf, meta_sub, on="Name")

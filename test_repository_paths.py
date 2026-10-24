@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 from packaging.requirements import Requirement
+from tdpy.verbosity import print
 
 import repository_paths
 
@@ -26,6 +27,7 @@ def test_repository_path_honors_configured_override(tmp_path, monkeypatch):
 
 def test_requirements_are_valid_and_use_no_local_file_urls():
     requirements_path = Path(__file__).resolve().parent / "requirements.txt"
+    print(f"Reading from {requirements_path}...")
     requirements = [
         Requirement(line)
         for line in requirements_path.read_text().splitlines()

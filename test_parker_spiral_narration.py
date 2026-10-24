@@ -25,6 +25,7 @@ def test_parker_spiral_file_narration_respects_verbosity(
     input_path = tmp_path / "taub_wind.npz"
     output_path = tmp_path / "parker_spiral.pdf"
     assert output_path.is_file()
+    print(f"Reading from {output_path}...")
     assert output_path.read_bytes().startswith(b"%PDF-")
     if verbosity == "0":
         assert capsys.readouterr().out == ""
@@ -32,4 +33,5 @@ def test_parker_spiral_file_narration_respects_verbosity(
         assert capsys.readouterr().out.splitlines() == [
             f"Reading from {input_path}...",
             f"Writing to {output_path}...",
+            f"Reading from {output_path}...",
         ]

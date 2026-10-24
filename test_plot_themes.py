@@ -20,6 +20,7 @@ from tdpy.plotting import apply_plot_theme, configure_plot_style, plot_backgroun
 @pytest.fixture
 def plot_functions(tmp_path):
     path = Path(__file__).with_name('plotter.py')
+    print(f'Reading from {path}...')
     tree = ast.parse(path.read_text())
     names = {'minor_tick_format', 'outcome_dist_hists', 'is_within_limits', 'scatter_plot', 'scatter_plot_bokeh'}
     functions = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in names]
@@ -70,6 +71,7 @@ def test_plot_functions_honor_requested_theme(plot_functions, monkeypatch, tmp_p
     monkeypatch.setattr(plt, 'show', inspect_display)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setenv('TDPY_VERBOSITY', '1')
+    capsys.readouterr()
     plot_functions['plot_background_colors'] = plot_background_colors
     options = {} if inherit else {'typeplotback': typeplotback}
     outer_theme = typeplotback if inherit else ('dark' if typeplotback == 'white' else 'white')
@@ -98,8 +100,13 @@ def test_plot_functions_honor_requested_theme(plot_functions, monkeypatch, tmp_p
             assert len(displayed) == 1
             if save:
                 filename = tmp_path / ('hist.pdf' if kind == 'histogram' else 'zoom.pdf')
+                print(f'Reading from {filename}...')
                 assert filename.read_bytes().startswith(b'%PDF-')
-                assert capsys.readouterr().out == f'Writing to {filename.name if kind == "histogram" else filename}...\n'
+                write_path = filename.name if kind == 'histogram' else filename
+                assert capsys.readouterr().out.splitlines() == [
+                    f'Writing to {write_path}...',
+                    f'Reading from {filename}...',
+                ]
             else:
                 assert capsys.readouterr().out == ''
         finally:

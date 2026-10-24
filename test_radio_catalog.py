@@ -46,6 +46,40 @@ def test_publisher_writes_csv_and_json_for_catalog(tmp_path: Path) -> None:
     assert json_rows == rows
 
 
+@pytest.mark.parametrize("verbosity, expected_output", [("0", ""), ("1", None)])
+def test_publisher_file_narration_respects_verbosity(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    verbosity: str,
+    expected_output: str | None,
+) -> None:
+    source_path = tmp_path / "append_table.csv"
+    output_directory = tmp_path / "docs"
+    monkeypatch.setenv("TDPY_VERBOSITY", verbosity)
+    write_catalog(
+        source_path,
+        [{
+            "Name": "Planet b",
+            "RA (J2000)": "12:00:00",
+            "DEC (J2000)": "+20:00:00",
+            "vmax": "2.5",
+            "Phi (Jy)": "4.0",
+        }],
+    )
+    capsys.readouterr()
+
+    csv_path, json_path = publish_radio_catalog(source_path, output_directory)
+
+    if expected_output is None:
+        expected_output = (
+            f"Reading from {source_path}...\n"
+            f"Writing to {csv_path}...\n"
+            f"Writing to {json_path}...\n"
+        )
+    assert capsys.readouterr().out == expected_output
+
+
 def test_publisher_rejects_missing_catalog_columns(tmp_path: Path) -> None:
     source_path = tmp_path / "incomplete.csv"
     print(f"Writing to {source_path}...")

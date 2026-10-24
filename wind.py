@@ -6,12 +6,14 @@ from scipy.optimize import fsolve
 import pandas as pd
 from radio_module import *
 from repository_paths import get_repository_path
+from tdpy.verbosity import print
 
 DATA_DIR = get_repository_path()
 
 
 # Read CSV using pandas
 filename = str(DATA_DIR / "NASA3004.csv")
+print(f"Reading from {filename}...")
 data = pd.read_csv(filename, comment="#")
 
 # Extract columns into separate arrays
@@ -64,7 +66,9 @@ def profile_plot(dfs, save=False, show=False):
     plt.tight_layout()  # Adjust rect parameter to leave space for the legend
 
     if save:
-        plt.savefig(DATA_DIR / "winds.pdf")
+        output_path = DATA_DIR / "winds.pdf"
+        print(f"Writing to {output_path}...")
+        plt.savefig(output_path)
 
     if show:
         plt.show()
@@ -173,15 +177,17 @@ def run_wind_simulation(save=True, show=False):
     windfile = str(
         DATA_DIR / f"stellar_wind_predictions_{Path(filename).stem[4:]}.tsv"
     )
-    with open(windfile, mode="w") as file:
-        writer = csv.writer(file, delimiter="\t")
+    wind_output_path = Path(windfile)
+    print(f"Writing to {wind_output_path}...")
+    with wind_output_path.open(mode="w", newline="", encoding="utf-8") as output_file:
+        writer = csv.writer(output_file, delimiter="\t")
         writer.writerow(column_headers)
         writer.writerows(results)
 
-    print(f"Results saved to {windfile}")
-
-    index = int(np.where(names == "tau Boo b")[0])
-    np.savez(DATA_DIR / "taub_wind", ranges=radial_ranges[index], speeds=wind_speeds[index])
+    index = np.flatnonzero(names == "tau Boo b").item()
+    wind_npz_path = DATA_DIR / "taub_wind.npz"
+    print(f"Writing to {wind_npz_path}...")
+    np.savez(wind_npz_path, ranges=radial_ranges[index], speeds=wind_speeds[index])
 
 
 if __name__ == "__main__":

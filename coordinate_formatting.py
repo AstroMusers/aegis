@@ -22,6 +22,15 @@ def format_coords(row: pd.Series) -> pd.Series:
     return pd.Series({"RA": ra_string, "DEC": dec_string})
 
 
+def convert_numeric_column(column: pd.Series) -> pd.Series:
+    """Convert a fully numeric column and retain its original values otherwise."""
+
+    try:
+        return pd.to_numeric(column)
+    except (TypeError, ValueError):
+        return column
+
+
 def zero_format(x) -> str:
     """Format a numeric value with zero decimal places."""
     return "{:.0f}".format(x)

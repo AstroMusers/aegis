@@ -13,11 +13,11 @@ except ImportError:
     adjust_text = None
 from radio_module import *
 from rotation_script import *
-from coordinate_formatting import format_coords, two_format, three_format
+from coordinate_formatting import convert_numeric_column, format_coords, two_format, three_format
 from matplotlib.colors import Normalize
 from matplotlib.cm import ScalarMappable
 from matplotlib.lines import Line2D
-from tqdm import tqdm
+from tdpy.verbosity import print, tqdm
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from repository_paths import get_repository_path
@@ -28,13 +28,15 @@ plt.rcParams['figure.figsize'] = [10, 5]
 rng = np.random.default_rng()
 
 # LOFAR:
+sensitivities_path = DATA_DIR / "sensitivities.csv"
+print(f"Reading from {sensitivities_path}...")
 lofar = pd.read_csv(
-    DATA_DIR / "sensitivities.csv")  # Obtained from van Haarlem et al. (2017), 8h integration time, 4.66MHz effective bandwidth
+    sensitivities_path)  # Obtained from van Haarlem et al. (2017), 8h integration time, 4.66MHz effective bandwidth
 lofar.columns = lofar.iloc[0]
 lofar = lofar[1:]
 lofar = lofar.drop([1, 2, 3, 11, 12, 13])
 lofar = lofar.reset_index(drop=True)
-lofar = lofar.apply(pd.to_numeric, errors="ignore")
+lofar = lofar.apply(convert_numeric_column)
 lofar["NL Core"] = lofar["NL Core"].multiply(10 ** (-3)) * 5  # 5 sigma sensitivity in Jy
 lofar["Full EU"] = lofar["Full EU"].multiply(10 ** (-3)) * 5  # 5 sigma sensitivity in Jy
 
@@ -52,7 +54,9 @@ Freq_2 = Freq[4:]
 NenuNoise = np.array([130.0, 9.0])  # MJy (10 MHz, 1h, website)
 NenuFreq = np.array([15.0, 85.0])  # MHz (website)
 NenuNoise *= np.sqrt(1 / 8) * 10 ** (-3) * 5  # 5 sigma sensitivity in Jy
-nenu_data = np.load(DATA_DIR / "nenufar.npz")
+nenu_path = DATA_DIR / "nenufar.npz"
+print(f"Reading from {nenu_path}...")
+nenu_data = np.load(nenu_path)
 NenuFreq = nenu_data["nenu_freqs"]
 NenuNoise = nenu_data["nenu_noise"] * 5
 
@@ -83,6 +87,7 @@ MWA["RMS Noise"] *= np.sqrt((2 / integration_time)) * 10 ** (-3) * 5
 
 # Retrieve Data
 filename = str(DATA_DIR / "NASA3004.csv")
+print(f"Reading from {filename}...")
 df = pd.read_csv(filename, comment="#")
 windfile = str(DATA_DIR / ("new_wind_info" + Path(filename).stem[4:] + ".txt"))
 
@@ -91,6 +96,7 @@ headers_to_find = ["pl_name", "pl_orbper", "pl_orbsmax", "pl_radj", "pl_bmassj",
 indices = [df.columns.get_loc(header) for header in headers_to_find]
 pl_name, pl_orbper, pl_orbsmax, radius, pl_bmassj, pl_bmassprov, dens, st_rad, st_mass, st_age, distance = indices
 
+print(f"Reading from {windfile}...")
 wind_temperatures, wind_speeds = np.genfromtxt(windfile, usecols=(1, 2), skip_header=1, delimiter="\t", unpack=True)
 
 # Plot initial distributions
@@ -163,7 +169,9 @@ fig.text(0, 0.75, 'Bin Count', va='center', rotation='vertical', fontsize=12)
 fig.tight_layout()
 
 fig.supylabel(' \n', va='center', rotation='vertical', fontsize=11)
-fig.savefig("dist.pdf")
+distribution_path = Path("dist.pdf")
+print(f"Writing to {distribution_path}...")
+fig.savefig(distribution_path)
 plt.show()
 plt.close(fig)
 
@@ -602,7 +610,9 @@ for i, j in tqdm(df.iterrows(), total=len(df)):  # The loop that reads exoplanet
         lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
         fig.legend(lines, labels, loc="upper right", bbox_to_anchor=(1, 1), ncol=int(len(lines_labels) / 2),
                    frameon=True, shadow=True)
-        plt.savefig(f"Distribution Plots/{EXO.name}.pdf")
+        distribution_path = DATA_DIR / "Distribution Plots" / f"{EXO.name}.pdf"
+        print(f"Writing to {distribution_path}...")
+        plt.savefig(distribution_path)
 
 real_outliers = set(outliers) - set(insiders)
 lofar_obs, nenufar_obs, mwa_obs, ugmrt_obs = np.array(lofar_obs), np.array(nenufar_obs), np.array(mwa_obs), np.array(
@@ -641,7 +651,9 @@ y_low_avg = np.exp(np.mean(np.log(np.array(y_low))))
 y_up_avg = np.exp(np.mean(np.log(np.array(y_up))))
 average_errors = [x_low_avg, x_up_avg, y_low_avg, y_up_avg]
 
-np.savez(DATA_DIR / "all.npz", y_mag_minerr=y_mag_minerr, y_mag_maxerr=y_mag_maxerr,
+all_path = DATA_DIR / "all.npz"
+print(f"Writing to {all_path}...")
+np.savez(all_path, y_mag_minerr=y_mag_minerr, y_mag_maxerr=y_mag_maxerr,
          y_kin_maxerr=y_mag_maxerr, y_kin_minerr=y_mag_minerr, y_both_minerr=y_both_minerr,
          y_both_maxerr=y_both_maxerr, x_minerr=x_minerr, x_maxerr=x_maxerr, average_errors=np.array(average_errors),
          detectables_both=np.array(detectables_both), intensities=np.array(intensities),
@@ -664,7 +676,9 @@ df1 = pd.DataFrame({"Names": names,
                     "x_err_max": x_maxerr})
 
 df1['Color'] = df1['Names'].apply(lambda x: 'gray' if x in real_outliers else 'black').astype(str)
-df1.to_csv(DATA_DIR / "df1.csv", index=False)
+df1_path = DATA_DIR / "df1.csv"
+print(f"Writing to {df1_path}...")
+df1.to_csv(df1_path, index=False)
 
 det_data = [[exo.name, exo.freq, exo.intensity_both] for exo in detectables_both]
 df_det = pd.DataFrame(det_data[0:], columns=["Name", "Freq", "Flux"])
@@ -703,24 +717,29 @@ for i in range(len(intensities)):
     detectable_data["Flux"] = detectable_data["Flux"].map(three_format)
     detectable_data = detectable_data.sort_values(by="Name")
     detectable_data.columns = ["Name", "Freq(MHz)", "Flux(mJy)"]
-    detectable_data.to_csv(DATA_DIR / file_names[3], index=False)
+    detectable_path = DATA_DIR / file_names[3]
+    print(f"Writing to {detectable_path}...")
+    detectable_data.to_csv(detectable_path, index=False)
 
     table = list(zip(*l2))
 
     table = sorted(table, key=lambda x: x[0].lower())
     file_name = DATA_DIR / f"Old Result Tables/{file_names[0]}"
-    with open(file_name, 'w') as f:
-        f.write(tabulate(table) if tabulate is not None else str(table))
+    print(f"Writing to {file_name}...")
+    with file_name.open('w', encoding="utf-8") as output_file:
+        output_file.write(tabulate(table) if tabulate is not None else str(table))
 
     table = sorted(table, key=lambda x: x[1])
     file_name = DATA_DIR / f"Old Result Tables/{file_names[1]}"
-    with open(file_name, 'w') as f:
-        f.write(tabulate(table) if tabulate is not None else str(table))
+    print(f"Writing to {file_name}...")
+    with file_name.open('w', encoding="utf-8") as output_file:
+        output_file.write(tabulate(table) if tabulate is not None else str(table))
 
     table = sorted(table, key=lambda x: x[2], reverse=True)
     file_name = DATA_DIR / f"Old Result Tables/{file_names[2]}"
-    with open(file_name, 'w') as f:
-        f.write(tabulate(table) if tabulate is not None else str(table))
+    print(f"Writing to {file_name}...")
+    with file_name.open('w', encoding="utf-8") as output_file:
+        output_file.write(tabulate(table) if tabulate is not None else str(table))
 
 final_df = df1[["Names", "x", "y_both", "x_err_min", "x_err_max", "y_err_min", "y_err_max"]]
 # Step 1: Merge the two dataframes on the name column
@@ -746,20 +765,29 @@ final_df = final_df[cols]
 
 final_df = final_df.sort_values(by="Max. Flux Density [Jy]", ascending=False)
 
-final_df.to_csv(DATA_DIR / "Output Tables/all.csv", index=False)
+output_table_path = DATA_DIR / "Output Tables/all.csv"
+print(f"Writing to {output_table_path}...")
+final_df.to_csv(output_table_path, index=False)
 end0 = final_df[(final_df["Max. Frequency [MHz]"] > 1e-1) & (final_df["Max. Frequency [MHz]"] < 1)]
 end1 = final_df[(final_df["Max. Frequency [MHz]"] > 1) & (final_df["Max. Frequency [MHz]"] < 1e1)]
 end2 = final_df[(final_df["Max. Frequency [MHz]"] > 1e1) & (final_df["Max. Frequency [MHz]"] < 1e2)]
 end3 = final_df[(final_df["Max. Frequency [MHz]"] > 1e2) & (final_df["Max. Frequency [MHz]"] < 1e3)]
-end0.to_csv(DATA_DIR / "Output Tables/0.1-1 MHz.csv", index=False)
-end1.to_csv(DATA_DIR / "Output Tables/1-10 MHz.csv", index=False)
-end2.to_csv(DATA_DIR / "Output Tables/10-100 MHz.csv", index=False)
-end3.to_csv(DATA_DIR / "Output Tables/100-1000 MHz.csv", index=False)
+for frequency_table, filename in zip(
+    (end0, end1, end2, end3),
+    ("0.1-1 MHz.csv", "1-10 MHz.csv", "10-100 MHz.csv", "100-1000 MHz.csv"),
+):
+    output_path = DATA_DIR / "Output Tables" / filename
+    print(f"Writing to {output_path}...")
+    frequency_table.to_csv(output_path, index=False)
 
-np.savez(DATA_DIR / "observables", lofar=lofar_obs, nenufar=nenufar_obs, mwa=mwa_obs, ugmrt=ugmrt_obs)
+observables_path = DATA_DIR / "observables.npz"
+print(f"Writing to {observables_path}...")
+np.savez(observables_path, lofar=lofar_obs, nenufar=nenufar_obs, mwa=mwa_obs, ugmrt=ugmrt_obs)
 
-with open(DATA_DIR / "result_stats.txt", "w") as fl:
-    fl.write(f"Total: {len(df)}\n"
+statistics_path = DATA_DIR / "result_stats.txt"
+print(f"Writing to {statistics_path}...")
+with statistics_path.open("w", encoding="utf-8") as output_file:
+    output_file.write(f"Total: {len(df)}\n"
              f"Can reach: {len(frequencies)}\n"
              f"Can reach (%): {len(frequencies) / len(df) * 100:.1f}\n"
              f"Can penetrate ionosphere:  {len(frequencies[np.where(frequencies > 10)])}\n"

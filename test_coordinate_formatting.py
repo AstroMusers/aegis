@@ -1,6 +1,7 @@
 import pandas as pd
 
 from coordinate_formatting import (
+    convert_numeric_column,
     format_coords,
     one_format,
     three_format,
@@ -22,6 +23,14 @@ def test_numeric_precision_formatters():
     assert one_format(3.14159) == "3.1"
     assert two_format(3.14159) == "3.14"
     assert three_format(3.14159) == "3.142"
+
+
+def test_convert_numeric_column_preserves_nonnumeric_values():
+    numeric = convert_numeric_column(pd.Series(["1", "2"]))
+    mixed = convert_numeric_column(pd.Series(["1", "text"]))
+
+    assert numeric.tolist() == [1, 2]
+    assert mixed.tolist() == ["1", "text"]
 
 
 def test_default_calculate_returns_positive_emission():

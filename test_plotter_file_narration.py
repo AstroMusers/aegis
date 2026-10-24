@@ -20,9 +20,9 @@ def test_plotter_import_narrates_input_files(verbosity):
         }
     )
     import_code = (
-        "import pandas as pd; import plotter; "
-        "assert plotter._to_numeric_or_keep(pd.Series(['1', '2'])).tolist() == [1, 2]; "
-        "assert plotter._to_numeric_or_keep(pd.Series(['x', '2'])).tolist() == ['x', '2']"
+        "import pandas as pd; import plotter; from coordinate_formatting import convert_numeric_column; "
+        "assert convert_numeric_column(pd.Series(['1', '2'])).tolist() == [1, 2]; "
+        "assert convert_numeric_column(pd.Series(['x', '2'])).tolist() == ['x', '2']"
     )
     result = subprocess.run(
         [sys.executable, "-c", import_code],

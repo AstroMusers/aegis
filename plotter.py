@@ -21,16 +21,9 @@ import json
 from tdpy.plotting import apply_plot_theme, configure_plot_style, plot_background_colors, plot_style
 from repository_paths import get_repository_path
 from tdpy.verbosity import print
+from coordinate_formatting import convert_numeric_column
 
 DATA_DIR = get_repository_path()
-
-
-def _to_numeric_or_keep(column):
-    try:
-        return pd.to_numeric(column)
-    except (TypeError, ValueError):
-        return column
-
 
 # LOFAR:
 sensitivities_path = DATA_DIR / "sensitivities.csv"
@@ -41,7 +34,7 @@ lofar.columns = lofar.iloc[0]
 lofar = lofar[1:]
 lofar = lofar.drop([1, 2, 3, 11, 12, 13])
 lofar = lofar.reset_index(drop=True)
-lofar = lofar.apply(_to_numeric_or_keep)
+lofar = lofar.apply(convert_numeric_column)
 lofar["NL Core"] = lofar["NL Core"].multiply(10 ** (-3)) * 5  # 5 sigma sensitivity in Jy
 lofar["Full EU"] = lofar["Full EU"].multiply(10 ** (-3)) * 5  # 5 sigma sensitivity in Jy
 

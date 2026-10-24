@@ -3,19 +3,25 @@ import pandas as pd
 
 from coordinate_formatting import format_coords, one_format, three_format, two_format, zero_format
 from repository_paths import get_repository_path
+from tdpy.verbosity import print
 
 DATA_DIR = get_repository_path()
 
 
 def append_predictions(save=True):
     filename = DATA_DIR / "NASA3004.csv"
+    print(f"Reading from {filename}...")
     df = pd.read_csv(filename, comment="#")
 
-    df2 = pd.read_csv(DATA_DIR / "Output Tables" / "all.csv")
+    predictions_path = DATA_DIR / "Output Tables" / "all.csv"
+    print(f"Reading from {predictions_path}...")
+    df2 = pd.read_csv(predictions_path)
     print(len(df2[0.1 < df2["Max. Frequency [MHz]"]]))
     df2 = df2[(0.1 < df2["Max. Frequency [MHz]"]) & (df2["Max. Frequency [MHz]"] < 10)]
     if save:
-        df2.to_csv(DATA_DIR / "Output Tables" / "0.1-10MHz.csv", index=False)
+        filtered_path = DATA_DIR / "Output Tables" / "0.1-10MHz.csv"
+        print(f"Writing to {filtered_path}...")
+        df2.to_csv(filtered_path, index=False)
     df2 = df2[:5]
     df2 = df2[["Name", "Max. Frequency [MHz]", "Max. Flux Density [Jy]"]]
 
@@ -41,7 +47,9 @@ def append_predictions(save=True):
     final["Phi (Jy)"] = (final["Phi (mJy)"]).apply(two_format)
 
     if save:
-        final.to_csv(DATA_DIR / "append_table.csv", columns=["Name", "RA (J2000)", "DEC (J2000)", "vmax", "Phi (Jy)"], index=False)
+        output_path = DATA_DIR / "append_table.csv"
+        print(f"Writing to {output_path}...")
+        final.to_csv(output_path, columns=["Name", "RA (J2000)", "DEC (J2000)", "vmax", "Phi (Jy)"], index=False)
     return final
 
 

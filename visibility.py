@@ -12,10 +12,12 @@ import matplotlib.patheffects as path_effects
 
 from coordinate_formatting import one_format, three_format, two_format, zero_format
 from repository_paths import get_repository_path
+from tdpy.verbosity import print
 
 DATA_DIR = get_repository_path()
 plt.rcParams['figure.figsize'] = [7, 4]
 
+print(f"Reading from {DATA_DIR / 'obs_table.csv'}...")
 df = pd.read_csv(DATA_DIR / "obs_table.csv")
 
 norm = mcolors.PowerNorm(gamma=0.3)  # Adjust gamma to control brightness
@@ -23,6 +25,7 @@ norm = mcolors.PowerNorm(gamma=0.3)  # Adjust gamma to control brightness
 cmap = plt.cm.jet
 cmap1 = plt.cm.turbo
 
+print(f"Reading from {DATA_DIR / 'observables.npz'}...")
 which_data = np.load(DATA_DIR / "observables.npz")
 lofar = which_data["lofar"]
 nenufar = which_data["nenufar"]
@@ -122,6 +125,7 @@ def generate_final_table(input_path=None, output_path=None):
     if output_path is None:
         output_path = DATA_DIR / "final-table.csv"
 
+    print(f"Reading from {input_path}...")
     final = pd.read_csv(input_path)
     final[["Telescope", "t20"]] = final["Name"].apply(lambda x: pd.Series(possible_time_for_target(x)))
     final["a (AU)"] *= 1e2
@@ -135,6 +139,7 @@ def generate_final_table(input_path=None, output_path=None):
     final["vmax"] = final["vmax"].apply(zero_format)
     final["Phi (mJy)"] = final["Phi (mJy)"].apply(two_format)
 
+    print(f"Writing to {output_path}...")
     final.to_csv(output_path, index=False)
     return final
 

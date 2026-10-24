@@ -4,6 +4,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Arc
 from repository_paths import get_repository_path
+from tdpy.verbosity import print
 
 DATA_DIR = get_repository_path()
 
@@ -122,6 +123,7 @@ def draw_magnetosphere_sketch(output_path=None, show=False):
     ax.set(xlim=[r_s_signed*1.75, -r_s_signed*1.75], ylim=[r_s_signed*1.25, -r_s_signed*1.25])
 
     if output_path is not None:
+        print(f"Writing to {output_path}...")
         fig.savefig(output_path, dpi=300)
 
     if show:

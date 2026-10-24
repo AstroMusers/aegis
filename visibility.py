@@ -230,7 +230,9 @@ def visibility_plot(results=None, save=False, show=False):
     plt.subplots_adjust(hspace=0.6)
 
     if save:
-        fig.savefig(DATA_DIR / "visibility.pdf")
+        output_path = DATA_DIR / "visibility.pdf"
+        print(f"Writing to {output_path}...")
+        fig.savefig(output_path)
 
     if show:
         plt.show()

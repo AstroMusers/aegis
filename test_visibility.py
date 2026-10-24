@@ -23,8 +23,10 @@ def test_visibility_file_narration_respects_verbosity(tmp_path, verbosity):
         [
             sys.executable,
             "-c",
-            "import os; import visibility; "
-            "visibility.generate_final_table(output_path=os.environ['VISIBILITY_OUTPUT'])",
+            "import os; import numpy as np; from pathlib import Path; import visibility; "
+            "visibility.generate_final_table(output_path=os.environ['VISIBILITY_OUTPUT']); "
+            "visibility.DATA_DIR = Path(os.environ['VISIBILITY_OUTPUT']).parent; "
+            "visibility.visibility_plot(results=[np.zeros((200, 200)) for _ in range(4)], save=True)",
         ],
         cwd=repository_path,
         env=environment,
@@ -41,5 +43,7 @@ def test_visibility_file_narration_respects_verbosity(tmp_path, verbosity):
             f"Reading from {repository_path / 'observables.npz'}...",
             f"Reading from {repository_path / 'obs_table.csv'}...",
             f"Writing to {output_path}...",
+            f"Writing to {tmp_path / 'visibility.pdf'}...",
         ]
     assert output_path.is_file()
+    assert output_path.stat().st_size > 0

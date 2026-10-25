@@ -51,7 +51,7 @@ def profile_plot(dfs, save=False, show=False):
                 plt.plot([], [], label=type, color=color)
                 plotted_spectral_types.add(type)
         ax.set(yscale="log", xscale="log")
-        ax.grid(True, alpha=0.5)
+        ax.grid(False)
         ax.set_ylim(10, 5000)
         ax.set_xlim(3e-5, 50)
         retro_noir(ax)

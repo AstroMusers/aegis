@@ -13,11 +13,11 @@ Start with a NASA Exoplanet Archive table containing the required system paramet
 
 ## Radio catalog
 
-We publish five selected predicted targets in a searchable radio
+We publish predictions for five selected targets in a searchable radio
 catalog. The page sorts by target, maximum frequency, or predicted flux and
-filters by name and frequency. These are model predictions, not detections.
+filters by name and frequency. No radio detections are claimed.
 
-To rebuild the site data from `append_table.csv`, run:
+Rebuild the site data from `append_table.csv` with this command.
 
 ```bash
 python publish_radio_catalog.py --check-physicality
@@ -40,22 +40,21 @@ GitHub Pages environment is enabled for this repository.
 ### Magnetic-field inference
 For a detected cyclotron-maser cutoff, `magnetic_field_inference.py` estimates the surface field from Aegis's cutoff-frequency relation and a Gaussian measurement likelihood. Install the dependencies in `requirements.txt`, then run the explicitly synthetic example with `python examples/infer_magnetic_field.py`. The fit uses a uniform magnetic-field prior and complements the forward Monte Carlo predictions with an observation-driven estimate.
 
-The [cutoff-inference notebook](examples/magnetic_field_cutoff.ipynb) compares
-two seeded synthetic measurements by passing them through
-`infer_surface_field()`. It displays the returned PCAT posterior intervals and
-their distributions. These toy inputs exercise the likelihood and sampling
-workflow; they are not radio observations or field measurements of real
-exoplanets. The short chains illustrate the API and do not establish
-convergence.
+The [cutoff-inference notebook](examples/magnetic_field_cutoff.ipynb) passes two
+seeded synthetic measurements through `infer_surface_field()` and displays the
+resulting PCAT posterior intervals and distributions. The notebook illustrates
+likelihood and sampling. Its short chains are too brief to assess convergence.
 
 ![Posterior field distributions for two explicitly synthetic radio-cutoff measurements](examples/visuals/aegis_synthetic_cutoff_field_posterior.png)
 
-The calculation requires the exoplanet archive table in comma-separated value format. We use 10,000 Monte Carlo samples. Reduce the count for faster exploratory calculations. The script also writes `df1.csv` and `all.npz` for the population figures. These draws propagate stated measurement uncertainties and the empirical Solar System spin distribution through a forward model. The cutoff fit above estimates a model parameter from an observed frequency.
+The calculation requires the exoplanet archive table in comma-separated value format. We use 10,000 Monte Carlo samples. For a quicker exploratory run, lower the sample count. The script also writes `df1.csv` and `all.npz` for the population figures. These draws carry stated measurement uncertainties and the empirical Solar System spin distribution through a forward model. `magnetic_field_inference.py` estimates the surface field from an observed cutoff frequency.
 
 ### Emission and observability figures
 `plotter.py` plots the Monte Carlo predictive emission-frequency and radio-flux distributions from `df1.csv` and `all.npz`. The `nenufar.npz` and `sensitivities.csv` inputs add the sensitivity limits of NenuFAR and other radio telescopes.
 
-For an interactive target view with hover values, uncertainty bars, and telescope sensitivity curves, install Bokeh and save the returned figure as HTML:
+Install Bokeh to create an interactive target view with hover values, uncertainty
+bars, and telescope sensitivity curves. Save the returned figure as HTML using
+this code.
 
 ```python
 from bokeh.io import output_file, save

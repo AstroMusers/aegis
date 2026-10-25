@@ -379,7 +379,7 @@ def scatter_plot(df1, which, y_err, x_err, det, avg_err, zoom=False, save=False,
 
     if zoom:
         errorbar.remove()
-        ax0.grid("on", alpha=0.2)
+        ax0.grid(False)
         # lab = lab_strict
         if strict:
             df1 = df[lab_strict != ""]

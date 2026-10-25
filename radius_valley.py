@@ -57,7 +57,7 @@ def plot_radius_valleys(save=True, show=False):
         ax1.set_ylabel(groups[i])
         ax1.tick_params(which="major", length=12)
         ax1.tick_params(which="minor", length=6)
-        ax1.grid(True, alpha=0.2)
+        ax1.grid(False)
 
         bins = np.linspace(0, 7, 25)
         label_long = r"Longer $T_\mathrm{orb}$"
@@ -100,7 +100,7 @@ def plot_radius_valleys(save=True, show=False):
     ax1.set_ylabel(r'Radius $[R_\oplus]$')
     ax1.tick_params(which="major", length=12)
     ax1.tick_params(which="minor", length=6)
-    ax1.grid(True, alpha=0.2)
+    ax1.grid(False)
 
     bins = np.linspace(0, 7, 25)
     ax2.hist(radii[colors == color1], bins=bins, orientation='horizontal', color=color1, alpha=0.8, edgecolor=color1, linewidth=1, histtype="step", hatch="//////", label=r"Longer $T_\mathrm{orb}$")

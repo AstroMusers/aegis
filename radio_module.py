@@ -407,7 +407,7 @@ mpl.rcParams["figure.autolayout"] = True
 
 
 def retro_noir(ax):
-    ax.grid(alpha=0.2)
+    ax.grid(False)
     ax.tick_params(direction="in", which="major", length=7, right=True, top=True, width=1.25)
     ax.tick_params(direction="in", which="minor", length=4, right=True, top=True, width=1.25)
     ax.spines['top'].set_linewidth(1.25)
@@ -418,8 +418,7 @@ def retro_noir(ax):
 
 def hist_noir(ax):
     # ax.minorticks_on()
-    ax.grid(alpha=0.15, which="major")
-    ax.grid(alpha=0.05, which="minor")
+    ax.grid(False)
     ax.tick_params(direction="in", which="major", length=5, right=True, top=True, width=1.5)
     ax.tick_params(direction="in", which="minor", length=2, right=True, top=True, width=1.1)
     ax.spines['top'].set_linewidth(1.5)

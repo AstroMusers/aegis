@@ -64,15 +64,13 @@ def plot_parker_spiral(save=True, show=False):
     y = r * np.sin(theta)
 
     fig, ax = plt.subplots(subplot_kw={'projection': 'polar'}, constrained_layout=True)
-    ax.grid(False, which='minor')
+    ax.grid(False)
 
     r = np.log10(r)
 
     masked_values = np.ma.masked_where(r < np.log10(R/215), B_perp)
 
     c = ax.pcolormesh(theta, r, masked_values, shading='gouraud', cmap=colormap)
-
-    ax.grid("on", color="w", alpha=0.25)
 
     fig.colorbar(c, orientation="vertical", pad=0.09, extend="both", fraction=0.03, aspect=30, label=r"log$_{10}$($B_\perp$ [nT])")
 

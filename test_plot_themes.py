@@ -113,6 +113,23 @@ def test_plot_functions_honor_requested_theme(plot_functions, monkeypatch, tmp_p
             plt.close('all')
 
 
+@pytest.mark.parametrize('bad_errors', [
+    [np.ma.array([0.1, 0.2], mask=[True, False]), np.ones(2)],
+    [np.array([0.1 + 0.2j, 0.2]), np.ones(2)],
+    [np.ones(2)], [np.ones(2), np.ones(2), np.ones(2)],
+])
+def test_bokeh_plot_rejects_ambiguous_uncertainties(plot_functions, bad_errors):
+    pytest.importorskip('bokeh')
+    data = pd.DataFrame({'Names': ['A', 'B'], 'x': [20., 40.],
+                         'y_both': [0.001, 0.01], 's': [-2., -1.]})
+    errors = [[np.ones(2), np.ones(2)] for _ in range(3)]
+    with pytest.raises(ValueError, match='Plot uncertainties'):
+        plot_functions['scatter_plot_bokeh'](data, 'both', errors, bad_errors)
+    with pytest.raises(ValueError, match='Plot uncertainties'):
+        plot_functions['scatter_plot_bokeh'](data, 'both', [errors[0], errors[1], bad_errors],
+                                              [np.ones(2), np.ones(2)])
+
+
 def test_bokeh_radio_plot_is_hoverable_and_serializes_without_mutating_inputs(plot_functions):
     pytest.importorskip('bokeh')
     from bokeh.embed import file_html

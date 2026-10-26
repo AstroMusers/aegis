@@ -504,6 +504,11 @@ def scatter_plot_bokeh(df1, which, y_err, x_err):
         raise ValueError("The selected prediction column has no positive finite values")
 
     error_index = {"mag": 0, "kin": 1, "both": 2}[which]
+    if (len(y_err) != 3 or len(y_err[error_index]) != 2 or len(x_err) != 2):
+        raise ValueError("Plot uncertainties need matching lower and upper vectors")
+    if any(np.ma.is_masked(value) or np.iscomplexobj(value)
+           for value in list(y_err[error_index]) + list(x_err)):
+        raise ValueError("Plot uncertainties must be complete real vectors")
     y_errors = [np.asarray(value, dtype=float) for value in y_err[error_index]]
     x_errors = [np.asarray(value, dtype=float) for value in x_err]
     if any(value.shape != (len(data),) or not np.isfinite(value).all() or np.any(value < 0)

@@ -15,7 +15,7 @@ Start with a NASA Exoplanet Archive table containing the required system paramet
 
 We publish predictions for five selected targets in a searchable radio
 catalog. The page sorts by target, maximum frequency, or predicted flux and
-filters by name and frequency. No radio detections are claimed.
+filters by name and frequency.
 
 Rebuild the site data from `append_table.csv` with this command.
 
@@ -25,6 +25,10 @@ python publish_radio_catalog.py --check-physicality
 
 The catalog is published at <https://astromusers.github.io/aegis/> when the
 GitHub Pages environment is enabled for this repository.
+
+A repository maintainer can enable GitHub Pages with GitHub Actions as the
+publishing source in Settings > Pages, then rerun the **Publish Aegis radio
+catalog** workflow. Generating the CSV and JSON alone does not enable hosting.
 
 ## Calculations
 
@@ -63,6 +67,12 @@ from plotter import df, scatter_plot_bokeh, x_err, y_err
 output_file("visuals/aegis_radio_predictions_bokeh.html")
 save(scatter_plot_bokeh(df, "both", y_err, x_err))
 ```
+
+The [saved interactive prediction plot](examples/visuals/aegis_radio_predictions_bokeh_20261026_004515.html)
+contains the same 1,111 pipeline-predicted target rows used by the static view.
+It is self-contained and can be opened offline. Plot uncertainties must have
+complete, real lower and upper vectors. Masked, complex, or malformed bounds
+raise an error before they can become misleading error bars.
 
 `outcome_dist_hists()` and `scatter_plot()` use white backgrounds with black
 axes by default. Pass `typeplotback='dark'` for black backgrounds with white

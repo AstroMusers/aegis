@@ -1,7 +1,13 @@
 from pathlib import Path
 import pandas as pd
 
-from coordinate_formatting import format_coords, one_format, three_format, two_format, zero_format
+from coordinate_formatting import (
+    build_radio_catalog_table,
+    one_format,
+    three_format,
+    two_format,
+    zero_format,
+)
 from repository_paths import get_repository_path
 from tdpy.verbosity import print
 
@@ -25,17 +31,9 @@ def append_predictions(save=True):
     df2 = df2[:5]
     df2 = df2[["Name", "Max. Frequency [MHz]", "Max. Flux Density [Jy]"]]
 
-    detect_data = df[df["pl_name"].isin(df2["Name"])]
-    enough_data = detect_data[["pl_name", "pl_bmassj", "pl_radj", "pl_orbsmax", "sy_dist", "st_age", "ra", "dec"]].copy()
-    enough_data.rename(columns={"pl_name": "Name"}, inplace=True)
-
-    merged = pd.merge(enough_data, df2, on="Name")
-
-    merged[['ra', 'dec']] = merged.apply(format_coords, axis=1)
-    merged["vmax"] = merged["Max. Frequency [MHz]"]
-    merged.columns = ["Name", "Mass (MJ)", "Radius (RJ)", "a (AU)", "d (pc)", "t (Gyr)", "RA (J2000)", "DEC (J2000)", "nupeak (MHz)", "Phi (mJy)", "vmax"]
-    final = merged[["Name", "RA (J2000)", "DEC (J2000)", "Mass (MJ)", "Radius (RJ)", "a (AU)", "d (pc)", "t (Gyr)", "vmax", "Phi (mJy)"]]
-    final = final.sort_values(by="Phi (mJy)", ascending=False)
+    final = build_radio_catalog_table(
+        df, df2, "Max. Frequency [MHz]", "Max. Flux Density [Jy]"
+    )
 
     final["Mass (MJ)"] = final["Mass (MJ)"].apply(three_format)
     final["a (AU)"] = (final["a (AU)"]*1e2).apply(one_format)

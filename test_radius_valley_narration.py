@@ -10,10 +10,14 @@ import pytest
 def test_radius_valley_file_narration_respects_verbosity(verbosity):
     repository_path = Path(__file__).resolve().parent
     environment = os.environ.copy()
+    python_paths = [str(repository_path)]
+    python_paths.extend(
+        path for path in environment.get("PYTHONPATH", "").split(os.pathsep) if path
+    )
     environment.update(
         {
             "AEGIS_PATH": str(repository_path),
-            "PYTHONPATH": str(repository_path),
+            "PYTHONPATH": os.pathsep.join(python_paths),
             "TDPY_VERBOSITY": verbosity,
         }
     )

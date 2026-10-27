@@ -1,5 +1,5 @@
 # Aegis
-What would it take to hear an exoplanet's magnetic field? We use Aegis to predict radio emission driven by cyclotron maser instability (CMI), propagate uncertain system properties through stellar-wind and planetary-emission models, and compare the resulting frequency and flux distributions with telescope sensitivities. The predictions depend on the adopted wind, spin, and magnetic-field assumptions, which are worth inspecting before choosing a target.
+Aegis predicts exoplanet radio emission from the cyclotron maser instability. It propagates uncertainty in stellar winds, planetary spin, and magnetic fields to predict emission frequencies and fluxes, then compares those distributions with telescope sensitivities.
 
 ## Installation
 The required packages are listed in `environment.yml` and `requirements.txt`.
@@ -87,7 +87,7 @@ axes, including saved figures. They also inherit an enclosing TDpy
 ## Output tables
 `exoplanet_predictions.py` writes radio flux densities and maximum emission frequencies for the magnetic, kinetic, and combined radiometric Bode-law predictions. `Output Tables/all.csv` contains the combined predictions and uncertainties for every exoplanet. Five additional tables divide the targets by predicted frequency. The text tables under `Old Result Tables` sort potentially visible candidates by name, frequency, and flux density.
 
-`extract.py` and `append.py` produce `final-table.csv` and `append.csv`, the two manuscript tables.
+`extract.py` writes `obs_table.csv`, `append.py` writes `append_table.csv` for the radio catalog, and `visibility.py` writes the manuscript table `final-table.csv`.
 
 
 ## Known limitations

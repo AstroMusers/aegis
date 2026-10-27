@@ -12,9 +12,42 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 import pytest
+from unittest.mock import Mock, call
 from tdpy.verbosity import print
 
 from tdpy.plotting import apply_plot_theme, configure_plot_style, plot_background_colors, plot_style
+
+
+@pytest.mark.parametrize(
+    "styler,major_length,major_width,minor_length,minor_width",
+    [
+        ("retro_noir", 7, 1.25, 4, 1.25),
+        ("hist_noir", 5, 1.5, 2, 1.1),
+    ],
+)
+def test_noir_axis_styles_preserve_tick_and_spine_settings(
+    styler, major_length, major_width, minor_length, minor_width
+):
+    from radio_module import hist_noir, retro_noir
+
+    axis = Mock()
+    axis.spines = {side: Mock() for side in ("top", "bottom", "left", "right")}
+
+    {"retro_noir": retro_noir, "hist_noir": hist_noir}[styler](axis)
+
+    axis.grid.assert_called_once_with(False)
+    assert axis.tick_params.call_args_list == [
+        call(
+            direction="in", which="major", length=major_length,
+            right=True, top=True, width=major_width,
+        ),
+        call(
+            direction="in", which="minor", length=minor_length,
+            right=True, top=True, width=minor_width,
+        ),
+    ]
+    for spine in axis.spines.values():
+        spine.set_linewidth.assert_called_once_with(major_width)
 
 
 @pytest.fixture

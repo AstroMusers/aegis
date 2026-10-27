@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from tdpy.exoplanet import keplerian_orbital_speed as keplerian
 
 
 class Exoplanet:
@@ -125,15 +126,6 @@ def freq_condition(nu, n):
     n /= 10 ** 6
     nu_p = 8.98 * np.sqrt(n) * 10 ** (-3)
     return nu > nu_p
-
-
-try:
-    from tdpy.exoplanet import keplerian_orbital_speed as keplerian
-except ImportError:
-    def keplerian(M, r):
-        """Calculate circular Keplerian velocity in km/s."""
-        G = 8.87129 * 10 ** 2  # Gravitational constant in AU (M_sun)-1 (km/s)2
-        return np.sqrt(G * M / r)
 
 
 def v_eff(v_wind, v_kepler):
@@ -406,25 +398,26 @@ mpl.rcParams["figure.autolayout"] = True
 # plt.rcParams.update(rc)
 
 
-def retro_noir(ax):
+def _style_noir_axis(ax, major_length, major_width, minor_length, minor_width):
     ax.grid(False)
-    ax.tick_params(direction="in", which="major", length=7, right=True, top=True, width=1.25)
-    ax.tick_params(direction="in", which="minor", length=4, right=True, top=True, width=1.25)
-    ax.spines['top'].set_linewidth(1.25)
-    ax.spines['bottom'].set_linewidth(1.25)
-    ax.spines['left'].set_linewidth(1.25)
-    ax.spines['right'].set_linewidth(1.25)
+    ax.tick_params(
+        direction="in", which="major", length=major_length, right=True, top=True,
+        width=major_width,
+    )
+    ax.tick_params(
+        direction="in", which="minor", length=minor_length, right=True, top=True,
+        width=minor_width,
+    )
+    for side in ('top', 'bottom', 'left', 'right'):
+        ax.spines[side].set_linewidth(major_width)
+
+
+def retro_noir(ax):
+    _style_noir_axis(ax, major_length=7, major_width=1.25, minor_length=4, minor_width=1.25)
 
 
 def hist_noir(ax):
-    # ax.minorticks_on()
-    ax.grid(False)
-    ax.tick_params(direction="in", which="major", length=5, right=True, top=True, width=1.5)
-    ax.tick_params(direction="in", which="minor", length=2, right=True, top=True, width=1.1)
-    ax.spines['top'].set_linewidth(1.5)
-    ax.spines['bottom'].set_linewidth(1.5)
-    ax.spines['left'].set_linewidth(1.5)
-    ax.spines['right'].set_linewidth(1.5)
+    _style_noir_axis(ax, major_length=5, major_width=1.5, minor_length=2, minor_width=1.1)
 
 
 k_b = 1.380649 * 10 ** (-29)  # Boltzmann Constant in kg km2 / s2 K

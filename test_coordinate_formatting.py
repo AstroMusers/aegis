@@ -1,6 +1,9 @@
+import numpy as np
 import pandas as pd
+import pytest
 
 from coordinate_formatting import (
+    build_radio_catalog_table,
     convert_numeric_column,
     format_coords,
     one_format,
@@ -16,6 +19,62 @@ def test_format_coords_preserves_table_format():
     formatted = format_coords(pd.Series({"ra": 0.0, "dec": -30.0}))
 
     assert formatted.to_dict() == {"RA": "00:00:00", "DEC": "-30:00:00"}
+
+
+def test_coordinate_formatting_uses_tdpy_owner():
+    from coordinate_formatting import format_equatorial_coordinates
+    from tdpy.astro import format_equatorial_coordinates as tdpy_formatter
+
+    assert format_equatorial_coordinates is tdpy_formatter
+
+
+@pytest.mark.parametrize(
+    ("frequency_column", "flux_column"),
+    [("Freq(MHz)", "Flux(mJy)"), ("Max. Frequency [MHz]", "Max. Flux Density [Jy]")],
+)
+def test_build_radio_catalog_table_preserves_schema_sort_and_inputs(
+    frequency_column, flux_column
+):
+    planets = pd.DataFrame([
+        {
+            "pl_name": "Planet A",
+            "pl_bmassj": 1.0,
+            "pl_radj": 1.0,
+            "pl_orbsmax": 0.1,
+            "sy_dist": 10.0,
+            "st_age": 5.0,
+            "ra": 180.0,
+            "dec": 20.0,
+        },
+        {
+            "pl_name": "Planet B",
+            "pl_bmassj": 2.0,
+            "pl_radj": 1.5,
+            "pl_orbsmax": 0.2,
+            "sy_dist": 20.0,
+            "st_age": 6.0,
+            "ra": 0.0,
+            "dec": -30.0,
+        },
+    ])
+    predictions = pd.DataFrame([
+        {"Name": "Planet B", frequency_column: 10.0, flux_column: 2.0},
+        {"Name": "Planet A", frequency_column: 40.0, flux_column: 5.0},
+    ])
+    original_planets = planets.copy(deep=True)
+    original_predictions = predictions.copy(deep=True)
+
+    table = build_radio_catalog_table(
+        planets, predictions, frequency_column, flux_column
+    )
+
+    assert table["Name"].tolist() == ["Planet A", "Planet B"]
+    assert table["RA (J2000)"].tolist() == ["12:00:00", "00:00:00"]
+    assert table["DEC (J2000)"].tolist() == ["+20:00:00", "-30:00:00"]
+    assert table["vmax"].tolist() == [40.0, 10.0]
+    assert table["Phi (mJy)"].tolist() == [5.0, 2.0]
+    pd.testing.assert_frame_equal(planets, original_planets)
+    pd.testing.assert_frame_equal(predictions, original_predictions)
 
 
 def test_numeric_precision_formatters():
@@ -39,6 +98,17 @@ def test_default_calculate_returns_positive_emission():
     freq_mhz, flux_jy = default_calculate("tau Boo b")
     assert freq_mhz > 0.0
     assert flux_jy > 0.0
+
+
+def test_keplerian_speed_uses_tdpy_implementation_for_arrays():
+    from radio_module import keplerian
+    from tdpy.exoplanet import keplerian_orbital_speed
+
+    assert keplerian is keplerian_orbital_speed
+    np.testing.assert_array_equal(
+        keplerian(np.array([1.0, 2.0]), np.array([1.0, 4.0])),
+        keplerian_orbital_speed(np.array([1.0, 2.0]), np.array([1.0, 4.0])),
+    )
 
 
 def test_sketch_and_spiral_plots_execute_without_display():

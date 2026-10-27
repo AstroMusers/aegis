@@ -11,10 +11,14 @@ def test_visibility_file_narration_respects_verbosity(tmp_path, verbosity):
     repository_path = Path(__file__).resolve().parent
     output_path = tmp_path / f"final-table-{verbosity}.csv"
     environment = os.environ.copy()
+    python_paths = [str(repository_path)]
+    python_paths.extend(
+        path for path in environment.get("PYTHONPATH", "").split(os.pathsep) if path
+    )
     environment.update(
         {
             "AEGIS_PATH": str(repository_path),
-            "PYTHONPATH": str(repository_path),
+            "PYTHONPATH": os.pathsep.join(python_paths),
             "TDPY_VERBOSITY": verbosity,
             "VISIBILITY_OUTPUT": str(output_path),
         }

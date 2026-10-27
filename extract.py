@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from radio_module import *
 
-from coordinate_formatting import format_coords, three_format, two_format
+from coordinate_formatting import build_radio_catalog_table, three_format, two_format
 from repository_paths import get_repository_path
 from tdpy.verbosity import print
 
@@ -18,18 +18,7 @@ def extract_observable_targets(save=True):
     detectable_path = DATA_DIR / "detectables_both.csv"
     print(f"Reading from {detectable_path}...")
     df2 = pd.read_csv(detectable_path)
-    detect_data = df[df["pl_name"].isin(df2["Name"])]
-    enough_data = detect_data[["pl_name", "pl_bmassj", "pl_radj", "pl_orbsmax", "sy_dist", "st_age", "ra", "dec"]].copy()
-    enough_data.rename(columns={"pl_name": "Name"}, inplace=True)
-
-    merged = pd.merge(enough_data, df2, on="Name")
-
-    merged[['ra', 'dec']] = merged.apply(format_coords, axis=1)
-
-    merged["vmax"] = merged["Freq(MHz)"]
-    merged.columns = ["Name", "Mass (MJ)", "Radius (RJ)", "a (AU)", "d (pc)", "t (Gyr)", "RA (J2000)", "DEC (J2000)", "nupeak (MHz)", "Phi (mJy)", "vmax"]
-    final = merged[["Name", "RA (J2000)", "DEC (J2000)", "Mass (MJ)", "Radius (RJ)", "a (AU)", "d (pc)", "t (Gyr)", "vmax", "Phi (mJy)"]]
-    final = final.sort_values(by="Phi (mJy)", ascending=False)
+    final = build_radio_catalog_table(df, df2, "Freq(MHz)", "Flux(mJy)")
 
     final["Mass (MJ)"] = final["Mass (MJ)"].apply(three_format)
     final["a (AU)"] = final["a (AU)"].apply(three_format)

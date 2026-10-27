@@ -1,18 +1,7 @@
-"""Shared coordinate formatting for Aegis table-generation scripts."""
+"""Shared coordinate and radio-catalog table helpers for Aegis."""
 
 import pandas as pd
-
-try:
-    from tdpy.astro import format_equatorial_coordinates
-except ImportError:
-    import astropy.units as u
-    from astropy.coordinates import SkyCoord
-
-    def format_equatorial_coordinates(ra_deg, dec_deg, precision=0):
-        coord = SkyCoord(ra=float(ra_deg) * u.deg, dec=float(dec_deg) * u.deg)
-        ra_str = coord.ra.to_string(unit=u.hour, sep=":", precision=precision, pad=True)
-        dec_str = coord.dec.to_string(unit=u.deg, sep=":", precision=precision, alwayssign=True, pad=True)
-        return ra_str, dec_str
+from tdpy.astro import format_equatorial_coordinates
 
 
 def format_coords(row: pd.Series) -> pd.Series:
@@ -20,6 +9,38 @@ def format_coords(row: pd.Series) -> pd.Series:
 
     ra_string, dec_string = format_equatorial_coordinates(row["ra"], row["dec"], precision=0)
     return pd.Series({"RA": ra_string, "DEC": dec_string})
+
+
+def build_radio_catalog_table(
+    exoplanet_catalog: pd.DataFrame,
+    predictions: pd.DataFrame,
+    frequency_column: str,
+    flux_column: str,
+) -> pd.DataFrame:
+    """Merge radio predictions into the shared, sorted Aegis table schema."""
+    planet_columns = [
+        "pl_name", "pl_bmassj", "pl_radj", "pl_orbsmax", "sy_dist", "st_age", "ra", "dec"
+    ]
+    planet_rows = exoplanet_catalog[
+        exoplanet_catalog["pl_name"].isin(predictions["Name"])
+    ][planet_columns].copy()
+    planet_rows.rename(columns={"pl_name": "Name"}, inplace=True)
+    prediction_rows = predictions[
+        ["Name", frequency_column, flux_column]
+    ].rename(columns={frequency_column: "nupeak (MHz)", flux_column: "Phi (mJy)"})
+
+    merged = pd.merge(planet_rows, prediction_rows, on="Name")
+    merged[["ra", "dec"]] = merged.apply(format_coords, axis=1)
+    merged["vmax"] = merged["nupeak (MHz)"]
+    merged.columns = [
+        "Name", "Mass (MJ)", "Radius (RJ)", "a (AU)", "d (pc)", "t (Gyr)",
+        "RA (J2000)", "DEC (J2000)", "nupeak (MHz)", "Phi (mJy)", "vmax",
+    ]
+    output_columns = [
+        "Name", "RA (J2000)", "DEC (J2000)", "Mass (MJ)", "Radius (RJ)",
+        "a (AU)", "d (pc)", "t (Gyr)", "vmax", "Phi (mJy)",
+    ]
+    return merged[output_columns].sort_values(by="Phi (mJy)", ascending=False)
 
 
 def convert_numeric_column(column: pd.Series) -> pd.Series:
